@@ -325,27 +325,31 @@ CATEGORIES = [
 ]
 
 # 漫画の全巻セット: 作品ごとに1ページ。ショップ・新品/中古の違いを比べたいので同一商品のまとめはしない
-MANGA = [("one-piece", "ワンピース", ["ワンピース", "ONE PIECE"]), ("jujutsu", "呪術廻戦", ["呪術廻戦"]),
-         ("kimetsu", "鬼滅の刃", ["鬼滅の刃"]), ("shingeki", "進撃の巨人", ["進撃の巨人"]),
-         ("heroaca", "僕のヒーローアカデミア", ["ヒーローアカデミア"]), ("frieren", "葬送のフリーレン", ["フリーレン"]),
-         ("kusuriya", "薬屋のひとりごと", ["薬屋のひとりごと"]), ("chainsaw", "チェンソーマン", ["チェンソーマン"]),
-         ("spy-family", "SPY×FAMILY", ["SPY", "スパイファミリー"]), ("bluelock", "ブルーロック", ["ブルーロック"]),
-         ("tokyo-revengers", "東京卍リベンジャーズ", ["リベンジャーズ"]), ("kingdom", "キングダム", ["キングダム"]),
-         ("haikyu", "ハイキュー!!", ["ハイキュー"]), ("conan", "名探偵コナン", ["名探偵コナン"]),
-         ("dungeon-meshi", "ダンジョン飯", ["ダンジョン飯"]), ("oshinoko", "【推しの子】", ["推しの子"]),
-         ("kaiju8", "怪獣8号", ["怪獣8号"]), ("slamdunk", "スラムダンク", ["スラムダンク", "SLAM DUNK"]),
-         ("dragonball", "ドラゴンボール", ["ドラゴンボール"]), ("naruto", "NARUTO", ["NARUTO", "ナルト"])]
+MANGA = [  # (slug, 作品名, 商品名に必要な語, 最低巻数: スピンオフや別作品の短いセットを除くため)
+    ("one-piece", "ワンピース", ["ワンピース", "ONE PIECE"], 90), ("jujutsu", "呪術廻戦", ["呪術廻戦"], 25),
+    ("kimetsu", "鬼滅の刃", ["鬼滅の刃"], 20), ("shingeki", "進撃の巨人", ["進撃の巨人"], 30),
+    ("heroaca", "僕のヒーローアカデミア", ["ヒーローアカデミア"], 35), ("frieren", "葬送のフリーレン", ["フリーレン"], 10),
+    ("kusuriya", "薬屋のひとりごと", ["薬屋のひとりごと"], 10), ("chainsaw", "チェンソーマン", ["チェンソーマン"], 15),
+    ("spy-family", "SPY×FAMILY", ["SPY", "スパイファミリー"], 12), ("bluelock", "ブルーロック", ["ブルーロック"], 25),
+    ("tokyo-revengers", "東京卍リベンジャーズ", ["リベンジャーズ"], 25), ("kingdom", "キングダム", ["キングダム"], 60),
+    ("haikyu", "ハイキュー!!", ["ハイキュー"], 40), ("conan", "名探偵コナン", ["名探偵コナン"], 90),
+    ("dungeon-meshi", "ダンジョン飯", ["ダンジョン飯"], 12), ("oshinoko", "【推しの子】", ["推しの子"], 14),
+    ("kaiju8", "怪獣8号", ["怪獣8号"], 12), ("slamdunk", "スラムダンク", ["スラムダンク", "SLAM DUNK"], 20),
+    ("dragonball", "ドラゴンボール", ["ドラゴンボール", "DRAGON BALL"], 34), ("naruto", "NARUTO", ["NARUTO", "ナルト"], 60),
+]
 MANGA_TIPS = ["中古の全巻セットは1冊あたりがかなり安いが、日焼けや書き込みなどの状態はショップごとに違う。商品ページの状態説明を確認する",
               "「1〜30巻」のように最新刊まで入っていないセットもある。冊数と巻数の表示を見比べる",
               "新品セットはきれいな状態で特典が付くこともあるが、1冊あたりは中古より高い"]
-for _slug, _title, _must in MANGA:
+for _slug, _title, _must, _minv in MANGA:
     CATEGORIES.append({
         "slug": f"manga-{_slug}", "title": f"{_title} 全巻セット 1冊あたり単価ランキング",
         "keyword": f"{_title.strip('【】')} 全巻セット", "unit": "冊", "base": "冊", "per_text": "1冊あたり",
-        "manga": True, "group": False, "min_reviews": 0, "outlier": 0.2, "tips": MANGA_TIPS,
+        "manga": True, "min_vol": _minv, "group": False, "min_reviews": 0, "outlier": 0.2, "tips": MANGA_TIPS,
         "must": _must, "must_all": ["全巻"],
         "ng": ["グッズ", "Blu-ray", "DVD", "ポスター", "アクリル", "カード", "フィギュア", "ファンブック", "画集",
-               "小説", "ノベライズ", "ぬいぐるみ", "Tシャツ", "収納", "ブックカバー", "シール", "缶バッジ"],
+               "小説", "ノベライズ", "ぬいぐるみ", "Tシャツ", "収納", "ブックカバー", "シール", "缶バッジ",
+               "すまっしゅ", "外伝", "スピンオフ", "モブサイコ", "オメガトライブ", "Before the fall", "ゼロの日常",
+               "警察学校", "犯沢", "パーティー", "EPISODE", "エピソード"],
     })
 
 CATEGORIES_BY_SLUG = {c["slug"]: c for c in CATEGORIES}
@@ -632,6 +636,8 @@ def rank(items, cat):
         note = ""
         if cat.get("manga"):  # 全巻セット: 冊数と新品/中古
             n, note = parse_volumes(it["itemName"])
+            if n and n < cat.get("min_vol", 0):
+                continue
         elif cat.get("parser"):  # 「ロール数×長さ」のように2つの数字を掛けるジャンル
             n = parse_product(it["itemName"], **cat["parser"])
         else:
