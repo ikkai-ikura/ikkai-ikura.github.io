@@ -1190,6 +1190,22 @@ a:focus-visible,button:focus-visible{{outline:2px solid var(--acc);outline-offse
 </script></body></html>"""
 
 
+GA_ID = os.environ.get("GA_ID", "G-HXQL3435N8")
+GA_TAG = f"""<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());gtag('config','{GA_ID}');
+document.addEventListener('click',function(e){{var a=e.target.closest&&e.target.closest('a[rel~="sponsored"]');if(!a)return;
+var box=a.closest('.row,.pick,.deal,.pi')||a;gtag('event','affiliate_click',{{page_path:location.pathname,
+item_label:(box.innerText||'').replace(/\\s+/g,' ').slice(0,90),link_domain:a.hostname}});}});</script>"""
+
+
+def add_analytics():
+    """docs 内の全ページの head にアクセス解析を入れる（その日に作り直さなかったページも含めて、まだ無いものだけ）"""
+    for f in OUT.glob("*.html"):
+        t = f.read_text(encoding="utf-8")
+        if GA_ID not in t and "<head><meta charset=utf-8>" in t:
+            f.write_text(t.replace("<head><meta charset=utf-8>", "<head><meta charset=utf-8>\n" + GA_TAG, 1), encoding="utf-8")
+
+
 def render_about():
     return """<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>このサイトについて｜TANKA</title>
@@ -1209,6 +1225,10 @@ h2{font-size:1.1rem;margin-top:1.6em}.mut{color:var(--mut);font-size:.85rem}</st
 <li>価格は取得時点のものです。送料別の商品は送料を含みません。購入前に必ず商品ページで価格と内容量をご確認ください。</li></ul>
 <h2>広告について</h2>
 <p>このサイトは楽天アフィリエイトを利用しています。商品リンクから購入されると、運営者に紹介料が支払われることがあります。紹介料の有無や料率によって掲載順を変えることはなく、並び順は単価のみで決めています。</p>
+<h2>アクセス解析と外部送信について</h2>
+<p>このサイトでは、利用状況を把握してサイトを改善するために、次のサービスに閲覧情報を送信しています。</p>
+<ul><li><b>Google アナリティクス</b>（Google LLC）：閲覧したページ、リンクのクリック、端末やブラウザの種類、Cookie などの識別子。利用状況の分析に使います。詳しくは <a href="https://policies.google.com/technologies/partner-sites?hl=ja" rel="noopener">Google のポリシー</a> をご覧ください。</li>
+<li><b>楽天アフィリエイト</b>（楽天グループ株式会社）・<b>A8.net</b>（株式会社ファンコミュニケーションズ）：広告リンクの表示やクリック、購入の計測。紹介料の計算に使われます。</li></ul>
 <h2>お問い合わせ</h2>
 <p>掲載内容の誤り（内容量の読み違いなど）のご指摘は、<a href="https://github.com/ikkai-ikura/ikkai-ikura.github.io/issues" rel="noopener">こちら</a>からお知らせください。</p>
 <p class=mut><a href="./">トップへ戻る</a></p>
@@ -1487,6 +1507,7 @@ def main():
         + f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{xml}</urlset>' + chr(10), encoding="utf-8")
     (OUT / "robots.txt").write_text(chr(10).join(["User-agent: *", "Allow: /", f"Sitemap: {site}sitemap.xml", ""]),
                                     encoding="utf-8")
+    add_analytics()
     if live and failed == len(CATEGORIES):
         print("::error::全ジャンルで取得に失敗しました")
         raise SystemExit(1)
