@@ -901,60 +901,116 @@ def render_index(summary, updated):
     groups = GROUPS + ([("other", "その他", [c["slug"] for c in CATEGORIES if c["slug"] not in grouped])]
                        if any(c["slug"] not in grouped for c in CATEGORIES) else [])
 
+    def off(s):
+        """最安が掲載商品の平均より何%安いか"""
+        return (1 - s["unit_price"] / s["avg"]) * 100 if s and s.get("avg") else 0
+
     def card(c):
         s = summary.get(c["slug"])
-        best = (f"<p class=b>最安 <b>{s['unit_price']:.1f}円</b><small>/{e(c['unit'])}</small></p>"
-                f"<p class=s>{e(s['name'])}</p>") if s else "<p class=s>集計中</p>"
-        img = f"<img src='{e(s['img'])}' alt='' loading=lazy>" if s and s.get("img") else ""
-        # 検索用の語: ジャンル名・検索キーワード・ブランド名
+        pct = off(s)
+        badge = f"<span class=off>平均より{pct:.0f}%安い</span>" if pct >= 5 else ""
+        best = (f"<p class=b>最安 <b>{s['unit_price']:.1f}円</b><small>/{e(c['unit'])}</small>{badge}</p>"
+                f"<p class=s>{e(s.get('clean') or s['name'])}</p>") if s else "<p class=s>集計中</p>"
+        img = f"<img src='{e(s['img'])}' alt='' loading=lazy>" if s and s.get("img") else "<span class=noimg></span>"
         words = " ".join([short(c), c["keyword"]] + c.get("keywords", []) + list(c.get("brands", {})))
         return (f"<a class=card href='{c['slug']}.html' data-k='{e(words.lower())}'>{img}"
                 f"<div><h3>{e(short(c))}</h3>{best}</div></a>")
 
-    chips = "".join(f"<a href='#{gid}'>{e(label)}</a>" for gid, label, _ in groups)
+    # 今日のお得: 最安と平均の差が大きいジャンル（漫画は中古と新品の差が出るだけなので除く）
+    deals = sorted((c for c in CATEGORIES if not c.get("manga") and summary.get(c["slug"])),
+                   key=lambda c: -off(summary[c["slug"]]))[:6]
+    deal_html = "".join(f"""<a class=deal href='{c['slug']}.html'>
+<span class=rank>{i}</span><img src='{e(summary[c['slug']].get('img', ''))}' alt='' loading=lazy>
+<span class=dn>{e(short(c))}</span>
+<span class=dp><b>{summary[c['slug']]['unit_price']:.1f}円</b>/{e(c['unit'])}</span>
+<span class=dd>平均 {summary[c['slug']]['avg']:.1f}円 → <strong>{off(summary[c['slug']]):.0f}%安い</strong></span></a>"""
+                        for i, c in enumerate(deals, 1))
+    n_items = sum(s.get("count", 0) for s in summary.values())
+    chips = "".join(f"<a href='#{gid}'>{e(label)}<i>{len([s for s in sls if s in by_slug])}</i></a>" for gid, label, sls in groups)
     sections = "".join(
         f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>"
         + "".join(card(by_slug[sl]) for sl in sls if sl in by_slug) + "</div></section>"
         for gid, label, sls in groups)
+    site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
+    desc = (f"洗剤・トイレットペーパー・ペットフード・お米・漫画全巻セットなど{len(CATEGORIES)}ジャンルを、"
+            "楽天の価格と内容量から1回あたり・1枚あたり・1冊あたりの値段に換算して毎朝自動で比較。")
+    ld = json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": "TANKA", "url": site,
+                     "description": desc}, ensure_ascii=False).replace("</", "<\\/")
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>TANKA｜日用品の1回あたり単価比較</title>
 <meta name="google-site-verification" content="A-JyA2Us3KYpkTLgjEMxZSKUwAAWLqE7rWFsJdlSn9o">
-<meta name=description content="洗剤・トイレットペーパー・ペットフード・お米など日用品{len(CATEGORIES)}ジャンルを、楽天の価格と内容量から1回あたりの値段に換算して毎日自動で比較。">
+<meta name=description content="{e(desc)}">
+<link rel=canonical href="{site}">
+<meta property=og:title content="TANKA｜日用品の1回あたり単価比較"><meta property=og:description content="{e(desc)}">
+<meta property=og:url content="{site}"><meta property=og:type content=website><meta property=og:site_name content="TANKA">
+<meta name=twitter:card content=summary>
+<script type="application/ld+json">{ld}</script>
 <style>
-:root{{--bg:#f5f5f7;--card:#fff;--fg:#1d1d1f;--mut:#6e6e73;--acc:#bf0000;--line:#e5e5ea}}
-@media(prefers-color-scheme:dark){{:root{{--bg:#111;--card:#1c1c1e;--fg:#f2f2f7;--mut:#a1a1a6;--acc:#ff6b6b;--line:#333}}}}
+:root{{--bg:#f5f5f7;--card:#fff;--fg:#1d1d1f;--mut:#6e6e73;--acc:#bf0000;--acc-soft:#fdeceb;--line:#e5e5ea;--ok:#1a7f4b}}
+@media(prefers-color-scheme:dark){{:root{{--bg:#111;--card:#1c1c1e;--fg:#f2f2f7;--mut:#a1a1a6;--acc:#ff6b6b;--acc-soft:#3a1d1d;--line:#333;--ok:#4cc38a}}}}
 body{{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,sans-serif}}
-main{{max-width:960px;margin:auto;padding:16px}} h1{{margin:.2em 0;font-size:1.6rem}}
-.pr,.lead{{color:var(--mut)}} .pr{{font-size:.8rem}}
-.bar{{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);display:grid;gap:8px}}
-.bar input{{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--fg);width:100%;box-sizing:border-box}}
-.chips{{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}} .chips a{{flex:none;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:inherit;text-decoration:none;font-size:.85rem}}
-.chips a:hover{{border-color:var(--acc)}}
-.grp{{scroll-margin-top:110px;margin-top:20px}} .grp h2{{font-size:1.05rem;margin:0 0 8px}}
-.grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}}
+main{{max-width:1000px;margin:auto;padding:0 16px 24px}} .pr{{color:var(--mut);font-size:.78rem}}
+.top{{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0}}
+.logo{{font-weight:800;letter-spacing:.12em;font-size:1.2rem;color:var(--fg);text-decoration:none}} .logo i{{font-style:normal;color:var(--acc)}}
+.hero{{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 18px;display:grid;gap:12px}}
+.hero h1{{margin:0;font-size:clamp(1.4rem,4.5vw,2rem);line-height:1.3;text-wrap:balance}} .hero h1 em{{font-style:normal;color:var(--acc)}}
+.hero p{{margin:0;color:var(--mut)}}
+.stats{{display:flex;flex-wrap:wrap;gap:8px}} .stats span{{background:var(--bg);border-radius:999px;padding:4px 12px;font-size:.82rem}} .stats b{{font-variant-numeric:tabular-nums}}
+.bar{{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:grid;gap:8px;margin-top:14px;border-bottom:1px solid var(--line)}}
+.bar input{{font:inherit;font-size:1rem;padding:11px 14px;border:2px solid var(--line);border-radius:999px;background:var(--card);color:var(--fg);width:100%;box-sizing:border-box}}
+.bar input:focus{{border-color:var(--acc);outline:none}}
+.chips{{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}} .chips a{{flex:none;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:inherit;text-decoration:none;font-size:.85rem}}
+.chips a i{{font-style:normal;color:var(--mut);margin-left:4px;font-size:.75rem}} .chips a:hover{{border-color:var(--acc)}}
+h2{{font-size:1.1rem;margin:0 0 10px}}
+.today{{margin-top:22px}} .today h2 small{{font-weight:400;color:var(--mut);font-size:.8rem;margin-left:6px}}
+.deals{{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
+.deal{{position:relative;display:grid;gap:3px;justify-items:center;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 8px;color:inherit;text-decoration:none}}
+.deal:hover{{border-color:var(--acc)}} .deal img{{width:72px;height:72px;object-fit:contain;background:#fff;border-radius:10px}}
+.rank{{position:absolute;top:8px;left:8px;width:1.6em;height:1.6em;line-height:1.6em;border-radius:50%;background:var(--acc);color:#fff;font-size:.75rem;font-weight:700}}
+.dn{{font-weight:700;font-size:.88rem;line-height:1.3}} .dp b{{color:var(--acc);font-size:1.2rem}} .dp{{font-size:.8rem;color:var(--mut)}}
+.dd{{font-size:.72rem;color:var(--mut)}} .dd strong{{color:var(--ok)}}
+.grp{{scroll-margin-top:120px;margin-top:24px}}
+.grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}}
 .card{{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:inherit;text-decoration:none}}
-.card:hover,.card:focus-visible{{border-color:var(--acc)}} .card img{{width:56px;height:56px;object-fit:contain;flex:none;background:#fff;border-radius:8px}}
-.card h3{{font-size:.95rem;margin:0}} .b{{margin:2px 0}} .b b{{color:var(--acc);font-size:1.1rem}}
+.card:hover,.card:focus-visible{{border-color:var(--acc)}} .card img,.noimg{{width:56px;height:56px;object-fit:contain;flex:none;background:#fff;border-radius:8px}}
+.card div{{min-width:0}} .card h3{{font-size:.95rem;margin:0}} .b{{margin:2px 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px}} .b b{{color:var(--acc);font-size:1.1rem}}
+.off{{font-size:.68rem;color:var(--ok);background:var(--bg);border-radius:4px;padding:0 5px;font-weight:700}}
 .s{{margin:0;color:var(--mut);font-size:.72rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}} small{{color:var(--mut)}}
+.how{{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}}
+.how ol{{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;counter-reset:s}}
+.how li{{counter-increment:s;display:grid;gap:2px}} .how li::before{{content:counter(s);width:1.7em;height:1.7em;line-height:1.7em;text-align:center;border-radius:50%;background:var(--acc-soft);color:var(--acc);font-weight:700}}
+.how b{{font-size:.95rem}} .how span{{color:var(--mut);font-size:.85rem}}
 .none{{color:var(--mut);margin-top:16px}}
+footer{{margin-top:28px;color:var(--mut);font-size:.8rem;display:grid;gap:4px}} footer a{{color:inherit}}
+a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset:2px}}
 </style></head><body><main>
-<p class=pr>PR：このサイトは楽天アフィリエイトを利用しています</p>
-<h1>TANKA <span style="font-size:.9rem;font-weight:normal;color:var(--mut)">日用品の1回あたり単価比較</span></h1>
-<p class=lead>日用品を「1回あたりの値段」で比べるサイトです。楽天市場の価格と内容量から自動で計算し、毎日更新しています（最終更新 {updated}）。</p>
-<div class=bar><input id=q type=search placeholder="さがす（例：洗剤、猫、トイレットペーパー、キュキュット）" aria-label="ジャンルをさがす" autocomplete=off>
-<nav class=chips aria-label="カテゴリ">{chips}</nav></div>
+<div class=top><a class=logo href="./">TAN<i>KA</i></a><span class=pr>PR：楽天アフィリエイトを利用しています</span></div>
+<section class=hero>
+<h1>そのまとめ買い、<em>本当に得？</em><br>1回あたりの値段で比べよう</h1>
+<p>大容量や○個セットは、総額だけでは割安か分かりません。TANKAは楽天市場の商品を「価格 ÷ 内容量」で計算し、1回・1枚・100g・1冊あたりの安い順に並べています。</p>
+<div class=stats><span><b>{len(CATEGORIES)}</b> ジャンル</span><span><b>{n_items:,}</b> 商品を比較</span><span>毎朝6時に自動更新（{updated[5:10].replace('-', '/')} {updated[11:]}）</span></div>
+</section>
+<div class=bar><input id=q type=search placeholder="さがす（例：洗剤、猫、トイレットペーパー、キュキュット、呪術廻戦）" aria-label="ジャンルをさがす" autocomplete=off>
+<nav class=chips aria-label="カテゴリ"><a href="#today">今日のお得</a>{chips}</nav></div>
+<section class=today id=today><h2>今日のお得ランキング<small>最安が平均より安いジャンル順</small></h2><div class=deals>{deal_html}</div></section>
 {sections}
 <p class=none id=none hidden>見つかりませんでした。別の言葉でさがしてみてください。</p>
-<p class=pr style="margin-top:24px"><a href="about.html">このサイトについて（計算方法・広告について）</a></p>
+<section class=how><h2>TANKAの比べ方</h2><ol>
+<li><b>楽天市場から毎朝取得</b><span>人気の商品の価格・レビュー数・評価を自動で集めます</span></li>
+<li><b>内容量で割って単価にする</b><span>「150個入×3袋」なども商品名から読み取って計算します</span></li>
+<li><b>同じ商品は最安だけ掲載</b><span>ショップ違い・袋数違いをまとめ、いちばん安い出品を表示します</span></li>
+</ol></section>
+<footer><a href="about.html">このサイトについて（計算方法・広告について）</a><span>価格は取得時点のものです。購入前に商品ページで確認してください。</span></footer>
 </main>
 <script>
 (function(){{
-  var q=document.getElementById('q'), cards=[].slice.call(document.querySelectorAll('.card')), grps=[].slice.call(document.querySelectorAll('.grp'));
+  var q=document.getElementById('q'), cards=[].slice.call(document.querySelectorAll('.card')), grps=[].slice.call(document.querySelectorAll('.grp')), today=document.getElementById('today');
   function norm(t){{return t.toLowerCase().replace(/[ァ-ン]/g,function(c){{return String.fromCharCode(c.charCodeAt(0)-0x60)}})}}
   q.addEventListener('input',function(){{
     var w=norm(q.value.trim()), hit=0;
     cards.forEach(function(c){{var ok=!w||norm(c.dataset.k+' '+c.textContent).indexOf(w)>=0; c.hidden=!ok; if(ok)hit++;}});
     grps.forEach(function(g){{g.hidden=!g.querySelector('.card:not([hidden])');}});
+    today.hidden=!!w;
     document.getElementById('none').hidden=hit>0;
   }});
 }})();
@@ -999,7 +1055,9 @@ def main():
             summary[cat["slug"]] = {"unit_price": top["unit_price"], "name": top["name"][:40], "img": top["img"],
                                     "count": len(rows), "fee": round(fees[len(fees) // 2]),
                                     "rate": round(sorted(r["rate"] for r in rows[:10])[min(len(rows), 10) // 2], 1),
-                                    "price": sorted(r["price"] for r in rows[:10])[min(len(rows), 10) // 2]}
+                                    "price": sorted(r["price"] for r in rows[:10])[min(len(rows), 10) // 2],
+                                    "avg": sum(r["unit_price"] for r in rows) / len(rows),
+                                    "clean": clean_name(top["name"], 40)}
         print(f"{cat['slug']}: 取得{len(items)}件 → 掲載{len(rows)}件 ({'本番' if live else 'サンプル'})")
     (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False), encoding="utf-8")
     (OUT / "index.html").write_text(render_index(summary, updated), encoding="utf-8")
