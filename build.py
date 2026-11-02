@@ -242,8 +242,21 @@ def parse_count(name, words, lo=5, hi=3000):
           for m in re.finditer(rf"(\d{{1,4}}(?:\.\d{{1,2}})?)\s*({w})(?!\s*セット)", s)]
     if not ms:
         return None
-    # セット数の候補: 「×3」「/箱×3」「3袋セット」「【3個セット】」
-    ks_set = [int(x) for x in re.findall(r"(\d{1,2})\s*(?:袋|箱|個|本|パック|冊)\s*セット", s)]
+    # セット数の候補: 「×3」「/箱×3」「3袋セット」「【3個セット】」「2ケース」
+    # ただしジャンルの単位と同じ語（水なら「12本セット」）は合計数量なので、セット数ではなく量の候補に回す
+    units = ["袋", "箱", "個", "本", "パック", "冊", "ケース"]
+    own = [u for u in units if any(k.startswith(u) for k in words)]
+    pack = "|".join(u for u in units if u not in own)
+    ks_set = [int(x) for x in re.findall(rf"(\d{{1,2}})\s*(?:{pack})\s*(?:セット)?(?![入\d])", s)
+              if re.search(rf"{x}\s*(?:{pack})\s*セット|{x}\s*ケース", s)]
+    if own:
+        top = max(v for v, _ in ms)
+        for x in re.findall(rf"(\d{{1,4}})\s*(?:{'|'.join(own)})\s*セット", s):
+            # 1袋の量より大きければ合計数量（12本セット）、小さければセット数（150個入りの3個セット）
+            if float(x) > top:
+                ms.append((float(x), None))
+            else:
+                ks_set.append(int(x))
     ks = ks_set + [int(x) for x in re.findall(r"[x*]\s*(\d{1,2})(?!\d|\.\d|\s*(?:g|kg|ml|L|枚|個|本|回))", s)]
     ms = [t for t in ms if t[0] > 1] or ms  # 「1個13g」の1個などは内容量ではない
     vals = sorted({v for v, _ in ms})
