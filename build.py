@@ -322,6 +322,73 @@ CATEGORIES = [
         "must": ["ティッシュ"],
         "ng": ["ウェット", "ポケット", "ケース付", "カバー", "トイレット", "キッチン", "除菌"],
     },
+    {
+        "slug": "diaper-pants-m",
+        "title": "紙おむつ パンツ Mサイズ 1枚あたり単価ランキング",
+        "keyword": "おむつ パンツ Mサイズ",
+        "keywords": ["おむつ パンツ Mサイズ ケース", "メリーズ パンツ Mサイズ", "パンパース パンツ Mサイズ", "ムーニー パンツ Mサイズ", "グーン パンツ Mサイズ"],
+        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 10, "range": (30, 3000),
+        "must": ["M"], "must_all": ["パンツ"],
+        "ng": ["テープ", "Lサイズ", "Sサイズ", "BIG", "ビッグ", "新生児", "大人", "介護", "水遊び", "スイミング", "ゴミ箱", "ポーチ"],
+    },
+    {
+        "slug": "diaper-tape-s",
+        "title": "紙おむつ テープ Sサイズ 1枚あたり単価ランキング",
+        "keyword": "おむつ テープ Sサイズ",
+        "keywords": ["おむつ テープ Sサイズ ケース", "メリーズ テープ Sサイズ", "パンパース テープ Sサイズ", "ムーニー テープ Sサイズ", "グーン テープ Sサイズ"],
+        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 10, "range": (30, 3000),
+        "must": ["S"], "must_all": ["テープ"],
+        "ng": ["パンツ", "Mサイズ", "Lサイズ", "新生児", "大人", "介護", "ゴミ箱", "ポーチ", "マスキング"],
+    },
+    {
+        "slug": "sanitary-napkin",
+        "title": "生理用ナプキン 昼用 1枚あたり単価ランキング",
+        "keyword": "生理用ナプキン 昼用",
+        "keywords": ["生理用ナプキン 昼用 まとめ買い", "ソフィ 昼用", "ロリエ 昼用", "エリス 昼用", "ウィスパー 昼用"],
+        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 10, "range": (15, 2000),
+        "must": ["昼"],
+        "ng": ["夜用", "ショーツ", "布ナプキン", "吸水ショーツ", "おりもの", "ライナー", "ポーチ", "ケース", "尿もれ"],
+    },
+    {
+        "slug": "kitchen-paper",
+        "title": "キッチンペーパー 100カットあたり単価ランキング",
+        "keyword": "キッチンペーパー",
+        "keywords": ["キッチンペーパー まとめ買い", "キッチンタオル ケース", "スコッティ キッチンタオル", "エリエール キッチンタオル"],
+        "unit": "100カット", "base": "カット", "per": 100, "per_text": "100カットあたり",
+        "parser": {"size": r"(\d{2,3})\s*(?:カット|枚|組)", "pack": r"ロール|R(?![a-z])|個|パック|袋", "lo": 100, "hi": 20000},
+        "min_reviews": 10,
+        "ng": ["ホルダー", "スタンド", "ケース付", "ラック", "トイレット", "ティッシュ"],
+    },
+    {
+        "slug": "food-wrap",
+        "title": "食品用ラップ 10mあたり単価ランキング",
+        "keyword": "ラップ 30cm",
+        "keywords": ["食品用ラップ 30cm 50m", "サランラップ 30cm", "クレラップ 30cm", "業務用ラップ 30cm"],
+        "unit": "10m", "base": "m", "per": 10, "per_text": "10mあたり",
+        "parser": {"size": r"(\d{2,3})\s*m(?![ml])", "pack": r"本|個|箱", "lo": 20, "hi": 20000},
+        "min_reviews": 10, "must": ["30cm", "30センチ"],
+        "ng": ["ホルダー", "ケース", "カッター", "ボックス", "シリコン", "ストレッチフィルム", "梱包", "22cm", "15cm"],
+    },
+    {
+        "slug": "soy-sauce",
+        "title": "しょうゆ 100mlあたり単価ランキング",
+        "keyword": "醤油 1L",
+        "keywords": ["醤油 1L", "しょうゆ 1.8L", "キッコーマン しょうゆ", "ヤマサ 醤油", "業務用 醤油"],
+        "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
+        "words": ML, "min_reviews": 10, "range": (300, 30000),
+        "must": ["醤油", "しょうゆ", "しょう油", "正油"],
+        "ng": ["ポン酢", "だし", "つゆ", "ドレッシング", "たれ", "タレ", "差し", "容器", "麹", "ギフト", "詰め合わせ"],
+    },
+    {
+        "slug": "canola-oil",
+        "title": "キャノーラ油 100gあたり単価ランキング",
+        "keyword": "キャノーラ油",
+        "keywords": ["キャノーラ油 1000g", "キャノーラ油 業務用", "日清 キャノーラ油", "AJINOMOTO キャノーラ油"],
+        "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
+        "words": {"kg": 1000, "g": 1}, "min_reviews": 10, "range": (300, 20000),
+        "must": ["キャノーラ", "なたね", "菜種"],
+        "ng": ["ごま", "オリーブ", "スプレー", "ギフト", "詰め合わせ", "マヨネーズ"],
+    },
 ]
 
 # 漫画の全巻セット: 作品ごとに1ページ。ショップ・新品/中古の違いを比べたいので同一商品のまとめはしない
@@ -431,6 +498,13 @@ TIPS = {
     "toilet-paper-double": ["ダブルは2枚重ねなので、同じ長さでもシングルより紙の量が多い。ここではダブル同士で比べている", "1.5倍巻・2倍巻などの長巻きは交換の手間が減り、収納場所も節約できる", "芯なしタイプは長さが長いぶん、ホルダーに入るサイズか確認する"],
     "toilet-paper-single": ["シングルは1枚なので、ダブルより長く巻かれていて交換回数が少ない", "再生紙（古紙）100%は安く、パルプ100%はやわらかい傾向", "長巻き（1.5倍・2倍）は1mあたりが安くなりやすい"],
     "tissue": ["「組」は2枚1組の数。150組と200組では1箱で使える量が違うので、100組あたりで比べている", "保湿ティッシュ（鼻セレブなど）は単価が高いが、鼻をよくかむ時期にはやさしい", "5箱パック×数パックのケース買いが最安になりやすい"],
+    "diaper-pants-m": ["同じMサイズでもメーカーで対象体重が少しずつ違う。体に合わないと漏れやすいので、まずは小パックで試してからケース買いにする", "ケース買い（3〜4パック）が1枚あたり最安になりやすい", "肌ざわりや吸収量で価格帯が分かれる。昼と夜でメーカーを使い分ける家庭も多い"],
+    "diaper-tape-s": ["テープタイプはねんね期向け。成長が早い時期なので、まとめ買いしすぎるとサイズアウトで余ることがある", "同じSサイズでもメーカーで対象体重が違う", "ケース買いが1枚あたり最安になりやすい"],
+    "sanitary-napkin": ["ここでは昼用で比べている。羽つき・羽なし、長さ（cm）で使い心地が変わる", "多い日用や夜用は1枚あたりが高めなので、日によって使い分けると節約になる", "肌が弱い人は、素材（コットンなど）を確認して選ぶ"],
+    "kitchen-paper": ["1ロールのカット数（枚数）がメーカーで違うので、100カットあたりで比べている", "厚手・2枚重ねは1枚で拭ける量が多いぶん、カット数あたりは高め", "ボックスタイプとロールタイプで、置き場所や取り出しやすさが違う"],
+    "food-wrap": ["ここでは幅30cmで比べている。長さ（50m・100mなど）が長いほど10mあたりが安い", "業務用の長巻きは安いが、ケースが大きいので収納場所を確認する", "電子レンジでの耐熱温度は製品ごとに違う"],
+    "soy-sauce": ["1.8Lなど大容量は安いが、開封後は風味が落ちやすい。使い切れる量を選ぶ", "密封ボトル（鮮度ボトル）は割高だが、開封後も風味が長持ちする", "濃口・薄口・減塩で用途と味が違う"],
+    "canola-oil": ["1000gクラスのボトルや業務用の大容量が100gあたり安い", "開封後は酸化しやすいので、使い切れる量を選ぶ", "なたね油（キャノーラ油）は加熱調理向けでクセが少ない"],
     "rice": ["銘柄米・ブレンド米・複数原料米で価格が大きく違う。ブレンド米は安いが産地や品種は混ざる", "10kg・20kgの大袋は1kgあたりが安いが、精米後は早めに食べきるのがおすすめ（夏は特に）", "無洗米は研ぐ手間と水が省けるぶん、少し高めのことが多い"],
     "cat-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "子猫用・成猫用・シニア用など年齢で栄養バランスが違う", "大袋は割安だが、開封後は酸化しやすいので小分け包装が便利"],
     "dog-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "小型犬用は粒が小さい。犬種や年齢に合ったものを選ぶ", "大袋は割安だが、開封後は湿気と酸化に注意。小分け包装だと鮮度を保ちやすい"],
@@ -644,6 +718,21 @@ def parse_volumes(name):
     return n, label + (f"・{state}" if state else "")
 
 
+def add_scores(rows):
+    """総合点: 単価の安さ(最安=1)と評価(件数が少ないほど★4.0に寄せるベイズ平均)を半分ずつ。
+    ポイント込み実質単価も付ける（楽天の基本1倍は全商品共通なので、それを超える分だけ差し引く）"""
+    if not rows:
+        return rows
+    c = 4.0  # レビューが少ない商品は★4.0に寄せる（少数の★5で上位に来ないように）
+    m = 30   # この件数のレビューで、自分の評価と★4.0が半々になる
+    best = min(r["unit_price"] for r in rows)
+    for r in rows:
+        bayes = (r["reviews"] * r["rating"] + m * c) / (r["reviews"] + m)
+        r["score"] = round(50 * best / r["unit_price"] + 50 * bayes / 5, 1)
+        r["eff_unit"] = r["unit_price"] * (1 - (max(r.get("point", 1), 1) - 1) / 100)
+    return rows
+
+
 def rank(items, cat):
     rows = []
     for it in items:
@@ -676,6 +765,7 @@ def rank(items, cat):
             "img": (it.get("mediumImageUrls") or [""])[0],
             "rate": float(it.get("affiliateRate") or 0),
             "note": note,
+            "point": int(it.get("pointRate") or 1),
         })
     rows.sort(key=lambda r: r["unit_price"])
     # 相場の35%未満（純正と互換が混ざるジャンルは15%未満）は数量の読み違いの可能性が高いので載せない
@@ -685,7 +775,7 @@ def rank(items, cat):
     if not cat.get("group", True):  # 全巻セットのようにショップ・状態違いを比べたいジャンル
         for r in rows:
             r["others"] = 0
-        return rows[:30]
+        return add_scores(rows[:30])
     # 同じ商品（ショップ違い・袋数違い）は1行にまとめ、1回あたり最安の出品だけを載せる
     groups = []
     for r in rows:  # rows は単価の安い順なので、各グループの先頭が最安
@@ -700,7 +790,7 @@ def rank(items, cat):
     for g in groups[:30]:
         g["row"]["others"] = g["others"]
         out.append(g["row"])
-    return out
+    return add_scores(out)
 
 
 def short(c):
@@ -722,10 +812,12 @@ def pick_rows(rows, cat=None):
         return []
     good = lambda r: r["rating"] >= 4.3 and r["reviews"] >= 100
     first = rows[0]
-    label = "いちばん安い" + ("・高評価" if good(first) else "") + ("・送料無料" if first["free_ship"] else "")
+    is_top = first is max(rows, key=lambda r: r.get("score", 0))
+    label = "いちばん安い" + ("・総合1位" if is_top else ("・高評価" if good(first) else "")) + ("・送料無料" if first["free_ship"] else "")
     picks, used = [(label, first)], {id(first)}
     # 1位と重なる場合は、条件を満たす次に安い商品を出す
-    tests = (("評価が高くて安い", good), ("送料無料で安い", lambda r: r["free_ship"]))
+    top_score = max(rows, key=lambda r: r.get("score", 0))
+    tests = (("総合おすすめ（安さ×評価）", lambda r: r is top_score), ("送料無料で安い", lambda r: r["free_ship"]))
     if cat and cat.get("manga"):
         tests = (("新品で安い", lambda r: "中古" not in r["name"]), ("送料無料で安い", lambda r: r["free_ship"]))
     for label, test in tests:
@@ -827,17 +919,17 @@ def render(cat, rows, updated, hist=None):
         f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in faq) + "</section>") if faq else ""
 
     medal = {1: "m1", 2: "m2", 3: "m3"}
-    items = "".join(f"""<li class=row data-u="{r['unit_price']:.4f}" data-r="{r['rating']:.2f}" data-n="{r['reviews']}" data-f="{1 if r['free_ship'] else 0}">
+    items = "".join(f"""<li class=row data-u="{r['unit_price']:.4f}" data-s="{r.get('score', 0)}" data-p="{r.get('eff_unit', r['unit_price']):.4f}" data-r="{r['rating']:.2f}" data-n="{r['reviews']}" data-f="{1 if r['free_ship'] else 0}">
 <span class="rk {medal.get(i, '')}">{i}</span>
 <a class=ri href="{e(r['url'])}" rel="sponsored noopener" target=_blank><img src="{e(r['img'])}" alt="" loading=lazy></a>
 <div class=rb><a class=rn href="{e(r['url'])}" rel="sponsored noopener" target=_blank title="{e(r['name'])}">{e(clean_name(r['name']))}</a>
-<div class=bd>{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class=b>送料別</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
+<div class=bd>{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class=b>送料別</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}<span class=b>総合{r.get('score', 0):.0f}点</span>{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
 <small>{e(r['shop'])}</small></div>
 <div class=rp><b>{r['unit_price']:.1f}<i>円/{e(unit)}</i></b><small>{r['price']:,}円・{r['count']:,.0f}{e(base)}</small>
 <a class=go href="{e(r['url'])}" rel="sponsored noopener" target=_blank>楽天で見る</a></div></li>"""
                     for i, r in enumerate(rows, 1))
     controls = """<div class=ctl role=group aria-label="並べ替え">
-<button type=button data-s=u aria-pressed=true>安い順</button><button type=button data-s=r aria-pressed=false>評価が高い順</button>
+<button type=button data-s=u aria-pressed=true>安い順</button><button type=button data-s=s aria-pressed=false>総合おすすめ順</button><button type=button data-s=p aria-pressed=false>ポイント込みで安い順</button><button type=button data-s=r aria-pressed=false>評価が高い順</button>
 <button type=button data-s=n aria-pressed=false>レビューが多い順</button>
 <label><input type=checkbox id=fs> 送料無料のみ</label></div>"""
 
@@ -904,7 +996,7 @@ ol.list{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
 .ri img{{width:64px;height:64px;object-fit:contain;background:#fff;border-radius:8px;display:block}}
 .rb{{min-width:0}} .rn{{color:inherit;text-decoration:none;font-size:.9rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 .rn:hover{{text-decoration:underline}}
-.bd{{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}} .b{{font-size:.7rem;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--mut)}} .b.ok{{color:var(--ok);font-weight:700}}
+.bd{{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}} .b{{font-size:.7rem;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--mut)}} .b.ok{{color:var(--ok);font-weight:700}} .b.pt{{color:var(--acc);font-weight:700}}
 small{{display:block;color:var(--mut);font-size:.72rem}}
 .rp{{text-align:right;display:grid;gap:4px;justify-items:end}} .rp b{{font-size:1.2rem;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}} .rp i{{font-style:normal;font-size:.75rem;color:var(--mut);font-weight:400}}
 @media(max-width:560px){{.row{{grid-template-columns:1.8em 52px minmax(0,1fr)}} .ri img{{width:52px;height:52px}} .rp{{grid-column:2/-1;grid-template-columns:auto 1fr auto;align-items:center;text-align:left}} .rp small{{justify-self:start}}}}
@@ -933,6 +1025,8 @@ a:focus-visible,button:focus-visible,input:focus-visible{{outline:2px solid var(
   function apply(){{
     var s=rows.slice().sort(function(a,b){{
       if(key==='u') return a.dataset.u-b.dataset.u;
+      if(key==='s') return b.dataset.s-a.dataset.s;
+      if(key==='p') return a.dataset.p-b.dataset.p;
       if(key==='r') return b.dataset.r-a.dataset.r||a.dataset.u-b.dataset.u;
       return b.dataset.n-a.dataset.n;
     }}), shown=0;
@@ -973,13 +1067,15 @@ h2{font-size:1.1rem;margin-top:1.6em}.mut{color:var(--mut);font-size:.85rem}</st
 
 
 GROUPS = [
-    ("laundry", "洗濯・キッチン", ["dishwasher-tablet", "dish-soap-refill", "laundry-gelball", "liquid-laundry-refill", "softener-refill"]),
+    ("laundry", "洗濯・キッチン", ["dishwasher-tablet", "dish-soap-refill", "laundry-gelball", "liquid-laundry-refill", "softener-refill",
+                               "kitchen-paper", "food-wrap"]),
     ("paper", "紙・生活用品", ["toilet-paper-double", "toilet-paper-single", "tissue", "garbage-bag-45l", "mask",
-                          "disinfect-wipes", "cotton-swab", "baby-wipes", "aa-battery"]),
+                          "disinfect-wipes", "cotton-swab", "aa-battery"]),
+    ("baby", "ベビー・衛生用品", ["diaper-pants-m", "diaper-tape-s", "baby-wipes", "sanitary-napkin"]),
     ("care", "バス・ケア", ["hand-soap-refill", "body-soap-refill", "shampoo-refill", "toothpaste",
                          "sonicare-brush-head", "oralb-brush-head"]),
     ("pet", "ペット", ["dog-food-dry", "cat-food-dry", "pet-sheet", "cat-litter"]),
-    ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "water-2l", "sparkling-water-500ml"]),
+    ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "water-2l", "sparkling-water-500ml", "soy-sauce", "canola-oil"]),
     ("manga", "漫画 全巻セット", [f"manga-{m[0]}" for m in MANGA]),
 ]
 
