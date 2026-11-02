@@ -780,6 +780,7 @@ def rank(items, cat):
             "rate": float(it.get("affiliateRate") or 0),
             "note": note,
             "point": int(it.get("pointRate") or 1),
+            "code": it.get("itemCode") or it.get("itemUrl", ""),
         })
     rows.sort(key=lambda r: r["unit_price"])
     # 相場の35%未満（純正と互換が混ざるジャンルは15%未満）は数量の読み違いの可能性が高いので載せない
@@ -937,7 +938,7 @@ def render(cat, rows, updated, hist=None):
 <span class="rk {medal.get(i, '')}">{i}</span>
 <a class=ri href="{e(r['url'])}" rel="sponsored noopener" target=_blank><img src="{e(r['img'])}" alt="" loading=lazy></a>
 <div class=rb><a class=rn href="{e(r['url'])}" rel="sponsored noopener" target=_blank title="{e(r['name'])}">{e(clean_name(r['name']))}</a>
-<div class=bd>{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class=b>送料別</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}<span class=b>総合{r.get('score', 0):.0f}点</span>{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
+<div class=bd>{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class=b>送料別</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b dn">前回より{r["drop"]:,}円値下がり</span>' if r.get('drop') else ''}{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}<span class=b>総合{r.get('score', 0):.0f}点</span>{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
 <small>{e(r['shop'])}</small></div>
 <div class=rp><b>{r['unit_price']:.1f}<i>円/{e(unit)}</i></b><small>{r['price']:,}円・{r['count']:,.0f}{e(base)}</small>
 <a class=go href="{e(r['url'])}" rel="sponsored noopener" target=_blank>楽天で見る</a></div></li>"""
@@ -1010,7 +1011,7 @@ ol.list{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
 .ri img{{width:64px;height:64px;object-fit:contain;background:#fff;border-radius:8px;display:block}}
 .rb{{min-width:0}} .rn{{color:inherit;text-decoration:none;font-size:.9rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 .rn:hover{{text-decoration:underline}}
-.bd{{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}} .b{{font-size:.7rem;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--mut)}} .b.ok{{color:var(--ok);font-weight:700}} .b.pt{{color:var(--acc);font-weight:700}}
+.bd{{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}} .b{{font-size:.7rem;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--mut)}} .b.ok{{color:var(--ok);font-weight:700}} .b.pt{{color:var(--acc);font-weight:700}} .b.dn{{background:var(--acc);color:#fff;font-weight:700}}
 small{{display:block;color:var(--mut);font-size:.72rem}}
 .rp{{text-align:right;display:grid;gap:4px;justify-items:end}} .rp b{{font-size:1.2rem;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}} .rp i{{font-style:normal;font-size:.75rem;color:var(--mut);font-weight:400}}
 @media(max-width:560px){{.row{{grid-template-columns:1.8em 52px minmax(0,1fr)}} .ri img{{width:52px;height:52px}} .rp{{grid-column:2/-1;grid-template-columns:auto 1fr auto;align-items:center;text-align:left}} .rp small{{justify-self:start}}}}
@@ -1229,7 +1230,7 @@ GROUPS = [
 ]
 
 
-def render_index(summary, updated):
+def render_index(summary, updated, drops=None):
     e = html.escape
     by_slug = {c["slug"]: c for c in CATEGORIES}
     grouped = {sl for _, _, sls in GROUPS for sl in sls}
@@ -1253,7 +1254,7 @@ def render_index(summary, updated):
 
     # 今日のお得: 最安と平均の差が大きいジャンル（漫画は中古と新品の差が出るだけなので除く）
     deals = sorted((c for c in CATEGORIES if not c.get("manga") and summary.get(c["slug"])),
-                   key=lambda c: -off(summary[c["slug"]]))[:6]
+                   key=lambda c: -off(summary[c["slug"]]) * (1 + summary[c["slug"]].get("fee", 0) / 500))[:6]
     deal_html = "".join(f"""<a class=deal href='{c['slug']}.html'>
 <span class=rank>{i}</span><img src='{e(summary[c['slug']].get('img', ''))}' alt='' loading=lazy>
 <span class=dn>{e(short(c))}</span>
@@ -1261,6 +1262,17 @@ def render_index(summary, updated):
 <span class=dd>平均 {summary[c['slug']]['avg']:.1f}円 → <strong>{off(summary[c['slug']]):.0f}%安い</strong></span></a>"""
                         for i, c in enumerate(deals, 1))
     n_items = sum(s.get("count", 0) for s in summary.values())
+    # 今日値下がりした商品: 値下がり率と1件あたりの報酬の両方で選ぶ（同じジャンルは2件まで）
+    picked, per_cat = [], {}
+    for d in sorted(drops or [], key=lambda d: -d["pct"] * (1 + d["fee"] / 300)):
+        if d["pct"] >= 3 and per_cat.get(d["slug"], 0) < 2:
+            per_cat[d["slug"]] = per_cat.get(d["slug"], 0) + 1
+            picked.append(d)
+    drop_html = ("<section class=today id=drops><h2>今日値下がりした商品<small>前回の価格より安くなったもの</small></h2><div class=deals>"
+                 + "".join(f"""<a class=deal href='{e(d['url'])}' rel='sponsored noopener' target=_blank>
+<span class=rank>↓</span><img src='{e(d['img'])}' alt='' loading=lazy><span class=dn>{e(d['name'])}</span>
+<span class=dp><b>{d['price']:,}円</b></span><span class=dd><strong>{d['drop']:,}円（{d['pct']:.0f}%）値下がり</strong></span>
+<span class=dd>{e(short(by_slug[d['slug']]))}</span></a>""" for d in picked[:6]) + "</div></section>") if picked else ""
     chips = "".join(f"<a href='#{gid}'>{e(label)}<i>{len([s for s in sls if s in by_slug])}</i></a>" for gid, label, sls in groups)
     def tile(c):
         """漫画用の小さいタイル: 作品名と1冊あたりの最安だけ"""
@@ -1351,8 +1363,9 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 <div class=stats><span><b>{len(CATEGORIES)}</b> ジャンル</span><span><b>{n_items:,}</b> 商品を比較</span><span>毎朝6時に自動更新（{updated[5:10].replace('-', '/')} {updated[11:]}）</span></div>
 </section>
 <div class=bar><input id=q type=search placeholder="さがす（例：洗剤、猫、トイレットペーパー、キュキュット、呪術廻戦）" aria-label="ジャンルをさがす" autocomplete=off>
-<nav class=chips aria-label="カテゴリ"><a href="#today">今日のお得</a>{chips}</nav></div>
-<section class=today id=today><h2>今日のお得ランキング<small>最安が平均より安いジャンル順</small></h2><div class=deals>{deal_html}</div></section>
+<nav class=chips aria-label="カテゴリ">{"<a href='#drops'>値下がり</a>" if picked else ""}<a href="#today">今日のお得</a>{chips}</nav></div>
+{drop_html}
+<section class=today id=today><h2>今日のお得ランキング<small>最安が平均より大きく安いジャンル</small></h2><div class=deals>{deal_html}</div></section>
 {sections}
 <p class=none id=none hidden>見つかりませんでした。別の言葉でさがしてみてください。</p>
 <section class=how><h2>TANKAの比べ方</h2><ol>
@@ -1394,6 +1407,12 @@ def main():
         history = json.loads((OUT / "history.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         history = {}
+    # 商品ごとの価格履歴（値下がり表示用）: {商品コード: [[日付, 価格], ...]} 直近14回分
+    try:
+        item_hist = json.loads((OUT / "items_history.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        item_hist = {}
+    drops = []  # トップの「今日値下がりした商品」
     today = updated[:10]
     for cat in CATEGORIES:
         if live:
@@ -1424,6 +1443,15 @@ def main():
         else:
             items = json.loads((ROOT / "sample_items.json").read_text(encoding="utf-8"))
         rows = rank(items, cat)
+        for r in rows:
+            past = [p for p in item_hist.get(r["code"], []) if p[0] != today]
+            if past and past[-1][1] > r["price"]:
+                r["drop"] = past[-1][1] - r["price"]
+                drops.append({"slug": cat["slug"], "name": clean_name(r["name"], 36), "url": r["url"], "img": r["img"],
+                              "price": r["price"], "drop": r["drop"], "pct": r["drop"] / past[-1][1] * 100,
+                              "unit": cat["unit"], "unit_price": r["unit_price"], "fee": r["price"] * r["rate"] / 100})
+            if live:
+                item_hist[r["code"]] = (past + [[today, r["price"]]])[-14:]
         if rows and live:
             h = [p for p in history.get(cat["slug"], []) if p[0] != today]
             history[cat["slug"]] = (h + [[today, round(rows[0]["unit_price"], 2)]])[-90:]
@@ -1442,7 +1470,10 @@ def main():
         print(f"{cat['slug']}: 取得{len(items)}件 → 掲載{len(rows)}件 ({'本番' if live else 'サンプル'})")
     (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False), encoding="utf-8")
     (OUT / "history.json").write_text(json.dumps(history, ensure_ascii=False), encoding="utf-8")
-    (OUT / "index.html").write_text(render_index(summary, updated), encoding="utf-8")
+    cutoff = (datetime.now(JST) - timedelta(days=14)).strftime("%Y-%m-%d")
+    item_hist = {k: v for k, v in item_hist.items() if v and v[-1][0] >= cutoff}
+    (OUT / "items_history.json").write_text(json.dumps(item_hist, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    (OUT / "index.html").write_text(render_index(summary, updated, drops), encoding="utf-8")
     (OUT / "about.html").write_text(render_about(), encoding="utf-8")
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
     # 検索エンジン向けのサイトマップ
