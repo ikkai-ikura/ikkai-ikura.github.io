@@ -65,7 +65,9 @@ def fetch(keyword, pages=3):
                 data = json.load(r)
         except urllib.error.HTTPError as e:
             # GitHub Actions の注釈に出してログイン無しで原因を読めるようにする
-            print(f"::error::楽天API {e.code}: {e.read()[:300].decode('utf-8', 'replace')}")
+            body = " ".join(e.read()[:300].decode("utf-8", "replace").split())
+            site = os.environ.get("SITE_URL", "")
+            print(f"::error::楽天API {e.code}: {body} / SITE_URL={len(site)}文字 / ID={len(os.environ.get('RAKUTEN_APP_ID',''))}文字")
             raise SystemExit(1)
         items += data.get("Items", [])
         time.sleep(1.1)  # 1秒1リクエスト制限
