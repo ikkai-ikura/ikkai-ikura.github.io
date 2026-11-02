@@ -324,6 +324,8 @@ CATEGORIES = [
     },
 ]
 
+CATEGORIES_BY_SLUG = {c["slug"]: c for c in CATEGORIES}
+
 # 楽天以外の提携案件（A8）。ページ下部の紹介枠に出す。link はA8の広告コードそのまま（クリック計測の画像を含む）
 PROMOS = {
     "dog-food-dry": {
@@ -625,39 +627,92 @@ def short(c):
     return c["title"].replace("単価ランキング", "").replace(per, "").strip()
 
 
+def clean_name(name, n=60):
+    """表示用の商品名: 【送料無料】＼ポイント5倍／★最安★ などの宣伝を取り除く"""
+    s = re.sub(r"【[^】]*】|［[^］]*］|\[[^\]]*\]|＼[^／]*／|★[^★]*★|☆[^☆]*☆|《[^》]*》|◆|◇|■|□", " ", name)
+    s = re.sub(r"\s+", " ", s).strip(" 　|｜/")
+    return (s[:n] + "…") if len(s) > n else (s or name[:n])
+
+
+def pick_rows(rows):
+    """冒頭の「結論」に出す3つ: 最安・高評価で最安・送料無料で最安（重複は出さない）"""
+    picks, used = [], set()
+    cands = [
+        ("いちばん安い", rows[:1]),
+        ("評価が高い中でいちばん安い", [r for r in rows if r["rating"] >= 4.3 and r["reviews"] >= 100][:1]),
+        ("送料無料でいちばん安い", [r for r in rows if r["free_ship"]][:1]),
+    ]
+    for label, rs in cands:
+        if rs and id(rs[0]) not in used:
+            used.add(id(rs[0]))
+            picks.append((label, rs[0]))
+    return picks
+
+
 def render(cat, rows, updated):
     e = html.escape
     per_text = cat.get('per_text', f"1{cat['unit']}あたり")
+    unit = cat["unit"]
+    base = cat.get("base", unit + "分")
     tips = TIPS.get(cat["slug"], [])
-    tips_html = ("<h2>選び方のポイント</h2><ul>" + "".join(f"<li>{e(t)}</li>" for t in tips) + "</ul>") if tips else ""
+    tips_html = ("<section class=tips><h2>選び方のポイント</h2><ul>" + "".join(f"<li>{e(t)}</li>" for t in tips)
+                 + "</ul></section>") if tips else ""
     promo = PROMOS.get(cat["slug"])
     if promo:  # link は自分で管理する広告コードなのでエスケープしない
         tips_html += (f"<section class=promo><p class=pr>PR</p><h2>{e(promo['title'])}</h2><p>{e(promo['lead'])}</p>"
                       + "".join(f"<div class=pi><b>{e(i['name'])}</b><span>{e(i['desc'])}</span>{i['link']}</div>"
                                 for i in promo["items"]) + "</section>")
-    trs = "".join(f"""
-<tr><td class=n>{i}</td>
-<td class=p><a href="{e(r['url'])}" rel="sponsored noopener" target=_blank>
-<img src="{e(r['img'])}" alt="" loading=lazy><span>{e(r['name'][:70])}</span></a>
-<small>{e(r['shop'])}{' ・送料無料' if r['free_ship'] else ' ・送料別'}{f" ・同じ商品の出品ほか{r['others']}件（ここが最安）" if r.get('others') else ''}</small></td>
-<td class=u><b>{r['unit_price']:.1f}円</b><small>/{cat['unit']}</small></td>
-<td class=d>{r['price']:,}円<br><small>{r['count']:,.0f}{cat.get('base', cat['unit'] + '分')}</small></td>
-<td class=d>★{r['rating']:.2f}<br><small>{r['reviews']:,}件</small></td></tr>"""
-                  for i, r in enumerate(rows, 1))
+
+    # 結論ボックス
+    hero = ""
+    if rows:
+        avg = sum(r["unit_price"] for r in rows) / len(rows)
+        best = rows[0]
+        diff = avg - best["unit_price"]
+        saving = (f"<p class=save>掲載{len(rows)}商品の平均（{avg:.1f}円/{e(unit)}）より "
+                  f"<b>{diff:.1f}円（{diff / avg * 100:.0f}%）安い</b></p>") if avg > 0 and diff > 0 else ""
+        cards = "".join(f"""<a class=pick href="{e(r['url'])}" rel="sponsored noopener" target=_blank>
+<span class=tag>{e(label)}</span><img src="{e(r['img'])}" alt="" loading=lazy>
+<span class=pn>{e(clean_name(r['name'], 44))}</span>
+<span class=pu><b>{r['unit_price']:.1f}円</b>/{e(unit)}</span>
+<span class=pm>{r['price']:,}円・{r['count']:,.0f}{e(base)}・★{r['rating']:.2f}（{r['reviews']:,}件）{'・送料無料' if r['free_ship'] else ''}</span>
+<span class=btn>楽天で見る</span></a>""" for label, r in pick_rows(rows))
+        hero = f"<section class=hero><h2>結論：{e(short(cat))}はこれが安い</h2>{saving}<div class=picks>{cards}</div></section>"
+
+    medal = {1: "m1", 2: "m2", 3: "m3"}
+    items = "".join(f"""<li class=row data-u="{r['unit_price']:.4f}" data-r="{r['rating']:.2f}" data-n="{r['reviews']}" data-f="{1 if r['free_ship'] else 0}">
+<span class="rk {medal.get(i, '')}">{i}</span>
+<a class=ri href="{e(r['url'])}" rel="sponsored noopener" target=_blank><img src="{e(r['img'])}" alt="" loading=lazy></a>
+<div class=rb><a class=rn href="{e(r['url'])}" rel="sponsored noopener" target=_blank title="{e(r['name'])}">{e(clean_name(r['name']))}</a>
+<div class=bd>{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class=b>送料別</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
+<small>{e(r['shop'])}</small></div>
+<div class=rp><b>{r['unit_price']:.1f}<i>円/{e(unit)}</i></b><small>{r['price']:,}円・{r['count']:,.0f}{e(base)}</small>
+<a class=go href="{e(r['url'])}" rel="sponsored noopener" target=_blank>楽天で見る</a></div></li>"""
+                    for i, r in enumerate(rows, 1))
+    controls = """<div class=ctl role=group aria-label="並べ替え">
+<button type=button data-s=u aria-pressed=true>安い順</button><button type=button data-s=r aria-pressed=false>評価が高い順</button>
+<button type=button data-s=n aria-pressed=false>レビューが多い順</button>
+<label><input type=checkbox id=fs> 送料無料のみ</label></div>"""
+
     site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
     url = f"{site}{cat['slug']}.html"
-    desc = f"{cat['keyword']}を楽天の価格と内容量から{per_text}の値段に換算して毎日自動で比較。同じ商品は最安の出品だけを掲載。"
+    desc = (f"{cat['keyword']}を楽天の価格と内容量から{per_text}の値段に換算して毎日自動で比較。"
+            + (f"今日の最安は{rows[0]['unit_price']:.1f}円/{unit}。" if rows else "") + "同じ商品は最安の出品だけを掲載。")
     # 検索エンジン向け構造化データ（パンくず＋ランキングの並び）
     ld = json.dumps([
         {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": "TANKA", "item": site},
             {"@type": "ListItem", "position": 2, "name": cat["title"], "item": url}]},
         {"@context": "https://schema.org", "@type": "ItemList", "name": cat["title"], "itemListElement": [
-            {"@type": "ListItem", "position": i, "name": r["name"][:80]} for i, r in enumerate(rows[:10], 1)]},
+            {"@type": "ListItem", "position": i, "name": clean_name(r["name"], 80)} for i, r in enumerate(rows[:10], 1)]},
     ], ensure_ascii=False).replace("</", "<\\/")
-    others = "".join(f'<a href="{c["slug"]}.html">{e(short(c))}</a>'
-                     for c in CATEGORIES if c["slug"] != cat["slug"])
-    nav = f'<nav class=oth><h2>ほかのジャンル</h2>{others}</nav><p class=pr><a href="./">トップへ戻る</a> ・ <a href="about.html">このサイトについて</a></p>'
+    gid = next((g for g, _, sls in GROUPS if cat["slug"] in sls), None)
+    same = [CATEGORIES_BY_SLUG[s] for g, _, sls in GROUPS if g == gid for s in sls if s != cat["slug"] and s in CATEGORIES_BY_SLUG]
+    rest = [c for c in CATEGORIES if c["slug"] != cat["slug"] and c not in same]
+    chip = lambda c: f'<a href="{c["slug"]}.html">{e(short(c))}</a>'
+    nav = (("<nav class=oth><h2>同じカテゴリのジャンル</h2>" + "".join(map(chip, same)) + "</nav>" if same else "")
+           + "<nav class=oth><h2>ほかのジャンル</h2>" + "".join(map(chip, rest)) + "</nav>"
+           + '<p class=pr><a href="./">トップへ戻る</a> ・ <a href="about.html">このサイトについて</a></p>')
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>{e(cat['title'])}｜TANKA</title>
@@ -668,31 +723,73 @@ def render(cat, rows, updated):
 <meta property=og:image content="{e(rows[0]['img'] if rows else '')}"><meta name=twitter:card content=summary>
 <script type="application/ld+json">{ld}</script>
 <style>
-:root{{--bg:#fff;--fg:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#bf0000}}
-@media(prefers-color-scheme:dark){{:root{{--bg:#111;--fg:#f2f2f7;--mut:#a1a1a6;--line:#333;--acc:#ff5a5a}}}}
+:root{{--bg:#f5f5f7;--card:#fff;--fg:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#bf0000;--ok:#1a7f4b;--gold:#c9971c;--silver:#8c96a0;--bronze:#a86a3d}}
+@media(prefers-color-scheme:dark){{:root{{--bg:#111;--card:#1c1c1e;--fg:#f2f2f7;--mut:#a1a1a6;--line:#333;--acc:#ff6b6b;--ok:#4cc38a}}}}
 body{{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,sans-serif}}
 main{{max-width:880px;margin:auto;padding:16px}}
-h1{{font-size:1.35rem;margin:.2em 0}} .pr{{color:var(--mut);font-size:.8rem}}
-table{{width:100%;border-collapse:collapse}} td{{border-bottom:1px solid var(--line);padding:8px 4px;vertical-align:middle}}
-.n{{color:var(--mut);width:2em;text-align:center}} .u b{{color:var(--acc);font-size:1.1rem}}
-.p a{{display:flex;gap:8px;align-items:center;color:inherit;text-decoration:none}}
-.p img{{width:56px;height:56px;object-fit:contain;flex:none}} small{{display:block;color:var(--mut);font-size:.75rem}}
-.d{{text-align:right;white-space:nowrap;font-size:.85rem}}
-@media(max-width:560px){{.d:last-child{{display:none}} .p span{{font-size:.85rem}}}}
-.oth{{margin-top:24px}} .oth a{{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:inherit;text-decoration:none;font-size:.85rem}}
+h1{{font-size:1.35rem;margin:.2em 0;text-wrap:balance}} h2{{font-size:1.05rem;margin:0 0 8px}} .pr{{color:var(--mut);font-size:.8rem}}
+.lead{{color:var(--mut);font-size:.88rem;margin:4px 0 14px}}
 .bc{{font-size:.8rem;color:var(--mut)}} .bc a{{color:inherit}}
-.promo{{margin-top:24px;padding:12px 14px;border:1px solid var(--line);border-radius:8px}} .promo h2{{margin:.2em 0}} .promo .pr{{margin:0}}
+.hero{{background:var(--card);border:2px solid var(--acc);border-radius:14px;padding:14px;margin-bottom:18px}}
+.save{{margin:0 0 10px;font-size:.9rem}} .save b{{color:var(--acc)}}
+.picks{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}}
+.pick{{display:grid;gap:4px;justify-items:start;padding:10px;border:1px solid var(--line);border-radius:10px;color:inherit;text-decoration:none;background:var(--bg)}}
+.pick:hover{{border-color:var(--acc)}} .pick img{{width:84px;height:84px;object-fit:contain;background:#fff;border-radius:8px}}
+.tag{{font-size:.72rem;font-weight:700;color:#fff;background:var(--acc);padding:2px 8px;border-radius:999px}}
+.pn{{font-size:.85rem;line-height:1.4}} .pu b{{font-size:1.5rem;color:var(--acc)}} .pu{{color:var(--mut);font-size:.85rem}}
+.pm{{font-size:.75rem;color:var(--mut)}}
+.btn,.go{{display:inline-block;background:var(--acc);color:#fff;font-weight:700;border-radius:8px;padding:6px 14px;text-decoration:none;font-size:.85rem}}
+.ctl{{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px}}
+.ctl button{{font:inherit;font-size:.85rem;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}}
+.ctl button[aria-pressed=true]{{background:var(--fg);color:var(--bg);border-color:var(--fg)}}
+.ctl label{{font-size:.85rem;margin-left:4px}}
+ol.list{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
+.row{{display:grid;grid-template-columns:2em 64px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}}
+.rk{{font-weight:700;color:var(--mut);text-align:center}} .rk.m1,.rk.m2,.rk.m3{{color:#fff;border-radius:50%;width:1.8em;height:1.8em;line-height:1.8em}}
+.m1{{background:var(--gold)}} .m2{{background:var(--silver)}} .m3{{background:var(--bronze)}}
+.ri img{{width:64px;height:64px;object-fit:contain;background:#fff;border-radius:8px;display:block}}
+.rb{{min-width:0}} .rn{{color:inherit;text-decoration:none;font-size:.9rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
+.rn:hover{{text-decoration:underline}}
+.bd{{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}} .b{{font-size:.7rem;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--mut)}} .b.ok{{color:var(--ok);font-weight:700}}
+small{{display:block;color:var(--mut);font-size:.72rem}}
+.rp{{text-align:right;display:grid;gap:4px;justify-items:end}} .rp b{{font-size:1.2rem;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}} .rp i{{font-style:normal;font-size:.75rem;color:var(--mut);font-weight:400}}
+@media(max-width:560px){{.row{{grid-template-columns:1.8em 52px minmax(0,1fr)}} .ri img{{width:52px;height:52px}} .rp{{grid-column:2/-1;grid-template-columns:auto 1fr auto;align-items:center;text-align:left}} .rp small{{justify-self:start}}}}
+.tips,.promo{{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}}
+.tips ul{{margin:0;padding-left:1.2em}} .promo .pr{{margin:0}}
 .pi{{display:grid;gap:2px;padding:8px 0;border-top:1px dashed var(--line)}} .pi span{{color:var(--mut);font-size:.85rem}} .pi a{{color:var(--acc);font-weight:600}}
+.oth{{margin-top:20px}} .oth a{{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:inherit;text-decoration:none;font-size:.85rem;background:var(--card)}}
+.none{{color:var(--mut)}}
+a:focus-visible,button:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset:2px}}
 </style></head><body><main>
 <p class=pr>PR：このページは楽天アフィリエイトを利用しています</p>
 <p class=bc><a href="./">TANKA</a> › {e(cat['title'])}</p>
 <h1>{e(cat['title'])}</h1>
-<p>楽天市場の商品を「価格 ÷ 内容量」で{per_text}に換算し、安い順に並べています。同じ商品はショップ違い・袋数違いをまとめ、1回あたり最安の出品だけを載せています。毎日自動更新（最終更新 {updated}）。価格は更新時点のもので、送料別の商品は送料を含みません。</p>
-<table>{trs}</table>
+<p class=lead>楽天市場の商品を「価格 ÷ 内容量」で{per_text}に換算して比べています。同じ商品は最安の出品だけを掲載。毎日自動更新（最終更新 {updated}）。送料別の商品は送料を含みません。</p>
+{hero}
+<section><h2>全商品ランキング（{len(rows)}商品）</h2>{controls}<ol class=list id=list>{items}</ol>
+<p class=none id=none hidden>条件に合う商品がありません。</p></section>
 {tips_html}
 <p class=pr>内容量は商品名から自動で読み取っています。セット数の読み違いがある場合があるので、購入前に商品ページで確認してください。</p>
 {nav}
-</main></body></html>"""
+</main>
+<script>
+(function(){{
+  var list=document.getElementById('list'), rows=[].slice.call(list.children), key='u', fs=document.getElementById('fs');
+  function apply(){{
+    var s=rows.slice().sort(function(a,b){{
+      if(key==='u') return a.dataset.u-b.dataset.u;
+      if(key==='r') return b.dataset.r-a.dataset.r||a.dataset.u-b.dataset.u;
+      return b.dataset.n-a.dataset.n;
+    }}), shown=0;
+    s.forEach(function(r){{ var ok=!fs.checked||r.dataset.f==='1'; r.hidden=!ok; if(ok){{shown++; r.querySelector('.rk').textContent=shown; r.querySelector('.rk').className='rk'+(key==='u'&&!fs.checked&&shown<=3?' m'+shown:'');}} list.appendChild(r); }});
+    document.getElementById('none').hidden=shown>0;
+  }}
+  [].forEach.call(document.querySelectorAll('.ctl button'),function(b){{
+    b.addEventListener('click',function(){{ key=b.dataset.s; [].forEach.call(document.querySelectorAll('.ctl button'),function(x){{x.setAttribute('aria-pressed',x===b)}}); apply(); }});
+  }});
+  fs.addEventListener('change',apply);
+}})();
+</script></body></html>"""
 
 
 def render_about():
