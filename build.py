@@ -238,7 +238,7 @@ CATEGORIES = [
         "slug": "cat-food-dry",
         "title": "キャットフード ドライ 100gあたり単価ランキング",
         "keyword": "キャットフード ドライ",
-        "keywords": ["キャットフード ドライ 大容量", "カルカン ドライ", "ピュリナワン キャット", "銀のスプーン ドライ", "メディファス", "ロイヤルカナン 猫"],
+        "keywords": ["キャットフード ドライ 大容量", "カルカン ドライ", "ピュリナワン キャット", "銀のスプーン ドライ", "メディファス", "ロイヤルカナン キャット"],
         "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
         "words": {"kg": 1000, "g": 1},
         "min_reviews": 10, "range": (500, 20000),
@@ -249,7 +249,7 @@ CATEGORIES = [
         "slug": "dog-food-dry",
         "title": "ドッグフード ドライ 100gあたり単価ランキング",
         "keyword": "ドッグフード ドライ",
-        "keywords": ["ドッグフード ドライ 大容量", "ビタワン", "ペディグリー ドライ", "ピュリナワン ドッグ", "サイエンスダイエット 犬", "ロイヤルカナン 犬"],
+        "keywords": ["ドッグフード ドライ 大容量", "ビタワン", "ペディグリー ドライ", "ピュリナワン ドッグ", "サイエンスダイエット ドッグ", "ロイヤルカナン ドッグ"],
         "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
         "words": {"kg": 1000, "g": 1},
         "min_reviews": 10, "range": (500, 20000),
@@ -315,7 +315,7 @@ CATEGORIES = [
         "slug": "tissue",
         "title": "ティッシュペーパー 100組あたり単価ランキング",
         "keyword": "ティッシュペーパー",
-        "keywords": ["ティッシュペーパー まとめ買い", "ティッシュ 箱 ケース", "エリエール ティッシュ", "スコッティ ティッシュ", "ネピア ティッシュ"],
+        "keywords": ["ティッシュペーパー まとめ買い", "ティッシュ ケース買い", "エリエール ティッシュ", "スコッティ ティッシュ", "ネピア ティッシュ"],
         "unit": "100組", "base": "組", "per": 100, "per_text": "100組あたり",
         "parser": {"size": r"(\d{2,3})\s*組", "pack": r"箱|個", "lo": 300, "hi": 100000},
         "min_reviews": 10,
@@ -1128,11 +1128,21 @@ def main():
                 # keywords があれば複数の検索語で集めて重複を除く（人気商品が検索上位に出ないジャンル向け）
                 kws = cat.get("keywords") or [cat["keyword"]]
                 items, seen_urls = [], set()
+                errors = []
                 for kw in kws:
-                    for it in fetch(kw, pages=cat.get("pages", 3 if len(kws) == 1 else 2)):
+                    try:
+                        got = fetch(kw, pages=cat.get("pages", 3 if len(kws) == 1 else 2))
+                    except RuntimeError as err:  # 1つの検索語の失敗では止めない
+                        errors.append(f"{kw}: {err}")
+                        continue
+                    for it in got:
                         if it.get("itemUrl") not in seen_urls:
                             seen_urls.add(it.get("itemUrl"))
                             items.append(it)
+                if errors:
+                    print(f"::warning::{cat['slug']}: " + " / ".join(errors))
+                if not items:
+                    raise RuntimeError("すべての検索語で取得に失敗")
             except RuntimeError as e:
                 # 1ジャンルの失敗で全体を止めない。前回のページはそのまま残る
                 print(f"::warning::{cat['slug']}: {e}")
