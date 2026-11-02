@@ -21,8 +21,21 @@ CASES = [
     (GW, "ロイヤルカナン インドア 4kg 単品 2個セット まとめ買い", None),
 ]
 
+TI = {"size": r"(\d{2,3})\s*組", "pack": r"箱|個", "lo": 300, "hi": 100000}
+PRODUCT_CASES = [
+    (build.TP_PARSER, "トイレットペーパー ダブル 30m 12ロール×4パック", 1440),
+    (build.TP_PARSER, "トイレットペーパー シングル 60m 48ロール(12ロール×4パック)", 2880),
+    (build.TP_PARSER, "1.5倍巻 45m 12R 8パックセット", 4320),
+    (build.TP_PARSER, "トイレットペーパー 114mm×27.5m ダブル 96ロール", 2640),
+    (build.TP_PARSER, "シングル60m ダブル30m 12ロール", None),
+    (TI, "ティッシュ 160組 5箱×12パック", 9600), (TI, "ティッシュペーパー 150組(300枚) 60箱(5箱×12パック)", 9000),
+    (TI, "エリエール 180組 5箱 ×10セット", 9000), (TI, "鼻セレブ 200組 5箱", 1000),
+]
+
 if __name__ == "__main__":
     bad = [(n, build.parse_count(n, w, 2, 10000), e) for w, n, e in CASES if build.parse_count(n, w, 2, 10000) != e]
+    bad += [(n, build.parse_product(n, **p), e) for p, n, e in PRODUCT_CASES if build.parse_product(n, **p) != e]
+    CASES = CASES + PRODUCT_CASES
     for b in bad:
         print("NG", *b)
     print(f"{len(CASES) - len(bad)}/{len(CASES)} OK")

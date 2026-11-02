@@ -22,6 +22,7 @@ API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701"
 
 ML = {"ml": 1, "mL": 1, "ML": 1, "L": 1000, "l": 1000, "リットル": 1000}
 REFILL = ["詰め替え", "詰替", "つめかえ", "詰めかえ"]
+TP_PARSER = {"size": r"(\d{2,3}(?:\.\d)?)\s*m(?![ml])", "pack": r"ロール|R(?![a-z])", "lo": 100, "hi": 20000}
 NG_ALL = ["ふるさと納税", "返礼品"]  # 寄付額なので実際の値段と比べられない
 
 # ページごとの設定。unit=表示単位、words=数量の後ろに付く語
@@ -288,6 +289,39 @@ CATEGORIES = [
         "must": REFILL,
         "ng": ["ジェルボール", "柔軟剤", "漂白", "粉末", "おしゃれ着", "ボトル"],
     },
+    {
+        "slug": "toilet-paper-double",
+        "title": "トイレットペーパー ダブル 100mあたり単価ランキング",
+        "keyword": "トイレットペーパー ダブル",
+        "keywords": ["トイレットペーパー ダブル まとめ買い", "トイレットペーパー ダブル 長持ち", "エリエール トイレットペーパー ダブル", "スコッティ ダブル"],
+        "unit": "100m", "base": "m", "per": 100, "per_text": "100mあたり",
+        "parser": TP_PARSER,
+        "min_reviews": 10,
+        "must": ["ダブル"],
+        "ng": ["シングル", "ホルダー", "収納", "ラック", "キッチンペーパー", "ティッシュ"],
+    },
+    {
+        "slug": "toilet-paper-single",
+        "title": "トイレットペーパー シングル 100mあたり単価ランキング",
+        "keyword": "トイレットペーパー シングル",
+        "keywords": ["トイレットペーパー シングル まとめ買い", "トイレットペーパー シングル 長持ち", "エリエール トイレットペーパー シングル", "スコッティ シングル"],
+        "unit": "100m", "base": "m", "per": 100, "per_text": "100mあたり",
+        "parser": TP_PARSER,
+        "min_reviews": 10,
+        "must": ["シングル"],
+        "ng": ["ダブル", "ホルダー", "収納", "ラック", "キッチンペーパー", "ティッシュ"],
+    },
+    {
+        "slug": "tissue",
+        "title": "ティッシュペーパー 100組あたり単価ランキング",
+        "keyword": "ティッシュペーパー",
+        "keywords": ["ティッシュペーパー まとめ買い", "ティッシュ 箱 ケース", "エリエール ティッシュ", "スコッティ ティッシュ", "ネピア ティッシュ"],
+        "unit": "100組", "base": "組", "per": 100, "per_text": "100組あたり",
+        "parser": {"size": r"(\d{2,3})\s*組", "pack": r"箱|個", "lo": 300, "hi": 100000},
+        "min_reviews": 10,
+        "must": ["ティッシュ"],
+        "ng": ["ウェット", "ポケット", "ケース付", "カバー", "トイレット", "キッチン", "除菌"],
+    },
 ]
 
 # 各ページ下部の「選び方のポイント」
@@ -305,6 +339,9 @@ TIPS = {
     "aa-battery": ["アルカリ乾電池はリモコン・時計など幅広く使える定番", "使用推奨期限（10年など）が長いものは備蓄にも向く", "消費が多い機器なら充電池も検討する（このページは使い切りの乾電池のみ）"],
     "protein": ["ホエイ・ソイ・カゼインで吸収の速さや原料が違う", "100gあたりの価格だけでなく、たんぱく質の含有率も商品ページで確認する", "初めての味は小さい袋で試してから大袋にすると失敗しにくい"],
     "water-2l": ["軟水は日本人になじみやすく、硬水はミネラルが多い", "ケース（6本・9本・12本）単位が安い。重いので送料込みかどうかも見る", "備蓄用なら保存期間の長い商品を選ぶ"],
+    "toilet-paper-double": ["ダブルは2枚重ねなので、同じ長さでもシングルより紙の量が多い。ここではダブル同士で比べている", "1.5倍巻・2倍巻などの長巻きは交換の手間が減り、収納場所も節約できる", "芯なしタイプは長さが長いぶん、ホルダーに入るサイズか確認する"],
+    "toilet-paper-single": ["シングルは1枚なので、ダブルより長く巻かれていて交換回数が少ない", "再生紙（古紙）100%は安く、パルプ100%はやわらかい傾向", "長巻き（1.5倍・2倍）は1mあたりが安くなりやすい"],
+    "tissue": ["「組」は2枚1組の数。150組と200組では1箱で使える量が違うので、100組あたりで比べている", "保湿ティッシュ（鼻セレブなど）は単価が高いが、鼻をよくかむ時期にはやさしい", "5箱パック×数パックのケース買いが最安になりやすい"],
     "rice": ["銘柄米・ブレンド米・複数原料米で価格が大きく違う。ブレンド米は安いが産地や品種は混ざる", "10kg・20kgの大袋は1kgあたりが安いが、精米後は早めに食べきるのがおすすめ（夏は特に）", "無洗米は研ぐ手間と水が省けるぶん、少し高めのことが多い"],
     "cat-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "子猫用・成猫用・シニア用など年齢で栄養バランスが違う", "大袋は割安だが、開封後は酸化しやすいので小分け包装が便利"],
     "dog-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "小型犬用は粒が小さい。犬種や年齢に合ったものを選ぶ", "大袋は割安だが、開封後は湿気と酸化に注意。小分け包装だと鮮度を保ちやすい"],
@@ -369,6 +406,33 @@ def fetch(keyword, pages=3):
 
 
 ZEN = str.maketrans("０１２３４５６７８９×Ｘｘ", "0123456789xxx")
+
+
+def parse_product(name, size, pack, lo, hi):
+    """1個あたりの量（size）×個数（pack）で総量を出す。
+    例 トイレットペーパー '30m 12ロール×4パック' -> 1440、ティッシュ '160組 5箱×12パック' -> 9600
+    size, pack は正規表現（数字を1つ目のグループで取る）。読めなければ None"""
+    s = name.translate(ZEN).replace(",", "")
+    if re.search(r"選べる|選択|単品.*セット|セット.*単品|\d\s*[~～〜]\s*\d", s):
+        return None
+    sizes = {float(x) for x in re.findall(size, s)}
+    if len(sizes) != 1:  # 「シングル60m ダブル30m」のように複数あると価格との対応が分からない
+        return None
+    per = sizes.pop()
+    # 個数の候補: 「12ロール」「12ロール×4パック」「5箱x12」→ 一番大きいものを総数とみなす
+    cands, used_x = [], False
+    for m in re.finditer(rf"(\d{{1,3}})\s*(?:{pack})(?:\s*[x*]\s*(\d{{1,2}}))?", s):
+        cands.append(int(m.group(1)) * (int(m.group(2)) if m.group(2) else 1))
+        used_x |= bool(m.group(2))
+    if not cands:
+        return None
+    n = max(cands)
+    # 「12ロール 4パックセット」「(5箱) 3セット」のように別に書かれたセット数
+    extra = re.search(r"(\d{1,2})\s*(?:パック|袋|ケース)?\s*セット", s)
+    if extra and not used_x and n == min(cands) and int(extra.group(1)) > 1:
+        n *= int(extra.group(1))
+    total = per * n
+    return total if lo <= total <= hi else None
 
 
 def parse_count(name, words, lo=5, hi=3000):
@@ -474,7 +538,10 @@ def rank(items, cat):
             continue
         if cat.get("must") and not any(w in it["itemName"] for w in cat["must"]):
             continue
-        n = parse_count(it["itemName"], cat["words"], *cat.get("range", (5, 3000)))
+        if cat.get("parser"):  # 「ロール数×長さ」のように2つの数字を掛けるジャンル
+            n = parse_product(it["itemName"], **cat["parser"])
+        else:
+            n = parse_count(it["itemName"], cat["words"], *cat.get("range", (5, 3000)))
         if not n or it.get("reviewCount", 0) < cat["min_reviews"]:
             continue
         price = it["itemPrice"]
