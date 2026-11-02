@@ -20,6 +20,9 @@ OUT = ROOT / "docs"
 JST = timezone(timedelta(hours=9))
 API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701"
 
+ML = {"ml": 1, "mL": 1, "ML": 1, "L": 1000, "l": 1000, "リットル": 1000}
+REFILL = ["詰め替え", "詰替", "つめかえ", "詰めかえ"]
+
 # ページごとの設定。unit=表示単位、words=数量の後ろに付く語
 CATEGORIES = [
     {
@@ -156,6 +159,64 @@ CATEGORIES = [
         "must": ["炭酸"],
         "ng": ["1L", "1000ml", "2L", "メーカー", "ガスシリンダー", "ソーダストリーム"],
     },
+    {
+        "slug": "hand-soap-refill",
+        "title": "ハンドソープ 詰め替え 100mlあたり単価ランキング",
+        "keyword": "ハンドソープ 詰め替え",
+        "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
+        "words": ML,
+        "min_reviews": 10, "range": (200, 20000),
+        "must": REFILL,
+        "ng": ["ディスペンサー", "オート", "自動", "本体", "ポンプ付"],
+    },
+    {
+        "slug": "dish-soap-refill",
+        "title": "食器用洗剤 詰め替え 100mlあたり単価ランキング",
+        "keyword": "食器用洗剤 詰め替え",
+        "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
+        "words": ML,
+        "min_reviews": 10, "range": (200, 20000),
+        "must": REFILL,
+        "ng": ["食洗機", "タブレット", "スポンジ", "ボトル"],
+    },
+    {
+        "slug": "body-soap-refill",
+        "title": "ボディソープ 詰め替え 100mlあたり単価ランキング",
+        "keyword": "ボディソープ 詰め替え",
+        "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
+        "words": ML,
+        "min_reviews": 10, "range": (200, 20000),
+        "must": REFILL,
+        "ng": ["本体", "ポンプ", "シャンプー", "ボトル"],
+    },
+    {
+        "slug": "softener-refill",
+        "title": "柔軟剤 詰め替え 100mlあたり単価ランキング",
+        "keyword": "柔軟剤 詰め替え",
+        "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
+        "words": ML,
+        "min_reviews": 10, "range": (300, 30000),
+        "must": REFILL,
+        "ng": ["本体", "ボトル", "ビーズ", "シート", "ミスト"],
+    },
+    {
+        "slug": "disinfect-wipes",
+        "title": "除菌ウェットシート 1枚あたり単価ランキング",
+        "keyword": "除菌 ウェットシート",
+        "unit": "枚", "base": "枚",
+        "words": ["枚入り", "枚入", "枚"],
+        "min_reviews": 10, "range": (30, 10000),
+        "ng": ["ケース", "フタ", "ふた", "おしりふき", "トイレ", "フローリング", "ワイパー"],
+    },
+    {
+        "slug": "cotton-swab",
+        "title": "綿棒 1本あたり単価ランキング",
+        "keyword": "綿棒",
+        "unit": "本", "base": "本", "per_text": "1本あたり",
+        "words": ["本入り", "本入", "本"],
+        "min_reviews": 10, "range": (100, 20000),
+        "ng": ["ケース", "スタンド", "耳かき", "イヤースコープ", "カメラ"],
+    },
 ]
 
 # 各ページ下部の「選び方のポイント」
@@ -173,6 +234,12 @@ TIPS = {
     "aa-battery": ["アルカリ乾電池はリモコン・時計など幅広く使える定番", "使用推奨期限（10年など）が長いものは備蓄にも向く", "消費が多い機器なら充電池も検討する（このページは使い切りの乾電池のみ）"],
     "protein": ["ホエイ・ソイ・カゼインで吸収の速さや原料が違う", "100gあたりの価格だけでなく、たんぱく質の含有率も商品ページで確認する", "初めての味は小さい袋で試してから大袋にすると失敗しにくい"],
     "water-2l": ["軟水は日本人になじみやすく、硬水はミネラルが多い", "ケース（6本・9本・12本）単位が安い。重いので送料込みかどうかも見る", "備蓄用なら保存期間の長い商品を選ぶ"],
+    "hand-soap-refill": ["泡タイプと液体タイプで詰め替え先のボトルが違うので、手持ちのボトルに合うものを選ぶ", "大容量の詰め替え（1L以上）ほど100mlあたりが安い", "薬用（殺菌成分入り）かどうかで値段が変わる"],
+    "dish-soap-refill": ["濃縮タイプは1回に使う量が少ないので、100mlあたりの値段だけでなく使用量も考える", "超特大の詰め替えは1回の購入額は高いが、単価は最安になりやすい", "手肌へのやさしさや除菌など、機能で価格帯が分かれる"],
+    "body-soap-refill": ["詰め替えは本体ボトルより100mlあたりがかなり安い", "大容量パウチは開け口が大きいと詰め替えやすい", "肌が弱い人は無添加・弱酸性などの表示を確認する"],
+    "softener-refill": ["濃縮タイプは1回あたりの使用量が少ないので、表示上の単価より割安になることがある", "香りの強さや持続時間で好みが分かれる。初めてなら小さい袋で試す", "部屋干し用・消臭重視など目的で選ぶ"],
+    "disinfect-wipes": ["アルコールタイプとノンアルコールタイプがある。手肌用か、物の掃除用かで選ぶ", "大判・厚手は1枚で拭ける範囲が広いが、枚数あたりは高め", "詰め替え用やまとめ買いが1枚あたり最安になりやすい"],
+    "cotton-swab": ["紙軸とプラスチック軸があり、紙軸は環境にやさしい", "細軸・ベビー用はサイズが小さいので、用途に合わせて選ぶ", "大容量（1000本以上）はまとめ買いで1本1円以下になることも多い"],
     "sparkling-water-500ml": ["強炭酸・微炭酸で飲みごたえが違う", "24本ケースが1本あたり最安になりやすい", "ラベルレスは分別の手間が少なく、価格も安め"],
 }
 
@@ -404,12 +471,50 @@ table{{width:100%;border-collapse:collapse}} td{{border-bottom:1px solid var(--l
 </main></body></html>"""
 
 
+def render_index(summary, updated):
+    e = html.escape
+    cards = []
+    for c in CATEGORIES:
+        s = summary.get(c["slug"])
+        name = c["title"].replace(" 単価ランキング", "").replace("単価ランキング", "")
+        best = (f"<p class=b>最安 <b>{s['unit_price']:.1f}円</b><small>/{e(c['unit'])}</small></p>"
+                f"<p class=s>{e(s['name'])}</p>") if s else "<p class=s>集計中</p>"
+        img = f"<img src='{e(s['img'])}' alt='' loading=lazy>" if s and s.get("img") else ""
+        cards.append(f"<a class=card href='{c['slug']}.html'>{img}<div><h2>{e(name)}</h2>{best}</div></a>")
+    return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>1回いくら｜日用品を1回あたりの値段で比較</title>
+<meta name="google-site-verification" content="A-JyA2Us3KYpkTLgjEMxZSKUwAAWLqE7rWFsJdlSn9o">
+<meta name=description content="洗剤・ゴミ袋・ペットシーツ・コーヒー豆など日用品を、楽天の価格と内容量から1回あたりの値段に換算して毎日自動で比較。">
+<style>
+:root{{--bg:#f5f5f7;--card:#fff;--fg:#1d1d1f;--mut:#6e6e73;--acc:#bf0000;--line:#e5e5ea}}
+@media(prefers-color-scheme:dark){{:root{{--bg:#111;--card:#1c1c1e;--fg:#f2f2f7;--mut:#a1a1a6;--acc:#ff6b6b;--line:#333}}}}
+body{{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,sans-serif}}
+main{{max-width:960px;margin:auto;padding:16px}} h1{{margin:.2em 0;font-size:1.6rem}}
+.pr,.lead{{color:var(--mut)}} .pr{{font-size:.8rem}}
+.grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:16px}}
+.card{{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;color:inherit;text-decoration:none}}
+.card:hover{{border-color:var(--acc)}} .card img{{width:64px;height:64px;object-fit:contain;flex:none;background:#fff;border-radius:8px}}
+.card h2{{font-size:1rem;margin:0}} .b{{margin:2px 0}} .b b{{color:var(--acc);font-size:1.15rem}}
+.s{{margin:0;color:var(--mut);font-size:.75rem;line-height:1.4}} small{{color:var(--mut)}}
+</style></head><body><main>
+<p class=pr>PR：このサイトは楽天アフィリエイトを利用しています</p>
+<h1>1回いくら</h1>
+<p class=lead>日用品を「1回あたりの値段」で比べるサイトです。楽天市場の価格と内容量から自動で計算し、毎日更新しています（最終更新 {updated}）。</p>
+<div class=grid>{''.join(cards)}</div>
+</main></body></html>"""
+
+
 def main():
     load_env()
     live = bool(os.environ.get("RAKUTEN_APP_ID"))
     OUT.mkdir(exist_ok=True)
     updated = datetime.now(JST).strftime("%Y-%m-%d %H:%M")
     failed = 0
+    # トップページ用の「各ジャンルの最安」。取得に失敗したジャンルは前回の値を使う
+    try:
+        summary = json.loads((OUT / "summary.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        summary = {}
     for cat in CATEGORIES:
         if live:
             try:
@@ -423,18 +528,13 @@ def main():
             items = json.loads((ROOT / "sample_items.json").read_text(encoding="utf-8"))
         rows = rank(items, cat)
         (OUT / f"{cat['slug']}.html").write_text(render(cat, rows, updated), encoding="utf-8")
+        if rows:
+            top = rows[0]
+            summary[cat["slug"]] = {"unit_price": top["unit_price"], "name": top["name"][:40], "img": top["img"],
+                                    "count": len(rows)}
         print(f"{cat['slug']}: 取得{len(items)}件 → 掲載{len(rows)}件 ({'本番' if live else 'サンプル'})")
-    links = "".join(f'<li><a href="{c["slug"]}.html">{html.escape(c["title"])}</a></li>' for c in CATEGORIES)
-    (OUT / "index.html").write_text(f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>1回いくら</title>
-<meta name="google-site-verification" content="A-JyA2Us3KYpkTLgjEMxZSKUwAAWLqE7rWFsJdlSn9o">
-<meta name=description content="日用品・消耗品を楽天の価格と内容量から1回あたりの値段に換算して毎日比較。">
-<style>body{{margin:0;font:16px/1.7 system-ui,sans-serif;background:#fff;color:#1d1d1f}}
-@media(prefers-color-scheme:dark){{body{{background:#111;color:#f2f2f7}}a{{color:#8ab4ff}}}}
-main{{max-width:720px;margin:auto;padding:16px}}</style></head><body><main>
-<p style="font-size:.8rem;opacity:.7">PR：このサイトは楽天アフィリエイトを利用しています</p>
-<h1>1回いくら</h1><p>日用品を「1回あたりの値段」で比べるサイトです。価格は毎日自動で更新しています（最終更新 {updated}）。</p>
-<ul>{links}</ul></main></body></html>""", encoding="utf-8")
+    (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False), encoding="utf-8")
+    (OUT / "index.html").write_text(render_index(summary, updated), encoding="utf-8")
     # 検索エンジン向けのサイトマップ
     site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
     day = updated[:10]
