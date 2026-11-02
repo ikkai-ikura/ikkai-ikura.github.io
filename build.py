@@ -338,6 +338,17 @@ PROMOS = {
                      '<img border="0" width="1" height="1" src="https://www10.a8.net/0.gif?a8mat=4BGBN4+8PRGKY+3J8+64KO76" alt="">'},
         ],
     },
+    "cat-food-dry": {
+        "title": "原材料にこだわるなら：プレミアムキャットフード",
+        "lead": "上のランキングは一般的なキャットフードの単価順です。グレインフリーやヒューマングレードの原材料にこだわる場合はプレミアムフードという選択肢もあります。100gあたりは上のフードより高めになるので、定期便の割引も含めて公式サイトで確認してください。",
+        "items": [
+            {"name": "モグニャン", "desc": "白身魚を中心にしたグレインフリーのキャットフード（ヒューマングレード、遺伝子組み換え原材料不使用）",
+             "link": '<a href="https://px.a8.net/svt/ejp?a8mat=4BGBN4+8VPSMQ+3J8+1TIJEP" rel="sponsored nofollow noopener" target="_blank">'
+                     '<img border="0" width="300" height="250" alt="モグニャン" style="max-width:100%;height:auto" loading="lazy" '
+                     'src="https://www22.a8.net/svt/bgt?aid=261102064537&amp;wid=001&amp;eno=01&amp;mid=s00000000458011004000&amp;mc=1"><br>モグニャンの公式サイトを見る</a>'
+                     '<img border="0" width="1" height="1" src="https://www10.a8.net/0.gif?a8mat=4BGBN4+8VPSMQ+3J8+1TIJEP" alt="">'},
+        ],
+    },
 }
 
 # 各ページ下部の「選び方のポイント」
