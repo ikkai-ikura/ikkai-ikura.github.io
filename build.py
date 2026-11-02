@@ -556,6 +556,7 @@ def rank(items, cat):
             "reviews": it.get("reviewCount", 0), "rating": it.get("reviewAverage", 0),
             "url": it.get("affiliateUrl") or it.get("itemUrl"),
             "img": (it.get("mediumImageUrls") or [""])[0],
+            "rate": float(it.get("affiliateRate") or 0),
         })
     rows.sort(key=lambda r: r["unit_price"])
     # 相場の35%未満（純正と互換が混ざるジャンルは15%未満）は数量の読み違いの可能性が高いので載せない
@@ -612,7 +613,7 @@ def render(cat, rows, updated):
     ], ensure_ascii=False).replace("</", "<\\/")
     others = "".join(f'<a href="{c["slug"]}.html">{e(short(c))}</a>'
                      for c in CATEGORIES if c["slug"] != cat["slug"])
-    nav = f'<nav class=oth><h2>ほかのジャンル</h2>{others}</nav><p class=pr><a href="./">トップへ戻る</a></p>'
+    nav = f'<nav class=oth><h2>ほかのジャンル</h2>{others}</nav><p class=pr><a href="./">トップへ戻る</a> ・ <a href="about.html">このサイトについて</a></p>'
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>{e(cat['title'])}｜TANKA</title>
@@ -648,6 +649,31 @@ table{{width:100%;border-collapse:collapse}} td{{border-bottom:1px solid var(--l
 </main></body></html>"""
 
 
+def render_about():
+    return """<!doctype html><html lang=ja><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>このサイトについて｜TANKA</title>
+<meta name=description content="TANKAの運営方針・価格の計算方法・広告についての説明です。">
+<style>:root{--bg:#fff;--fg:#1d1d1f;--mut:#6e6e73}
+@media(prefers-color-scheme:dark){:root{--bg:#111;--fg:#f2f2f7;--mut:#a1a1a6}a{color:#8ab4ff}}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.8 system-ui,sans-serif}main{max-width:720px;margin:auto;padding:16px}
+h2{font-size:1.1rem;margin-top:1.6em}.mut{color:var(--mut);font-size:.85rem}</style></head><body><main>
+<p class=mut><a href="./">TANKA</a> › このサイトについて</p>
+<h1>このサイトについて</h1>
+<p>TANKAは、日用品・消耗品を「1回あたり」「1枚あたり」「100gあたり」などの単価で比べるサイトです。大容量やまとめ買いの商品は総額だけでは割安かどうか分かりにくいため、内容量で割った値段で並べています。</p>
+<h2>価格の計算方法</h2>
+<ul><li>楽天市場の商品検索APIから、価格・商品名・レビュー件数を毎日1回自動で取得しています。</li>
+<li>内容量は商品名から自動で読み取り、「価格 ÷ 内容量」で単価を計算しています。</li>
+<li>同じ商品がショップ違い・袋数違いで複数ある場合は、単価が最も安い出品だけを掲載しています。</li>
+<li>レビューが少ない商品、内容量が読み取れない商品、サイズを選ぶ形式で価格と内容量が対応しない商品は掲載していません。</li>
+<li>価格は取得時点のものです。送料別の商品は送料を含みません。購入前に必ず商品ページで価格と内容量をご確認ください。</li></ul>
+<h2>広告について</h2>
+<p>このサイトは楽天アフィリエイトを利用しています。商品リンクから購入されると、運営者に紹介料が支払われることがあります。紹介料の有無や料率によって掲載順を変えることはなく、並び順は単価のみで決めています。</p>
+<h2>お問い合わせ</h2>
+<p>掲載内容の誤り（内容量の読み違いなど）のご指摘は、<a href="https://github.com/ikkai-ikura/ikkai-ikura.github.io/issues" rel="noopener">こちら</a>からお知らせください。</p>
+<p class=mut><a href="./">トップへ戻る</a></p>
+</main></body></html>"""
+
+
 def render_index(summary, updated):
     e = html.escape
     cards = []
@@ -678,6 +704,7 @@ main{{max-width:960px;margin:auto;padding:16px}} h1{{margin:.2em 0;font-size:1.6
 <h1>TANKA <span style="font-size:.9rem;font-weight:normal;color:var(--mut)">日用品の1回あたり単価比較</span></h1>
 <p class=lead>日用品を「1回あたりの値段」で比べるサイトです。楽天市場の価格と内容量から自動で計算し、毎日更新しています（最終更新 {updated}）。</p>
 <div class=grid>{''.join(cards)}</div>
+<p class=pr style="margin-top:24px"><a href="about.html">このサイトについて（計算方法・広告について）</a></p>
 </main></body></html>"""
 
 
@@ -714,15 +741,20 @@ def main():
         (OUT / f"{cat['slug']}.html").write_text(render(cat, rows, updated), encoding="utf-8")
         if rows:
             top = rows[0]
+            # 上位10件の「価格×報酬率」の中央値＝このジャンルで1件売れたときの報酬の目安
+            fees = sorted(r["price"] * r["rate"] / 100 for r in rows[:10])
             summary[cat["slug"]] = {"unit_price": top["unit_price"], "name": top["name"][:40], "img": top["img"],
-                                    "count": len(rows)}
+                                    "count": len(rows), "fee": round(fees[len(fees) // 2]),
+                                    "rate": round(sorted(r["rate"] for r in rows[:10])[min(len(rows), 10) // 2], 1),
+                                    "price": sorted(r["price"] for r in rows[:10])[min(len(rows), 10) // 2]}
         print(f"{cat['slug']}: 取得{len(items)}件 → 掲載{len(rows)}件 ({'本番' if live else 'サンプル'})")
     (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False), encoding="utf-8")
     (OUT / "index.html").write_text(render_index(summary, updated), encoding="utf-8")
+    (OUT / "about.html").write_text(render_about(), encoding="utf-8")
     # 検索エンジン向けのサイトマップ
     site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
     day = updated[:10]
-    urls = [site] + [f"{site}{c['slug']}.html" for c in CATEGORIES]
+    urls = [site, f"{site}about.html"] + [f"{site}{c['slug']}.html" for c in CATEGORIES]
     xml = "".join(f"<url><loc>{u}</loc><lastmod>{day}</lastmod></url>" for u in urls)
     (OUT / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>' + chr(10)
