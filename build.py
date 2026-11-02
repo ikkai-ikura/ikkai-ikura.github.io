@@ -33,6 +33,60 @@ CATEGORIES = [
         "brands": {"フィニッシュ": ["finish", "フィニッシュ", "フィニッフシュ"], "キュキュット": ["キュキュット"],
                    "ジョイ": ["ジョイ", "joy"], "ミーレ": ["miele", "ミーレ"], "SAMKYO": ["samkyo"]},
     },
+    {
+        "slug": "garbage-bag-45l",
+        "title": "ゴミ袋 45L 1枚あたり単価ランキング",
+        "keyword": "ゴミ袋 45L 枚入",
+        "unit": "枚", "base": "枚",
+        "words": ["枚入り", "枚入", "枚"],
+        "min_reviews": 10, "range": (10, 3000),
+        "ng": ["ホルダー", "スタンド", "ゴミ箱", "ダストボックス"],
+    },
+    {
+        "slug": "pet-sheet",
+        "title": "ペットシーツ レギュラー 1枚あたり単価ランキング",
+        "keyword": "ペットシーツ レギュラー",
+        "unit": "枚", "base": "枚",
+        "words": ["枚入り", "枚入", "枚"],
+        "min_reviews": 10, "range": (20, 3000),
+        "ng": ["トレー", "トレイ", "ケース", "ワイド", "ハーフ"],
+    },
+    {
+        "slug": "mask",
+        "title": "不織布マスク 1枚あたり単価ランキング",
+        "keyword": "不織布マスク",
+        "unit": "枚", "base": "枚",
+        "words": ["枚入り", "枚入", "枚"],
+        "min_reviews": 10, "range": (20, 3000),
+        "ng": ["ケース", "ホルダー", "フィルター"],
+    },
+    {
+        "slug": "sonicare-brush-head",
+        "title": "ソニッケアー 替えブラシ（互換含む）1本あたり単価ランキング",
+        "keyword": "ソニッケアー 替えブラシ",
+        "unit": "本", "base": "本",
+        "words": ["本入り", "本入", "本組", "本", "個入り", "個入", "個"],
+        "min_reviews": 10, "range": (2, 100), "outlier": 0.15,
+        "ng": ["本体", "充電器", "ケース", "スタンド", "ホルダー", "付き", "モード", "ブラウン", "オーラル"],
+    },
+    {
+        "slug": "oralb-brush-head",
+        "title": "ブラウン オーラルB 替えブラシ（互換含む）1本あたり単価ランキング",
+        "keyword": "ブラウン オーラルB 替えブラシ",
+        "unit": "本", "base": "本",
+        "words": ["本入り", "本入", "本組", "本", "個入り", "個入", "個"],
+        "min_reviews": 10, "range": (2, 100), "outlier": 0.15,
+        "ng": ["本体", "充電器", "ケース", "スタンド", "ホルダー", "付き", "モード", "ソニッケアー", "フィリップス"],
+    },
+    {
+        "slug": "coffee-beans",
+        "title": "コーヒー豆 100gあたり単価ランキング",
+        "keyword": "コーヒー豆",
+        "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
+        "words": {"kg": 1000, "g": 1},
+        "min_reviews": 10, "range": (200, 10000),
+        "ng": ["スケール", "はかり", "ドリップバッグ", "ドリップ バッグ", "インスタント", "ミル", "キャニスター", "カプセル"],
+    },
 ]
 
 
@@ -77,26 +131,43 @@ def fetch(keyword, pages=3):
 ZEN = str.maketrans("０１２３４５６７８９×Ｘｘ", "0123456789xxx")
 
 
-def parse_count(name, words):
-    """商品名から総数量を推定。例: '60個入×3袋' -> 180。判定できなければ None"""
+def parse_count(name, words, lo=5, hi=3000):
+    """商品名から総数量を推定。例: '60個入×3袋' -> 180、'500g×2袋' -> 1000。判定できなければ None
+    words は語のリスト、または {語: 倍率}（例 {"kg": 1000, "g": 1}）"""
+    if isinstance(words, list):
+        words = {w: 1 for w in words}
     s = name.translate(ZEN).replace(",", "")
     # 「1袋～3袋 選べる」のようなバリエーション商品は価格と数量が対応しないので除外
     if re.search(r"選べる|\d\s*[~～〜]\s*\d", s):
         return None
     w = "|".join(map(re.escape, sorted(words, key=len, reverse=True)))
-    # 「3個セット」のセット数を拾わないよう、直後がセットの数字は除く。一番大きい数を内容量とみなす
-    ms = [m for m in re.finditer(rf"(\d{{1,4}})\s*(?:{w})(?!\s*セット)", s)]
+    # 「3個セット」のセット数を拾わないよう、直後がセットの数字は除く。一番大きい量を内容量とみなす
+    ms = [(float(m.group(1)) * words[m.group(2)], m)
+          for m in re.finditer(rf"(\d{{1,4}}(?:\.\d{{1,2}})?)\s*({w})(?!\s*セット)", s)]
     if not ms:
         return None
-    m = max(ms, key=lambda m: int(m.group(1)))
-    n = int(m.group(1))
-    # 直後の「×3」「/箱×3」、または「3袋セット」「【3個セット】」を掛ける
-    k = re.match(r"\s*(?:\S{0,3}?)[x*]\s*(\d{1,2})", s[m.end():m.end() + 15])
-    if not k:
-        k = re.search(r"(\d{1,2})\s*(?:袋|箱|個|本|パック)\s*セット", s)
-    if k and int(k.group(1)) < n:
-        n *= int(k.group(1))
-    return n if 5 <= n <= 3000 else None
+    # セット数の候補: 「×3」「/箱×3」「3袋セット」「【3個セット】」
+    ks_set = [int(x) for x in re.findall(r"(\d{1,2})\s*(?:袋|箱|個|本|パック|冊)\s*セット", s)]
+    ks = ks_set + [int(x) for x in re.findall(r"[x*]\s*(\d{1,2})(?!\d|\.\d|\s*(?:g|kg|ml|L|枚|個|本|回))", s)]
+    ms = [t for t in ms if t[0] > 1] or ms  # 「1個13g」の1個などは内容量ではない
+    vals = sorted({v for v, _ in ms})
+    if len(vals) >= 2:
+        # 量が複数ある: 「500g×4袋 2kg」のように 大=小×セット数 なら大を採用、
+        # 「88枚 66枚 56枚」のようなサイズ違いの羅列は価格がどれのものか分からないので除外
+        lo_v, hi_v = vals[0], vals[-1]
+        if len(vals) == 2 and any(abs(lo_v * k - hi_v) < 1e-6 for k in ks):
+            n = hi_v
+        else:
+            return None
+    else:
+        n, m = ms[0]
+        k = re.match(r"\s*(?:\S{0,3}?)[x*]\s*(\d{1,2})(?!\d|\.\d|\s*(?:g|kg|ml|L))", s[m.end():m.end() + 15])
+        k = int(k.group(1)) if k else next(iter(ks_set), None)
+        if k:
+            n *= k
+        elif re.search(r"(?<![x*\d])\s*\d\s*(?:袋|箱|冊|パック)(?!\s*(?:入|セット))", s):
+            return None  # 「112枚 4袋」のように袋数の掛け方が読めない
+    return n if lo <= n <= hi else None
 
 
 def rank(items, cat):
@@ -104,19 +175,23 @@ def rank(items, cat):
     for it in items:
         if any(w in it["itemName"] for w in cat.get("ng", [])):
             continue
-        n = parse_count(it["itemName"], cat["words"])
+        n = parse_count(it["itemName"], cat["words"], *cat.get("range", (5, 3000)))
         if not n or it.get("reviewCount", 0) < cat["min_reviews"]:
             continue
         price = it["itemPrice"]
         rows.append({
             "name": it["itemName"], "shop": it.get("shopName", ""),
-            "price": price, "count": n, "unit_price": price / n,
+            "price": price, "count": n, "unit_price": price / (n / cat.get("per", 1)),
             "free_ship": it.get("postageFlag") == 0,
             "reviews": it.get("reviewCount", 0), "rating": it.get("reviewAverage", 0),
             "url": it.get("affiliateUrl") or it.get("itemUrl"),
             "img": (it.get("mediumImageUrls") or [""])[0],
         })
     rows.sort(key=lambda r: r["unit_price"])
+    # 相場の35%未満（純正と互換が混ざるジャンルは15%未満）は数量の読み違いの可能性が高いので載せない
+    if len(rows) >= 5:
+        med = rows[len(rows) // 2]["unit_price"]
+        rows = [r for r in rows if r["unit_price"] >= med * cat.get("outlier", 0.35)]
     # 同じ商品の重複（ショップ違い）は最安だけ残す
     # キーは「ブランド＋1袋の内容量」。ブランド不明なら商品名の先頭で代用
     seen, out = set(), []
@@ -125,27 +200,29 @@ def rank(items, cat):
         brand = next((b for b, aliases in cat.get("brands", {}).items()
                       if any(a in low for a in aliases)), None)
         key = (brand, r["count"]) if brand else re.sub(r"\W", "", r["name"])[:25]
-        if key not in seen:
-            seen.add(key)
+        key2 = (r["shop"], r["count"], r["price"])
+        if key not in seen and key2 not in seen:
+            seen.update([key, key2])
             out.append(r)
     return out[:30]
 
 
 def render(cat, rows, updated):
     e = html.escape
+    per_text = cat.get('per_text', f"1{cat['unit']}あたり")
     trs = "".join(f"""
 <tr><td class=n>{i}</td>
 <td class=p><a href="{e(r['url'])}" rel="sponsored noopener" target=_blank>
 <img src="{e(r['img'])}" alt="" loading=lazy><span>{e(r['name'][:70])}</span></a>
 <small>{e(r['shop'])}{' ・送料無料' if r['free_ship'] else ' ・送料別'}</small></td>
 <td class=u><b>{r['unit_price']:.1f}円</b><small>/{cat['unit']}</small></td>
-<td class=d>{r['price']:,}円<br><small>{r['count']}{cat['unit']}分</small></td>
+<td class=d>{r['price']:,}円<br><small>{r['count']:,.0f}{cat.get('base', cat['unit'] + '分')}</small></td>
 <td class=d>★{r['rating']:.2f}<br><small>{r['reviews']:,}件</small></td></tr>"""
                   for i, r in enumerate(rows, 1))
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>{e(cat['title'])}</title>
-<meta name=description content="{e(cat['keyword'])}を楽天の価格と内容量から1{cat['unit']}あたりの値段に換算して毎日自動で比較。">
+<meta name=description content="{e(cat['keyword'])}を楽天の価格と内容量から{per_text}の値段に換算して毎日自動で比較。">
 <style>
 :root{{--bg:#fff;--fg:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#bf0000}}
 @media(prefers-color-scheme:dark){{:root{{--bg:#111;--fg:#f2f2f7;--mut:#a1a1a6;--line:#333;--acc:#ff5a5a}}}}
@@ -161,7 +238,7 @@ table{{width:100%;border-collapse:collapse}} td{{border-bottom:1px solid var(--l
 </style></head><body><main>
 <p class=pr>PR：このページは楽天アフィリエイトを利用しています</p>
 <h1>{e(cat['title'])}</h1>
-<p>楽天市場の商品を「価格 ÷ 内容量」で1{cat['unit']}あたりに換算し、安い順に並べています。毎日自動更新（最終更新 {updated}）。価格は更新時点のもので、送料別の商品は送料を含みません。</p>
+<p>楽天市場の商品を「価格 ÷ 内容量」で{per_text}に換算し、安い順に並べています。毎日自動更新（最終更新 {updated}）。価格は更新時点のもので、送料別の商品は送料を含みません。</p>
 <table>{trs}</table>
 <p class=pr>内容量は商品名から自動で読み取っています。セット数の読み違いがある場合があるので、購入前に商品ページで確認してください。</p>
 </main></body></html>"""
@@ -190,6 +267,16 @@ main{{max-width:720px;margin:auto;padding:16px}}</style></head><body><main>
 <p style="font-size:.8rem;opacity:.7">PR：このサイトは楽天アフィリエイトを利用しています</p>
 <h1>1回いくら</h1><p>日用品を「1回あたりの値段」で比べるサイトです。価格は毎日自動で更新しています（最終更新 {updated}）。</p>
 <ul>{links}</ul></main></body></html>""", encoding="utf-8")
+    # 検索エンジン向けのサイトマップ
+    site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
+    day = updated[:10]
+    urls = [site] + [f"{site}{c['slug']}.html" for c in CATEGORIES]
+    xml = "".join(f"<url><loc>{u}</loc><lastmod>{day}</lastmod></url>" for u in urls)
+    (OUT / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>' + chr(10)
+        + f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{xml}</urlset>' + chr(10), encoding="utf-8")
+    (OUT / "robots.txt").write_text(chr(10).join(["User-agent: *", "Allow: /", f"Sitemap: {site}sitemap.xml", ""]),
+                                    encoding="utf-8")
 
 
 if __name__ == "__main__":
