@@ -24,7 +24,8 @@ RAKUTEN_ORIGIN = os.environ.get("RAKUTEN_ORIGIN", "https://ikkai-ikura.github.io
 ML = {"ml": 1, "mL": 1, "ML": 1, "L": 1000, "l": 1000, "リットル": 1000}
 REFILL = ["詰め替え", "詰替", "つめかえ", "詰めかえ"]
 TP_PARSER = {"size": r"(\d{2,3}(?:\.\d)?)\s*m(?![ml])", "pack": r"ロール|R(?![a-z])", "lo": 100, "hi": 20000}
-NG_ALL = ["ふるさと納税", "返礼品"]  # 寄付額なので実際の値段と比べられない
+NG_ALL = ["ふるさと納税", "返礼品"]
+MIN_INDEX = 5  # 掲載がこれ未満のページは中身が薄いので検索エンジンに載せない（サイトマップからも外す）  # 寄付額なので実際の値段と比べられない
 
 # ページごとの設定。unit=表示単位、words=数量の後ろに付く語
 CATEGORIES = [
@@ -971,7 +972,7 @@ def render(cat, rows, updated, hist=None):
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>{e(cat['title'])}｜TANKA</title>
 <meta name=description content="{e(desc)}">
-<link rel=canonical href="{url}">
+<link rel=canonical href="{url}">{"<meta name=robots content=noindex>" if len(rows) < MIN_INDEX else ""}
 <meta property=og:title content="{e(cat['title'])}"><meta property=og:description content="{e(desc)}">
 <meta property=og:url content="{url}"><meta property=og:type content=article><meta property=og:site_name content="TANKA">
 <meta property=og:image content="{e(rows[0]['img'] if rows else '')}"><meta name=twitter:card content=summary>
@@ -1447,7 +1448,8 @@ def main():
     # 検索エンジン向けのサイトマップ
     site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
     day = updated[:10]
-    urls = [site, f"{site}about.html", f"{site}sim.html"] + [f"{site}{c['slug']}.html" for c in CATEGORIES]
+    urls = [site, f"{site}about.html", f"{site}sim.html"] + [f"{site}{c['slug']}.html" for c in CATEGORIES
+                                                              if summary.get(c["slug"], {}).get("count", 0) >= MIN_INDEX]
     xml = "".join(f"<url><loc>{u}</loc><lastmod>{day}</lastmod></url>" for u in urls)
     (OUT / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>' + chr(10)
