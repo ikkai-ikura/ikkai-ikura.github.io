@@ -19,6 +19,7 @@ ROOT = Path(__file__).parent
 OUT = ROOT / "docs"
 JST = timezone(timedelta(hours=9))
 API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701"
+RAKUTEN_ORIGIN = os.environ.get("RAKUTEN_ORIGIN", "https://ikkai-ikura.github.io")
 
 ML = {"ml": 1, "mL": 1, "ML": 1, "L": 1000, "l": 1000, "リットル": 1000}
 REFILL = ["詰め替え", "詰替", "つめかえ", "詰めかえ"]
@@ -541,8 +542,9 @@ def fetch(keyword, pages=3):
             "sort": "-reviewCount", "format": "json", "formatVersion": 2,
         })
         req = urllib.request.Request(f"{API}?{q}", headers={
-            "Referer": os.environ.get("SITE_URL", ""),
-            "Origin": os.environ.get("SITE_URL", "").rstrip("/"),
+            # 楽天アプリに登録したURL。サイトを独自ドメインに移しても、楽天側の登録は変えずに済むよう分けている
+            "Referer": RAKUTEN_ORIGIN + "/",
+            "Origin": RAKUTEN_ORIGIN,
             "User-Agent": "Mozilla/5.0",
         })
         for attempt in range(3):
