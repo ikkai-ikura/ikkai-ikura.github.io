@@ -336,20 +336,40 @@ MANGA = [  # (slug, 作品名, 商品名に必要な語, 最低巻数: スピン
     ("dungeon-meshi", "ダンジョン飯", ["ダンジョン飯"], 12), ("oshinoko", "【推しの子】", ["推しの子"], 14),
     ("kaiju8", "怪獣8号", ["怪獣8号"], 12), ("slamdunk", "スラムダンク", ["スラムダンク", "SLAM DUNK"], 20),
     ("dragonball", "ドラゴンボール", ["ドラゴンボール", "DRAGON BALL"], 34), ("naruto", "NARUTO", ["NARUTO", "ナルト"], 60),
+    ("gintama", "銀魂", ["銀魂"], 70), ("bleach", "BLEACH", ["BLEACH", "ブリーチ"], 70),
+    ("hunter", "HUNTER×HUNTER", ["HUNTER", "ハンター×ハンター", "ハンターハンター"], 35),
+    ("hagaren", "鋼の錬金術師", ["鋼の錬金術師"], 25), ("neverland", "約束のネバーランド", ["約束のネバーランド"], 18),
+    ("drstone", "Dr.STONE", ["STONE", "ドクターストーン"], 24), ("kamuy", "ゴールデンカムイ", ["ゴールデンカムイ"], 28),
+    ("gotoubun", "五等分の花嫁", ["五等分の花嫁"], 14), ("kaguya", "かぐや様は告らせたい", ["かぐや様"], 26),
+    ("uchu-kyodai", "宇宙兄弟", ["宇宙兄弟"], 40), ("onepunch", "ワンパンマン", ["ワンパンマン", "ONE PUNCH"], 28),
+    ("tensura", "転生したらスライムだった件", ["スライムだった件"], 20), ("dandadan", "ダンダダン", ["ダンダダン"], 15),
+    ("sakamoto", "SAKAMOTO DAYS", ["SAKAMOTO", "サカモトデイズ"], 17), ("yowapeda", "弱虫ペダル", ["弱虫ペダル"], 80),
+    ("nanatsu", "七つの大罪", ["七つの大罪"], 40), ("lion", "3月のライオン", ["3月のライオン"], 16),
+    ("chihaya", "ちはやふる", ["ちはやふる"], 48), ("yotsuba", "よつばと!", ["よつばと"], 14),
+    ("kiseiju", "寄生獣", ["寄生獣"], 8), ("monster", "MONSTER", ["MONSTER"], 9),
+    ("yuyu", "幽☆遊☆白書", ["幽遊白書", "幽☆遊☆白書"], 15), ("kenshin", "るろうに剣心", ["るろうに剣心"], 22),
+    ("worldtrigger", "ワールドトリガー", ["ワールドトリガー"], 24), ("jigokuraku", "地獄楽", ["地獄楽"], 13),
+    ("chi", "チ。―地球の運動について―", ["地球の運動について"], 8), ("komisan", "古見さんは、コミュ症です。", ["古見さん"], 30),
+    ("blackclover", "ブラッククローバー", ["ブラッククローバー"], 30), ("bokuyaba", "僕の心のヤバイやつ", ["ヤバイやつ"], 9),
+    ("medalist", "メダリスト", ["メダリスト"], 10),
 ]
+# 作品名のままだと検索しにくいものの検索語
+MANGA_KW = {"chi": "地球の運動について", "yuyu": "幽遊白書", "drstone": "Dr.STONE", "komisan": "古見さん コミュ症",
+            "monster": "MONSTER 浦沢直樹", "kaguya": "かぐや様は告らせたい", "tensura": "転生したらスライムだった件"}
 MANGA_TIPS = ["中古の全巻セットは1冊あたりがかなり安いが、日焼けや書き込みなどの状態はショップごとに違う。商品ページの状態説明を確認する",
               "「1〜30巻」のように最新刊まで入っていないセットもある。冊数と巻数の表示を見比べる",
               "新品セットはきれいな状態で特典が付くこともあるが、1冊あたりは中古より高い"]
 for _slug, _title, _must, _minv in MANGA:
     CATEGORIES.append({
         "slug": f"manga-{_slug}", "title": f"{_title} 全巻セット 1冊あたり単価ランキング",
-        "keyword": f"{_title.strip('【】')} 全巻セット", "unit": "冊", "base": "冊", "per_text": "1冊あたり",
-        "manga": True, "min_vol": _minv, "group": False, "min_reviews": 0, "outlier": 0.2, "tips": MANGA_TIPS,
+        "keyword": MANGA_KW.get(_slug, re.sub(r'[【】!！。―☆、]', ' ', _title).split()[0]) + " 全巻セット", "unit": "冊", "base": "冊", "per_text": "1冊あたり",
+        "manga": True, "min_vol": _minv, "group": False, "pages": 2, "min_reviews": 0, "outlier": 0.2, "tips": MANGA_TIPS,
         "must": _must, "must_all": ["全巻"],
         "ng": ["グッズ", "Blu-ray", "DVD", "ポスター", "アクリル", "カード", "フィギュア", "ファンブック", "画集",
                "小説", "ノベライズ", "ぬいぐるみ", "Tシャツ", "収納", "ブックカバー", "シール", "缶バッジ",
                "すまっしゅ", "外伝", "スピンオフ", "モブサイコ", "オメガトライブ", "Before the fall", "ゼロの日常",
-               "警察学校", "犯沢", "パーティー", "EPISODE", "エピソード"],
+               "警察学校", "犯沢", "パーティー", "EPISODE", "エピソード", "ポケット", "ポケモン", "モンスターハンター",
+               "黙示録", "SPARE BIKE", "銀の匙", "転ちゅら", "番外編", "アンソロジー"],
     })
 
 CATEGORIES_BY_SLUG = {c["slug"]: c for c in CATEGORIES}
@@ -714,7 +734,63 @@ def pick_rows(rows, cat=None):
     return picks
 
 
-def render(cat, rows, updated):
+def trend_html(hist, unit):
+    """直近30日の最安単価の推移（小さな折れ線）と買い時バッジ"""
+    pts = hist[-30:]
+    if not pts:
+        return ""
+    vals = [p[1] for p in pts]
+    now = vals[-1]
+    if len(pts) < 7:
+        badge = f"<span class=tb>価格を記録中（{len(pts)}日目）</span>"
+    elif now <= min(vals):
+        badge = "<span class='tb hot'>過去30日で最安値</span>"
+    elif now <= sorted(vals)[len(vals) // 4]:
+        badge = "<span class='tb ok'>過去30日の中でも安い水準</span>"
+    else:
+        badge = f"<span class=tb>過去30日の最安は {min(vals):.1f}円/{html.escape(unit)}</span>"
+    svg = ""
+    if len(pts) >= 2:
+        W, H, P = 240, 48, 4
+        lo, hi = min(vals), max(vals)
+        span = (hi - lo) or 1
+        xy = [(P + i * (W - 2 * P) / (len(vals) - 1), H - P - (v - lo) / span * (H - 2 * P)) for i, v in enumerate(vals)]
+        line = " ".join(f"{x:.1f},{y:.1f}" for x, y in xy)
+        area = f"{xy[0][0]:.1f},{H - P} {line} {xy[-1][0]:.1f},{H - P}"
+        svg = (f"<svg class=spark viewBox='0 0 {W} {H}' role=img aria-label='直近{len(vals)}日の最安単価の推移'>"
+               f"<polygon points='{area}' fill='var(--acc-soft)'/><polyline points='{line}' fill='none' stroke='var(--acc)' stroke-width='2'/>"
+               f"<circle cx='{xy[-1][0]:.1f}' cy='{xy[-1][1]:.1f}' r='3' fill='var(--acc)'/></svg>"
+               f"<span class=tr>{pts[0][0][5:].replace('-', '/')}〜今日　{lo:.1f}〜{hi:.1f}円/{html.escape(unit)}</span>")
+    return f"<div class=trend>{badge}{svg}</div>"
+
+
+def faq_items(cat, rows, updated):
+    """その日のデータから作る「よくある質問」"""
+    if not rows:
+        return []
+    unit, base, name = cat["unit"], cat.get("base", cat["unit"] + "分"), short(cat)
+    best = rows[0]
+    avg = sum(r["unit_price"] for r in rows) / len(rows)
+    qa = [(f"{name}でいちばん安いのはどれ？",
+           f"{updated[:10].replace('-', '/')}時点では「{clean_name(best['name'], 50)}」が{best['unit_price']:.1f}円/{unit}で最安です"
+           f"（{best['price']:,}円・{best['count']:,.0f}{base}）。"),
+          (f"{name}の1{unit}あたりの平均はいくら？",
+           f"掲載している{len(rows)}商品の平均は{avg:.1f}円/{unit}です。最安の商品は平均より{(1 - best['unit_price'] / avg) * 100:.0f}%安くなっています。")]
+    free = next((r for r in rows if r["free_ship"]), None)
+    if free:
+        qa.append((f"送料無料で安い{name}は？", f"送料無料の中では「{clean_name(free['name'], 50)}」が{free['unit_price']:.1f}円/{unit}で最安です。"))
+    if cat.get("manga"):
+        used = [r for r in rows if "中古" in r["name"]]
+        new = [r for r in rows if "中古" not in r["name"]]
+        if used and new:
+            qa.append(("新品と中古、どちらが安い？",
+                       f"1冊あたりでは中古の最安が{used[0]['unit_price']:.0f}円、新品（中古表記なし）の最安が{new[0]['unit_price']:.0f}円です。"
+                       "中古は状態の説明を確認してから選んでください。"))
+    qa.append(("価格はいつ更新される？", "毎朝6時ごろに楽天市場の最新価格を取得して自動で更新しています。購入前に商品ページで価格を確認してください。"))
+    return qa
+
+
+def render(cat, rows, updated, hist=None):
     e = html.escape
     per_text = cat.get('per_text', f"1{cat['unit']}あたり")
     unit = cat["unit"]
@@ -742,7 +818,11 @@ def render(cat, rows, updated):
 <span class=pu><b>{r['unit_price']:.1f}円</b>/{e(unit)}</span>
 <span class=pm>{(e(r['note']) + '・') if r.get('note') else ''}{r['price']:,}円・{r['count']:,.0f}{e(base)}・★{r['rating']:.2f}（{r['reviews']:,}件）{'・送料無料' if r['free_ship'] else ''}</span>
 <span class=btn>楽天で見る</span></a>""" for label, r in pick_rows(rows, cat))
-        hero = f"<section class=hero><h2>結論：{e(short(cat))}はこれが安い</h2>{saving}<div class=picks>{cards}</div></section>"
+        hero = (f"<section class=hero><h2>結論：{e(short(cat))}はこれが安い</h2>{saving}{trend_html(hist or [], unit)}"
+                f"<div class=picks>{cards}</div></section>")
+    faq = faq_items(cat, rows, updated)
+    faq_html = ("<section class=faq><h2>よくある質問</h2>" + "".join(
+        f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in faq) + "</section>") if faq else ""
 
     medal = {1: "m1", 2: "m2", 3: "m3"}
     items = "".join(f"""<li class=row data-u="{r['unit_price']:.4f}" data-r="{r['rating']:.2f}" data-n="{r['reviews']}" data-f="{1 if r['free_ship'] else 0}">
@@ -770,7 +850,9 @@ def render(cat, rows, updated):
             {"@type": "ListItem", "position": 2, "name": cat["title"], "item": url}]},
         {"@context": "https://schema.org", "@type": "ItemList", "name": cat["title"], "itemListElement": [
             {"@type": "ListItem", "position": i, "name": clean_name(r["name"], 80)} for i, r in enumerate(rows[:10], 1)]},
-    ], ensure_ascii=False).replace("</", "<\\/")
+    ] + ([{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}] if faq else []),
+        ensure_ascii=False).replace("</", "<\\/")
     gid = next((g for g, _, sls in GROUPS if cat["slug"] in sls), None)
     same = [CATEGORIES_BY_SLUG[s] for g, _, sls in GROUPS if g == gid for s in sls if s != cat["slug"] and s in CATEGORIES_BY_SLUG]
     rest = [c for c in CATEGORIES if c["slug"] != cat["slug"] and c not in same]
@@ -788,8 +870,8 @@ def render(cat, rows, updated):
 <meta property=og:image content="{e(rows[0]['img'] if rows else '')}"><meta name=twitter:card content=summary>
 <script type="application/ld+json">{ld}</script>
 <style>
-:root{{--bg:#f5f5f7;--card:#fff;--fg:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#bf0000;--ok:#1a7f4b;--gold:#c9971c;--silver:#8c96a0;--bronze:#a86a3d}}
-@media(prefers-color-scheme:dark){{:root{{--bg:#111;--card:#1c1c1e;--fg:#f2f2f7;--mut:#a1a1a6;--line:#333;--acc:#ff6b6b;--ok:#4cc38a}}}}
+:root{{--bg:#f5f5f7;--card:#fff;--fg:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#bf0000;--acc-soft:#fdeceb;--ok:#1a7f4b;--gold:#c9971c;--silver:#8c96a0;--bronze:#a86a3d}}
+@media(prefers-color-scheme:dark){{:root{{--bg:#111;--card:#1c1c1e;--fg:#f2f2f7;--mut:#a1a1a6;--line:#333;--acc:#ff6b6b;--acc-soft:#3a1d1d;--ok:#4cc38a}}}}
 body{{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,sans-serif}}
 main{{max-width:880px;margin:auto;padding:16px}}
 h1{{font-size:1.35rem;margin:.2em 0;text-wrap:balance}} h2{{font-size:1.05rem;margin:0 0 8px}} .pr{{color:var(--mut);font-size:.8rem}}
@@ -797,6 +879,11 @@ h1{{font-size:1.35rem;margin:.2em 0;text-wrap:balance}} h2{{font-size:1.05rem;ma
 .bc{{font-size:.8rem;color:var(--mut)}} .bc a{{color:inherit}}
 .hero{{background:var(--card);border:2px solid var(--acc);border-radius:14px;padding:14px;margin-bottom:18px}}
 .save{{margin:0 0 10px;font-size:.9rem}} .save b{{color:var(--acc)}}
+.trend{{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 12px}} .spark{{width:180px;height:36px}}
+.tb{{font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--mut)}} .tb.hot{{background:var(--acc);color:#fff}} .tb.ok{{color:var(--ok)}}
+.tr{{font-size:.72rem;color:var(--mut);font-variant-numeric:tabular-nums}}
+.faq{{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}}
+.faq details{{border-top:1px solid var(--line);padding:8px 0}} .faq details:first-of-type{{border-top:0}} .faq summary{{cursor:pointer;font-weight:600}} .faq p{{margin:6px 0 0;color:var(--mut);font-size:.9rem}}
 .picks{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}}
 .pick{{display:grid;gap:4px;justify-items:start;padding:10px;border:1px solid var(--line);border-radius:10px;color:inherit;text-decoration:none;background:var(--bg)}}
 .pick:hover{{border-color:var(--acc)}} .pick img{{width:84px;height:84px;object-fit:contain;background:#fff;border-radius:8px}}
@@ -834,6 +921,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{{outline:2px solid var(
 <section><h2>全商品ランキング（{len(rows)}商品）</h2>{controls}<ol class=list id=list>{items}</ol>
 <p class=none id=none hidden>条件に合う商品がありません。</p></section>
 {tips_html}
+{faq_html}
 <p class=pr>内容量は商品名から自動で読み取っています。セット数の読み違いがある場合があるので、購入前に商品ページで確認してください。</p>
 {nav}
 </main>
@@ -1028,6 +1116,12 @@ def main():
         summary = json.loads((OUT / "summary.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         summary = {}
+    # 価格推移: ジャンルごとに [日付, 最安単価] を90日分
+    try:
+        history = json.loads((OUT / "history.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        history = {}
+    today = updated[:10]
     for cat in CATEGORIES:
         if live:
             try:
@@ -1035,7 +1129,7 @@ def main():
                 kws = cat.get("keywords") or [cat["keyword"]]
                 items, seen_urls = [], set()
                 for kw in kws:
-                    for it in fetch(kw, pages=3 if len(kws) == 1 else 2):
+                    for it in fetch(kw, pages=cat.get("pages", 3 if len(kws) == 1 else 2)):
                         if it.get("itemUrl") not in seen_urls:
                             seen_urls.add(it.get("itemUrl"))
                             items.append(it)
@@ -1047,7 +1141,11 @@ def main():
         else:
             items = json.loads((ROOT / "sample_items.json").read_text(encoding="utf-8"))
         rows = rank(items, cat)
-        (OUT / f"{cat['slug']}.html").write_text(render(cat, rows, updated), encoding="utf-8")
+        if rows and live:
+            h = [p for p in history.get(cat["slug"], []) if p[0] != today]
+            history[cat["slug"]] = (h + [[today, round(rows[0]["unit_price"], 2)]])[-90:]
+        (OUT / f"{cat['slug']}.html").write_text(render(cat, rows, updated, history.get(cat["slug"], [])),
+                                                 encoding="utf-8")
         if rows:
             top = rows[0]
             # 上位10件の「価格×報酬率」の中央値＝このジャンルで1件売れたときの報酬の目安
@@ -1060,6 +1158,7 @@ def main():
                                     "clean": clean_name(top["name"], 40)}
         print(f"{cat['slug']}: 取得{len(items)}件 → 掲載{len(rows)}件 ({'本番' if live else 'サンプル'})")
     (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False), encoding="utf-8")
+    (OUT / "history.json").write_text(json.dumps(history, ensure_ascii=False), encoding="utf-8")
     (OUT / "index.html").write_text(render_index(summary, updated), encoding="utf-8")
     (OUT / "about.html").write_text(render_about(), encoding="utf-8")
     # 検索エンジン向けのサイトマップ
