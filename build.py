@@ -627,7 +627,7 @@ def parse_count(name, words, lo=5, hi=3000):
     w = "|".join(map(re.escape, sorted(words, key=len, reverse=True)))
     # 「3個セット」のセット数を拾わないよう、直後がセットの数字は除く。一番大きい量を内容量とみなす
     ms = [(float(m.group(1)) * words[m.group(2)], m)
-          for m in re.finditer(rf"(\d{{1,4}}(?:\.\d{{1,2}})?)\s*({w})(?!\s*セット)", s)]
+          for m in re.finditer(rf"(?<!\d)(\d{{1,5}}(?:\.\d{{1,2}})?)\s*({w})(?!\s*セット)", s)]
     if not ms:
         return None
     # セット数の候補: 「×3」「/箱×3」「3袋セット」「【3個セット】」「2ケース」
