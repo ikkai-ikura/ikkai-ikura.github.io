@@ -90,7 +90,91 @@ CATEGORIES = [
         "min_reviews": 10, "range": (200, 10000),
         "ng": ["スケール", "はかり", "ドリップバッグ", "ドリップ バッグ", "インスタント", "ミル", "キャニスター", "カプセル"],
     },
+    {
+        "slug": "laundry-gelball",
+        "title": "洗濯洗剤ジェルボール 1回あたり単価ランキング",
+        "keyword": "洗濯洗剤 ジェルボール",
+        "unit": "回",
+        "words": ["個入り", "個入", "個", "粒", "回分"],
+        "min_reviews": 10, "range": (10, 3000),
+        "ng": ["ケース", "ボトル", "ホルダー"],
+    },
+    {
+        "slug": "cat-litter",
+        "title": "猫砂 1Lあたり単価ランキング",
+        "keyword": "猫砂",
+        "unit": "L", "base": "L", "per_text": "1Lあたり",
+        "words": {"L": 1, "l": 1, "リットル": 1},
+        "min_reviews": 10, "range": (3, 300),
+        "ng": ["トイレ本体", "システムトイレ", "スコップ", "マット", "シート"],
+    },
+    {
+        "slug": "baby-wipes",
+        "title": "おしりふき 1枚あたり単価ランキング",
+        "keyword": "おしりふき",
+        "unit": "枚", "base": "枚",
+        "words": ["枚入り", "枚入", "枚"],
+        "min_reviews": 10, "range": (50, 10000),
+        "ng": ["ケース", "ふた", "フタ", "ウォーマー"],
+    },
+    {
+        "slug": "aa-battery",
+        "title": "単3形 乾電池 1本あたり単価ランキング",
+        "keyword": "単3 乾電池",
+        "unit": "本", "base": "本",
+        "words": ["本入り", "本入", "本パック", "本"],
+        "min_reviews": 10, "range": (4, 500),
+        "must": ["電池"],
+        "ng": ["充電", "ニッケル水素", "エネループ", "単4", "単1", "単2", "ケース", "ライト", "LED", "電池式"],
+    },
+    {
+        "slug": "protein",
+        "title": "プロテイン 100gあたり単価ランキング",
+        "keyword": "プロテイン 1kg",
+        "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
+        "words": {"kg": 1000, "g": 1},
+        "min_reviews": 10, "range": (300, 10000),
+        "must": ["プロテイン"],
+        "ng": ["シェイカー", "バー", "サンプル", "お試し", "ドリンク", "ml", "クッキー", "大豆ミート", "黒豆", "黒千石", "おから"],
+    },
+    {
+        "slug": "water-2l",
+        "title": "ミネラルウォーター 2L 1本あたり単価ランキング",
+        "keyword": "ミネラルウォーター 2L",
+        "unit": "本", "base": "本",
+        "words": ["本入り", "本入", "本"],
+        "min_reviews": 10, "range": (6, 200),
+        "ng": ["500ml", "550ml", "サーバー", "ボトル用"],
+    },
+    {
+        "slug": "sparkling-water-500ml",
+        "title": "炭酸水 500ml 1本あたり単価ランキング",
+        "keyword": "炭酸水 500ml",
+        "unit": "本", "base": "本",
+        "words": ["本入り", "本入", "本"],
+        "min_reviews": 10, "range": (12, 300),
+        "must": ["炭酸"],
+        "ng": ["1L", "1000ml", "2L", "メーカー", "ガスシリンダー", "ソーダストリーム"],
+    },
 ]
+
+# 各ページ下部の「選び方のポイント」
+TIPS = {
+    "dishwasher-tablet": ["ほとんどのタブレットは1回1個。大容量の袋ほど1回あたりが安くなりやすい", "オールインワンやジェル入りは、すすぎ剤や油汚れ対策の成分が入るぶん単価が高め", "海外製の食洗機（ミーレなど）は、メーカー指定の洗剤を確認してから選ぶ"],
+    "garbage-bag-45l": ["自治体指定のゴミ袋がある地域では使えないので、先に確認する", "厚さ（0.015mm、0.03mmなど）が薄いほど安いが、生ゴミや角のあるゴミには厚手が安心", "半透明・透明・黒は自治体ルールで決まっていることが多い"],
+    "pet-sheet": ["レギュラーは小型犬・猫向けの標準サイズ。犬の体格に合わないと漏れやすい", "薄型は安くて収納しやすいが、交換回数が増えると1日あたりのコストは上がる", "1回で替えるか、数回使うかで最適な厚みが変わる"],
+    "mask": ["1枚あたりは大箱・まとめ買いが安い", "子供用・小さめ・大きめなどサイズ違いが混ざるので、商品ページでサイズを確認する", "日本製や個包装は単価が高め。持ち歩きが多いなら個包装が便利"],
+    "sonicare-brush-head": ["型番（HX6014=スタンダード、HX6024=ミニ、HX6064=ダイヤモンドクリーンなど）で形が決まる", "互換品は純正の数分の1の値段だが、毛の品質や耐久性は製品ごとに差がある", "交換の目安は約3か月。年間の本数から1本あたりの差を考えると選びやすい"],
+    "oralb-brush-head": ["EB17・EB20・EB50など型番でブラシの種類が決まる。手持ちの本体に合うか確認する", "互換品は純正よりかなり安いが、毛の硬さや品質には差がある", "交換の目安は約3か月"],
+    "coffee-beans": ["大袋は安いが、開封後は風味が落ちやすい。冷凍保存すると長持ちする", "「豆のまま」と「粉」がある。ミルがなければ粉を選ぶ", "福袋やセットは1kgあたりが安い一方、好みの銘柄が入るとは限らない"],
+    "laundry-gelball": ["基本は1回1個。洗濯物の量が多い日に2個使うと単価は倍になる", "つめかえ用の大袋ほど1回あたりが安い", "部屋干し用・柔軟剤入りなど機能で値段が変わる"],
+    "cat-litter": ["紙・木・おから・ベントナイト（鉱物）で、固まり方や処分方法が違う", "ここでは容量（L）で比べている。重さ（kg）表記の商品は含まれない", "トイレに流せるタイプかどうかは商品ごとに確認する"],
+    "baby-wipes": ["厚手は1枚で拭ける範囲が広く、薄手は単価が安い", "水99%などの成分や、手口ふき兼用かどうかで選ぶ", "ケース買い（12個入りなど）が1枚あたり最安になりやすい"],
+    "aa-battery": ["アルカリ乾電池はリモコン・時計など幅広く使える定番", "使用推奨期限（10年など）が長いものは備蓄にも向く", "消費が多い機器なら充電池も検討する（このページは使い切りの乾電池のみ）"],
+    "protein": ["ホエイ・ソイ・カゼインで吸収の速さや原料が違う", "100gあたりの価格だけでなく、たんぱく質の含有率も商品ページで確認する", "初めての味は小さい袋で試してから大袋にすると失敗しにくい"],
+    "water-2l": ["軟水は日本人になじみやすく、硬水はミネラルが多い", "ケース（6本・9本・12本）単位が安い。重いので送料込みかどうかも見る", "備蓄用なら保存期間の長い商品を選ぶ"],
+    "sparkling-water-500ml": ["強炭酸・微炭酸で飲みごたえが違う", "24本ケースが1本あたり最安になりやすい", "ラベルレスは分別の手間が少なく、価格も安め"],
+}
 
 
 def load_env():
@@ -117,15 +201,24 @@ def fetch(keyword, pages=3):
             "Origin": os.environ.get("SITE_URL", "").rstrip("/"),
             "User-Agent": "Mozilla/5.0",
         })
-        try:
-            with urllib.request.urlopen(req, timeout=20) as r:
-                data = json.load(r)
-        except urllib.error.HTTPError as e:
-            # GitHub Actions の注釈に出してログイン無しで原因を読めるようにする
-            body = " ".join(e.read()[:300].decode("utf-8", "replace").split())
-            site = os.environ.get("SITE_URL", "")
-            print(f"::error::楽天API {e.code}: {body} / SITE_URL={len(site)}文字 / ID={len(os.environ.get('RAKUTEN_APP_ID',''))}文字")
-            raise SystemExit(1)
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(req, timeout=20) as r:
+                    data = json.load(r)
+                break
+            except urllib.error.HTTPError as e:
+                if e.code == 429 and attempt < 2:  # 回数制限は少し待てば通る
+                    time.sleep(3)
+                    continue
+                # GitHub Actions の注釈に出してログイン無しで原因を読めるようにする
+                body = " ".join(e.read()[:300].decode("utf-8", "replace").split())
+                site = os.environ.get("SITE_URL", "")
+                raise RuntimeError(f"楽天API {e.code}: {body} / SITE_URL={len(site)}文字 / "
+                                   f"ID={len(os.environ.get('RAKUTEN_APP_ID', ''))}文字")
+            except (urllib.error.URLError, TimeoutError) as e:
+                if attempt == 2:
+                    raise RuntimeError(f"楽天APIに接続できません: {e}")
+                time.sleep(5)
         items += data.get("Items", [])
         time.sleep(1.1)  # 1秒1リクエスト制限
     return items
@@ -168,7 +261,7 @@ def parse_count(name, words, lo=5, hi=3000):
         k = int(k.group(1)) if k else next(iter(ks_set), None)
         if k:
             n *= k
-        elif re.search(r"(?<![x*\d])\s*\d\s*(?:袋|箱|冊|パック)(?!\s*(?:入|セット))", s):
+        elif re.search(r"(?<![x*\d])\s*\d\s*(?:袋|箱|冊|パック|ケース)(?!\s*(?:入|セット))", s):
             return None  # 「112枚 4袋」のように袋数の掛け方が読めない
     return n if lo <= n <= hi else None
 
@@ -222,6 +315,8 @@ def rank(items, cat):
     for it in items:
         if any(w in it["itemName"] for w in cat.get("ng", [])):
             continue
+        if cat.get("must") and not any(w in it["itemName"] for w in cat["must"]):
+            continue
         n = parse_count(it["itemName"], cat["words"], *cat.get("range", (5, 3000)))
         if not n or it.get("reviewCount", 0) < cat["min_reviews"]:
             continue
@@ -259,6 +354,8 @@ def rank(items, cat):
 def render(cat, rows, updated):
     e = html.escape
     per_text = cat.get('per_text', f"1{cat['unit']}あたり")
+    tips = TIPS.get(cat["slug"], [])
+    tips_html = ("<h2>選び方のポイント</h2><ul>" + "".join(f"<li>{e(t)}</li>" for t in tips) + "</ul>") if tips else ""
     trs = "".join(f"""
 <tr><td class=n>{i}</td>
 <td class=p><a href="{e(r['url'])}" rel="sponsored noopener" target=_blank>
@@ -289,6 +386,7 @@ table{{width:100%;border-collapse:collapse}} td{{border-bottom:1px solid var(--l
 <h1>{e(cat['title'])}</h1>
 <p>楽天市場の商品を「価格 ÷ 内容量」で{per_text}に換算し、安い順に並べています。同じ商品はショップ違い・袋数違いをまとめ、1回あたり最安の出品だけを載せています。毎日自動更新（最終更新 {updated}）。価格は更新時点のもので、送料別の商品は送料を含みません。</p>
 <table>{trs}</table>
+{tips_html}
 <p class=pr>内容量は商品名から自動で読み取っています。セット数の読み違いがある場合があるので、購入前に商品ページで確認してください。</p>
 </main></body></html>"""
 
@@ -298,9 +396,16 @@ def main():
     live = bool(os.environ.get("RAKUTEN_APP_ID"))
     OUT.mkdir(exist_ok=True)
     updated = datetime.now(JST).strftime("%Y-%m-%d %H:%M")
+    failed = 0
     for cat in CATEGORIES:
         if live:
-            items = fetch(cat["keyword"])
+            try:
+                items = fetch(cat["keyword"])
+            except RuntimeError as e:
+                # 1ジャンルの失敗で全体を止めない。前回のページはそのまま残る
+                print(f"::warning::{cat['slug']}: {e}")
+                failed += 1
+                continue
         else:
             items = json.loads((ROOT / "sample_items.json").read_text(encoding="utf-8"))
         rows = rank(items, cat)
@@ -327,6 +432,9 @@ main{{max-width:720px;margin:auto;padding:16px}}</style></head><body><main>
         + f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{xml}</urlset>' + chr(10), encoding="utf-8")
     (OUT / "robots.txt").write_text(chr(10).join(["User-agent: *", "Allow: /", f"Sitemap: {site}sitemap.xml", ""]),
                                     encoding="utf-8")
+    if live and failed == len(CATEGORIES):
+        print("::error::全ジャンルで取得に失敗しました")
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
