@@ -32,6 +32,9 @@ CATEGORIES = [
         "ng": ["クリーナー", "工事", "本体", "分岐水栓"],
         "brands": {"フィニッシュ": ["finish", "フィニッシュ", "フィニッフシュ"], "キュキュット": ["キュキュット"],
                    "ジョイ": ["ジョイ", "joy"], "ミーレ": ["miele", "ミーレ"], "SAMKYO": ["samkyo"]},
+        "lines": {"フィニッシュ": [("オールインワン", r"オールインワン|パワーボール"), ("ウルトラ", r"ウルトラ|ジェル"),
+                                  ("パワーキューブL", r"キューブ\s*l(?![a-z])|(?<![a-z])l\s*[(（]|lサイズ"),
+                                  ("パワーキューブ", r".")]},
     },
     {
         "slug": "garbage-bag-45l",
@@ -170,6 +173,50 @@ def parse_count(name, words, lo=5, hi=3000):
     return n if lo <= n <= hi else None
 
 
+NOISE = r"送料無料|最安値|挑戦|楽天|ランキング|\d位|入賞|受賞|獲得|クーポン|ポイント|限定|お試し|価格|大容量|お得|まとめ買い|"         r"セット|業務用|公式|正規品|純正品|純正|互換品|互換|対応|高評価|レビュー|特典|送料込み|メール便|新色|本日|先着"
+
+
+COMMON = ["電動歯ブラシ", "歯ブラシ", "替えブラシ", "替ブラシ", "ブラシヘッド", "ブラシ", "ヘッド", "食洗機用", "食洗機", "食器洗い機用",
+          "食器洗い乾燥機用", "食器洗い機", "洗剤", "タブレット", "ペットシーツ", "ペットシート", "トイレシート", "シーツ", "レギュラー",
+          "ゴミ袋", "ごみ袋", "ポリ袋", "半透明", "リットル", "マスク", "不織布", "立体", "コーヒー豆", "コーヒー", "珈琲豆", "珈琲",
+          "フィリップス", "ソニッケアー", "ソニッケア", "ブラウン", "オーラルb", "oralb", "philips", "sonicare", "braun"]
+
+
+def signature(name):
+    """商品名から宣伝文句・数量・ジャンル共通語を除いた (2-gram集合, 型番集合)"""
+    s = name.translate(ZEN).lower()
+    s = re.sub(r"[【\[［《〈].*?[】\]］》〉]", " ", s)  # 墨付き括弧内はほぼ宣伝
+    codes = set(re.findall(r"[a-z]{1,4}-?\d{2,5}[a-z]?", s)) - {"45l"}
+    s = re.sub(NOISE, " ", s)
+    for w in COMMON:
+        s = s.replace(w, " ")
+    s = re.sub(r"[\d.]+\s*(?:個入り|個入|個|回分|回|錠|粒|枚入り|枚入|枚|本入り|本入|本組|本|袋|箱|冊|kg|g|ml|l|p|パック)?", " ", s)
+    s = re.sub(r"[^\w]|_", "", s)
+    return {s[i:i + 2] for i in range(len(s) - 1)}, codes
+
+
+def similar(a, b, th=0.35):
+    """型番が両方にあって食い違えば別商品。それ以外は2-gramのJaccard係数で判定"""
+    (ga, ca), (gb, cb) = a, b
+    if ca and cb:
+        return bool(ca & cb)  # 型番が両方にあれば型番だけで判定（HX6014互換どうしは同じ扱い）
+    if not ga or not gb:
+        return False
+    return len(ga & gb) / len(ga | gb) >= th
+
+
+def product_line(name, cat):
+    """カテゴリ設定の lines（ブランド→[(シリーズ名, 正規表現)]）で決まるシリーズ名。該当なしは None"""
+    low = name.translate(ZEN).lower()
+    for brand, aliases in cat.get("brands", {}).items():
+        if any(a in low for a in aliases):
+            for label, pat in cat.get("lines", {}).get(brand, []):
+                if re.search(pat, low):
+                    return f"{brand} {label}"
+            return brand
+    return None
+
+
 def rank(items, cat):
     rows = []
     for it in items:
@@ -192,19 +239,21 @@ def rank(items, cat):
     if len(rows) >= 5:
         med = rows[len(rows) // 2]["unit_price"]
         rows = [r for r in rows if r["unit_price"] >= med * cat.get("outlier", 0.35)]
-    # 同じ商品の重複（ショップ違い）は最安だけ残す
-    # キーは「ブランド＋1袋の内容量」。ブランド不明なら商品名の先頭で代用
-    seen, out = set(), []
-    for r in rows:
-        low = r["name"].lower()
-        brand = next((b for b, aliases in cat.get("brands", {}).items()
-                      if any(a in low for a in aliases)), None)
-        key = (brand, r["count"]) if brand else re.sub(r"\W", "", r["name"])[:25]
-        key2 = (r["shop"], r["count"], r["price"])
-        if key not in seen and key2 not in seen:
-            seen.update([key, key2])
-            out.append(r)
-    return out[:30]
+    # 同じ商品（ショップ違い・袋数違い）は1行にまとめ、1回あたり最安の出品だけを載せる
+    groups = []
+    for r in rows:  # rows は単価の安い順なので、各グループの先頭が最安
+        sig = product_line(r["name"], cat) or signature(r["name"])
+        for g in groups:
+            if sig == g["sig"] or (not isinstance(sig, str) and not isinstance(g["sig"], str) and similar(sig, g["sig"])):
+                g["others"] += 1
+                break
+        else:
+            groups.append({"sig": sig, "row": r, "others": 0})
+    out = []
+    for g in groups[:30]:
+        g["row"]["others"] = g["others"]
+        out.append(g["row"])
+    return out
 
 
 def render(cat, rows, updated):
@@ -214,7 +263,7 @@ def render(cat, rows, updated):
 <tr><td class=n>{i}</td>
 <td class=p><a href="{e(r['url'])}" rel="sponsored noopener" target=_blank>
 <img src="{e(r['img'])}" alt="" loading=lazy><span>{e(r['name'][:70])}</span></a>
-<small>{e(r['shop'])}{' ・送料無料' if r['free_ship'] else ' ・送料別'}</small></td>
+<small>{e(r['shop'])}{' ・送料無料' if r['free_ship'] else ' ・送料別'}{f" ・同じ商品の出品ほか{r['others']}件（ここが最安）" if r.get('others') else ''}</small></td>
 <td class=u><b>{r['unit_price']:.1f}円</b><small>/{cat['unit']}</small></td>
 <td class=d>{r['price']:,}円<br><small>{r['count']:,.0f}{cat.get('base', cat['unit'] + '分')}</small></td>
 <td class=d>★{r['rating']:.2f}<br><small>{r['reviews']:,}件</small></td></tr>"""
@@ -238,7 +287,7 @@ table{{width:100%;border-collapse:collapse}} td{{border-bottom:1px solid var(--l
 </style></head><body><main>
 <p class=pr>PR：このページは楽天アフィリエイトを利用しています</p>
 <h1>{e(cat['title'])}</h1>
-<p>楽天市場の商品を「価格 ÷ 内容量」で{per_text}に換算し、安い順に並べています。毎日自動更新（最終更新 {updated}）。価格は更新時点のもので、送料別の商品は送料を含みません。</p>
+<p>楽天市場の商品を「価格 ÷ 内容量」で{per_text}に換算し、安い順に並べています。同じ商品はショップ違い・袋数違いをまとめ、1回あたり最安の出品だけを載せています。毎日自動更新（最終更新 {updated}）。価格は更新時点のもので、送料別の商品は送料を含みません。</p>
 <table>{trs}</table>
 <p class=pr>内容量は商品名から自動で読み取っています。セット数の読み違いがある場合があるので、購入前に商品ページで確認してください。</p>
 </main></body></html>"""
@@ -260,6 +309,7 @@ def main():
     links = "".join(f'<li><a href="{c["slug"]}.html">{html.escape(c["title"])}</a></li>' for c in CATEGORIES)
     (OUT / "index.html").write_text(f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>1回いくら</title>
+<meta name="google-site-verification" content="A-JyA2Us3KYpkTLgjEMxZSKUwAAWLqE7rWFsJdlSn9o">
 <meta name=description content="日用品・消耗品を楽天の価格と内容量から1回あたりの値段に換算して毎日比較。">
 <style>body{{margin:0;font:16px/1.7 system-ui,sans-serif;background:#fff;color:#1d1d1f}}
 @media(prefers-color-scheme:dark){{body{{background:#111;color:#f2f2f7}}a{{color:#8ab4ff}}}}
