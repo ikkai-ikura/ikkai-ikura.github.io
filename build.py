@@ -347,6 +347,18 @@ PROMOS = {
                      '<img border="0" width="300" height="250" alt="モグニャン" style="max-width:100%;height:auto" loading="lazy" '
                      'src="https://www22.a8.net/svt/bgt?aid=261102064537&amp;wid=001&amp;eno=01&amp;mid=s00000000458011004000&amp;mc=1"><br>モグニャンの公式サイトを見る</a>'
                      '<img border="0" width="1" height="1" src="https://www10.a8.net/0.gif?a8mat=4BGBN4+8VPSMQ+3J8+1TIJEP" alt="">'},
+            {"name": "カナガン デンタルキャットフード", "desc": "歯の健康に配慮した成分を配合したグレインフリーのキャットフード",
+             "link": '<a href="https://px.a8.net/svt/ejp?a8mat=4BGBN4+9Q2WHE+3J8+3SXWUQ" rel="sponsored nofollow noopener" target="_blank">カナガン デンタルキャットフードの公式サイトを見る</a>'
+                     '<img border="0" width="1" height="1" src="https://www19.a8.net/0.gif?a8mat=4BGBN4+9Q2WHE+3J8+3SXWUQ" alt="">'},
+        ],
+    },
+    "water-2l": {
+        "title": "毎月たくさん飲むなら：ウォーターサーバー",
+        "lead": "重いペットボトルを運ぶ手間がなくなり、冷水・温水がすぐ使えるのがウォーターサーバーの利点です。費用はボトル代に電気代や配送条件が加わるので、上のペットボトルの1本あたり単価と比べながら、毎月飲む量で検討してください。",
+        "items": [
+            {"name": "ワンウェイウォーター", "desc": "サーバーのレンタル料が無料のウォーターサーバー",
+             "link": '<a href="https://px.a8.net/svt/ejp?a8mat=4BGBN4+8G8IWI+1MQG+5Z6WY" rel="sponsored nofollow noopener" target="_blank">ワンウェイウォーターの公式サイトを見る</a>'
+                     '<img border="0" width="1" height="1" src="https://www16.a8.net/0.gif?a8mat=4BGBN4+8G8IWI+1MQG+5Z6WY" alt="">'},
         ],
     },
 }
@@ -708,38 +720,82 @@ h2{font-size:1.1rem;margin-top:1.6em}.mut{color:var(--mut);font-size:.85rem}</st
 </main></body></html>"""
 
 
+GROUPS = [
+    ("laundry", "洗濯・キッチン", ["dishwasher-tablet", "dish-soap-refill", "laundry-gelball", "liquid-laundry-refill", "softener-refill"]),
+    ("paper", "紙・生活用品", ["toilet-paper-double", "toilet-paper-single", "tissue", "garbage-bag-45l", "mask",
+                          "disinfect-wipes", "cotton-swab", "baby-wipes", "aa-battery"]),
+    ("care", "バス・ケア", ["hand-soap-refill", "body-soap-refill", "shampoo-refill", "toothpaste",
+                         "sonicare-brush-head", "oralb-brush-head"]),
+    ("pet", "ペット", ["dog-food-dry", "cat-food-dry", "pet-sheet", "cat-litter"]),
+    ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "water-2l", "sparkling-water-500ml"]),
+]
+
+
 def render_index(summary, updated):
     e = html.escape
-    cards = []
-    for c in CATEGORIES:
+    by_slug = {c["slug"]: c for c in CATEGORIES}
+    grouped = {sl for _, _, sls in GROUPS for sl in sls}
+    groups = GROUPS + ([("other", "その他", [c["slug"] for c in CATEGORIES if c["slug"] not in grouped])]
+                       if any(c["slug"] not in grouped for c in CATEGORIES) else [])
+
+    def card(c):
         s = summary.get(c["slug"])
-        name = short(c)
         best = (f"<p class=b>最安 <b>{s['unit_price']:.1f}円</b><small>/{e(c['unit'])}</small></p>"
                 f"<p class=s>{e(s['name'])}</p>") if s else "<p class=s>集計中</p>"
         img = f"<img src='{e(s['img'])}' alt='' loading=lazy>" if s and s.get("img") else ""
-        cards.append(f"<a class=card href='{c['slug']}.html'>{img}<div><h2>{e(name)}</h2>{best}</div></a>")
+        # 検索用の語: ジャンル名・検索キーワード・ブランド名
+        words = " ".join([short(c), c["keyword"]] + c.get("keywords", []) + list(c.get("brands", {})))
+        return (f"<a class=card href='{c['slug']}.html' data-k='{e(words.lower())}'>{img}"
+                f"<div><h3>{e(short(c))}</h3>{best}</div></a>")
+
+    chips = "".join(f"<a href='#{gid}'>{e(label)}</a>" for gid, label, _ in groups)
+    sections = "".join(
+        f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>"
+        + "".join(card(by_slug[sl]) for sl in sls if sl in by_slug) + "</div></section>"
+        for gid, label, sls in groups)
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>TANKA｜日用品の1回あたり単価比較</title>
 <meta name="google-site-verification" content="A-JyA2Us3KYpkTLgjEMxZSKUwAAWLqE7rWFsJdlSn9o">
-<meta name=description content="洗剤・ゴミ袋・ペットシーツ・コーヒー豆など日用品を、楽天の価格と内容量から1回あたりの値段に換算して毎日自動で比較。">
+<meta name=description content="洗剤・トイレットペーパー・ペットフード・お米など日用品{len(CATEGORIES)}ジャンルを、楽天の価格と内容量から1回あたりの値段に換算して毎日自動で比較。">
 <style>
 :root{{--bg:#f5f5f7;--card:#fff;--fg:#1d1d1f;--mut:#6e6e73;--acc:#bf0000;--line:#e5e5ea}}
 @media(prefers-color-scheme:dark){{:root{{--bg:#111;--card:#1c1c1e;--fg:#f2f2f7;--mut:#a1a1a6;--acc:#ff6b6b;--line:#333}}}}
 body{{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,sans-serif}}
 main{{max-width:960px;margin:auto;padding:16px}} h1{{margin:.2em 0;font-size:1.6rem}}
 .pr,.lead{{color:var(--mut)}} .pr{{font-size:.8rem}}
-.grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:16px}}
-.card{{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;color:inherit;text-decoration:none}}
-.card:hover{{border-color:var(--acc)}} .card img{{width:64px;height:64px;object-fit:contain;flex:none;background:#fff;border-radius:8px}}
-.card h2{{font-size:1rem;margin:0}} .b{{margin:2px 0}} .b b{{color:var(--acc);font-size:1.15rem}}
-.s{{margin:0;color:var(--mut);font-size:.75rem;line-height:1.4}} small{{color:var(--mut)}}
+.bar{{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);display:grid;gap:8px}}
+.bar input{{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--fg);width:100%;box-sizing:border-box}}
+.chips{{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}} .chips a{{flex:none;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:inherit;text-decoration:none;font-size:.85rem}}
+.chips a:hover{{border-color:var(--acc)}}
+.grp{{scroll-margin-top:110px;margin-top:20px}} .grp h2{{font-size:1.05rem;margin:0 0 8px}}
+.grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}}
+.card{{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:inherit;text-decoration:none}}
+.card:hover,.card:focus-visible{{border-color:var(--acc)}} .card img{{width:56px;height:56px;object-fit:contain;flex:none;background:#fff;border-radius:8px}}
+.card h3{{font-size:.95rem;margin:0}} .b{{margin:2px 0}} .b b{{color:var(--acc);font-size:1.1rem}}
+.s{{margin:0;color:var(--mut);font-size:.72rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}} small{{color:var(--mut)}}
+.none{{color:var(--mut);margin-top:16px}}
 </style></head><body><main>
 <p class=pr>PR：このサイトは楽天アフィリエイトを利用しています</p>
 <h1>TANKA <span style="font-size:.9rem;font-weight:normal;color:var(--mut)">日用品の1回あたり単価比較</span></h1>
 <p class=lead>日用品を「1回あたりの値段」で比べるサイトです。楽天市場の価格と内容量から自動で計算し、毎日更新しています（最終更新 {updated}）。</p>
-<div class=grid>{''.join(cards)}</div>
+<div class=bar><input id=q type=search placeholder="さがす（例：洗剤、猫、トイレットペーパー、キュキュット）" aria-label="ジャンルをさがす" autocomplete=off>
+<nav class=chips aria-label="カテゴリ">{chips}</nav></div>
+{sections}
+<p class=none id=none hidden>見つかりませんでした。別の言葉でさがしてみてください。</p>
 <p class=pr style="margin-top:24px"><a href="about.html">このサイトについて（計算方法・広告について）</a></p>
-</main></body></html>"""
+</main>
+<script>
+(function(){{
+  var q=document.getElementById('q'), cards=[].slice.call(document.querySelectorAll('.card')), grps=[].slice.call(document.querySelectorAll('.grp'));
+  function norm(t){{return t.toLowerCase().replace(/[ァ-ン]/g,function(c){{return String.fromCharCode(c.charCodeAt(0)-0x60)}})}}
+  q.addEventListener('input',function(){{
+    var w=norm(q.value.trim()), hit=0;
+    cards.forEach(function(c){{var ok=!w||norm(c.dataset.k+' '+c.textContent).indexOf(w)>=0; c.hidden=!ok; if(ok)hit++;}});
+    grps.forEach(function(g){{g.hidden=!g.querySelector('.card:not([hidden])');}});
+    document.getElementById('none').hidden=hit>0;
+  }});
+}})();
+</script></body></html>"""
 
 
 def main():
