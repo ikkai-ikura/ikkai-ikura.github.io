@@ -413,8 +413,8 @@ def parse_product(name, size, pack, lo, hi):
     例 トイレットペーパー '30m 12ロール×4パック' -> 1440、ティッシュ '160組 5箱×12パック' -> 9600
     size, pack は正規表現（数字を1つ目のグループで取る）。読めなければ None"""
     s = name.translate(ZEN).replace(",", "")
-    if re.search(r"選べる|選択|単品.*セット|セット.*単品|\d\s*[~～〜]\s*\d", s):
-        return None
+    if re.search(r"選べる|選択|単品.*セット|セット.*単品|\d\s*[~～〜]\s*\d|\d\s*[・/]\s*\d+\s*(?:個|箱|ロール)", s):
+        return None  # 「50・90個」のような選択式
     sizes = {float(x) for x in re.findall(size, s)}
     if len(sizes) != 1:  # 「シングル60m ダブル30m」のように複数あると価格との対応が分からない
         return None
@@ -425,6 +425,10 @@ def parse_product(name, size, pack, lo, hi):
         cands.append(int(m.group(1)) * (int(m.group(2)) if m.group(2) else 1))
         used_x |= bool(m.group(2))
     if not cands:
+        return None
+    # 「80個 90個」のように掛け算の関係にない個数が並ぶのはサイズ違いの羅列
+    plain = set(cands)
+    if not used_x and len(plain) >= 2 and max(plain) not in {a * b for a in plain for b in plain}:
         return None
     n = max(cands)
     # 「12ロール 4パックセット」「(5箱) 3セット」のように別に書かれたセット数
