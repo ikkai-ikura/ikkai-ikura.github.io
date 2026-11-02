@@ -390,6 +390,16 @@ CATEGORIES = [
         "must": ["キャノーラ", "なたね", "菜種"],
         "ng": ["ごま", "オリーブ", "スプレー", "ギフト", "詰め合わせ", "マヨネーズ"],
     },
+    {
+        "slug": "mobile-battery",
+        "title": "モバイルバッテリー 1000mAhあたり単価ランキング",
+        "keyword": "モバイルバッテリー",
+        "keywords": ["モバイルバッテリー 大容量", "モバイルバッテリー 10000mAh", "Anker モバイルバッテリー", "モバイルバッテリー 20000mAh"],
+        "unit": "1000mAh", "base": "mAh", "per": 1000, "per_text": "1000mAhあたり",
+        "words": {"mAh": 1, "MAH": 1, "mah": 1}, "min_reviews": 10, "range": (2000, 60000),
+        "must": ["モバイルバッテリー"],
+        "ng": ["ケース", "ポーチ", "レンタル", "ソーラー", "ポータブル電源", "ファン", "扇風機", "カイロ", "ベスト"],
+    },
 ]
 
 # 漫画の全巻セット: 作品ごとに1ページ。ショップ・新品/中古の違いを比べたいので同一商品のまとめはしない
@@ -506,6 +516,7 @@ TIPS = {
     "food-wrap": ["ここでは幅30cmで比べている。長さ（50m・100mなど）が長いほど10mあたりが安い", "業務用の長巻きは安いが、ケースが大きいので収納場所を確認する", "電子レンジでの耐熱温度は製品ごとに違う"],
     "soy-sauce": ["1.8Lなど大容量は安いが、開封後は風味が落ちやすい。使い切れる量を選ぶ", "密封ボトル（鮮度ボトル）は割高だが、開封後も風味が長持ちする", "濃口・薄口・減塩で用途と味が違う"],
     "canola-oil": ["1000gクラスのボトルや業務用の大容量が100gあたり安い", "開封後は酸化しやすいので、使い切れる量を選ぶ", "なたね油（キャノーラ油）は加熱調理向けでクセが少ない"],
+    "mobile-battery": ["容量（mAh）が大きいほど1000mAhあたりは安いが、重く大きくなる。持ち歩くなら10000mAh前後が目安", "スマホを急速充電したいなら、出力（W数）やPD対応かどうかも確認する", "飛行機に持ち込めるのは一般に160Wh以下。大容量品は持ち込み条件を確認する"],
     "rice": ["銘柄米・ブレンド米・複数原料米で価格が大きく違う。ブレンド米は安いが産地や品種は混ざる", "10kg・20kgの大袋は1kgあたりが安いが、精米後は早めに食べきるのがおすすめ（夏は特に）", "無洗米は研ぐ手間と水が省けるぶん、少し高めのことが多い"],
     "cat-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "子猫用・成猫用・シニア用など年齢で栄養バランスが違う", "大袋は割安だが、開封後は酸化しやすいので小分け包装が便利"],
     "dog-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "小型犬用は粒が小さい。犬種や年齢に合ったものを選ぶ", "大袋は割安だが、開封後は湿気と酸化に注意。小分け包装だと鮮度を保ちやすい"],
@@ -1043,6 +1054,119 @@ a:focus-visible,button:focus-visible,input:focus-visible{{outline:2px solid var(
 </script></body></html>"""
 
 
+# 格安SIM（音声通話つき・税込・月額）。2026年11月2日に各社公式サイトで確認。料金改定があれば更新する
+# tiers: [(GB上限, 月額)]。None は上限なし（無制限）。step=True は「使った分だけ」の段階制（楽天モバイル・LINEMO）
+SIM_CHECKED = "2026年11月2日"
+SIM_PLANS = [
+    {"name": "IIJmio", "plan": "ギガプラン", "url": "https://www.iijmio.jp/hdc/spec/",
+     "tiers": [(2, 850), (5, 950), (10, 1400), (15, 1600), (25, 2000), (35, 2400), (45, 3300), (55, 3900)],
+     "note": "5GB単位で選ぶ定額。余ったデータは翌月に繰り越し", "link": ""},
+    {"name": "mineo", "plan": "マイピタ", "url": "https://mineo.jp/price/",
+     "tiers": [(3, 1298), (7, 1518), (15, 1958), (30, 2178), (50, 2948)],
+     "note": "容量を使い切った後も最大200kbps。パケット放題（無料の速度制限付き使い放題）と組み合わせ可", "link": ""},
+    {"name": "楽天モバイル", "plan": "Rakuten最強プラン", "url": "https://network.mobile.rakuten.co.jp/fee/saikyo-plan/",
+     "tiers": [(3, 1078), (20, 2178), (None, 3278)], "step": True,
+     "note": "使った分だけの段階制。20GB超は無制限。Rakuten Linkアプリで国内通話無料", "link": ""},
+    {"name": "LINEMO", "plan": "ベストプラン／ベストプランV", "url": "https://www.linemo.jp/plan/",
+     "tiers": [(3, 990), (10, 2090), (30, 2970)], "step": True,
+     "note": "LINEのトーク・通話はデータ消費ゼロ。30GBは5分以内の通話無料つき", "link": ""},
+    {"name": "ahamo", "plan": "ahamo", "url": "https://ahamo.com/plan/",
+     "tiers": [(30, 2970), (110, 4950)],
+     "note": "5分以内の国内通話無料。2026年12月1日から40GB 3,135円〜120GB 5,115円の段階制に改定予定", "link": ""},
+]
+SIM_USES = [1, 3, 5, 10, 20, 30, 50, 100]
+
+
+def sim_cost(plan, gb):
+    """gb を使う月の料金と、そのときのプラン容量。使えない量なら None"""
+    for cap, price in plan["tiers"]:
+        if cap is None or gb <= cap:
+            return price, cap
+    return None
+
+
+def render_sim(updated):
+    e = html.escape
+    site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
+    url = f"{site}sim.html"
+    data = json.dumps([{"name": p["name"], "plan": p["plan"], "tiers": p["tiers"], "note": p["note"],
+                        "href": p["link"] or p["url"], "ad": bool(p["link"])} for p in SIM_PLANS], ensure_ascii=False)
+
+    def table(gb):
+        rows = sorted(((sim_cost(p, gb), p) for p in SIM_PLANS if sim_cost(p, gb)), key=lambda t: t[0][0])
+        return "".join(
+            f"<li class=row><span class='rk {'m1' if i == 1 else ''}'>{i}</span><div class=rb><b>{e(p['name'])}</b>"
+            f"<small>{e(p['plan'])}・{'無制限' if cap is None else f'{cap}GBまで'}</small><small>{e(p['note'])}</small></div>"
+            f"<div class=rp><b>{price:,}<i>円/月</i></b><small>1GBあたり {price / gb:,.0f}円</small>"
+            f"<a class=go href='{e(p['link'] or p['url'])}' rel='{'sponsored ' if p['link'] else ''}noopener' target=_blank>公式サイト</a></div></li>"
+            for i, ((price, cap), p) in enumerate(rows, 1))
+
+    buttons = "".join(f"<button type=button data-gb={g} aria-pressed={'true' if g == 10 else 'false'}>{g}GB</button>" for g in SIM_USES)
+    faq = [("毎月10GBくらい使うなら、どこが安い？",
+            "公式料金で比べると" + "、".join(f"{p['name']} {sim_cost(p, 10)[0]:,}円" for p in sorted(SIM_PLANS, key=lambda p: sim_cost(p, 10)[0])[:3])
+            + "の順です（音声通話つき・税込）。"),
+           ("料金はいつの情報？", f"{SIM_CHECKED}に各社の公式サイトで確認した通常料金です。キャンペーン割引や家族割引は含みません。申し込み前に公式サイトで最新の料金を確認してください。")]
+    ld = json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]},
+        ensure_ascii=False).replace("</", "<\\/")
+    return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>格安SIM 1GBあたり料金比較｜TANKA</title>
+<meta name=description content="毎月使うデータ量を選ぶだけで、IIJmio・mineo・楽天モバイル・LINEMO・ahamoの一番安いプランと1GBあたりの料金を比較。{SIM_CHECKED}時点の公式料金。">
+<link rel=canonical href="{url}"><meta property=og:title content="格安SIM 1GBあたり料金比較｜TANKA"><meta property=og:url content="{url}"><meta property=og:site_name content="TANKA">
+<script type="application/ld+json">{ld}</script>
+<style>
+:root{{--bg:#f5f5f7;--card:#fff;--fg:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#bf0000;--gold:#c9971c}}
+@media(prefers-color-scheme:dark){{:root{{--bg:#111;--card:#1c1c1e;--fg:#f2f2f7;--mut:#a1a1a6;--line:#333;--acc:#ff6b6b}}}}
+body{{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,sans-serif}} main{{max-width:880px;margin:auto;padding:16px}}
+h1{{font-size:1.35rem;margin:.2em 0}} h2{{font-size:1.05rem;margin:0 0 8px}} .pr,.bc{{color:var(--mut);font-size:.8rem}} .bc a{{color:inherit}}
+.lead{{color:var(--mut);font-size:.9rem}}
+.pick{{background:var(--card);border:2px solid var(--acc);border-radius:14px;padding:14px;margin:12px 0}}
+.uses{{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}} .uses button{{font:inherit;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}}
+.uses button[aria-pressed=true]{{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}}
+ol{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
+.row{{display:grid;grid-template-columns:2em minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}}
+.rk{{font-weight:700;color:var(--mut);text-align:center}} .rk.m1{{color:#fff;background:var(--gold);border-radius:50%;width:1.8em;height:1.8em;line-height:1.8em}}
+.rb{{min-width:0;display:grid}} small{{color:var(--mut);font-size:.74rem}}
+.rp{{text-align:right;display:grid;gap:3px;justify-items:end}} .rp b{{color:var(--acc);font-size:1.25rem;white-space:nowrap}} .rp i{{font-style:normal;font-size:.75rem;color:var(--mut);font-weight:400}}
+.go{{display:inline-block;background:var(--acc);color:#fff;font-weight:700;border-radius:8px;padding:5px 12px;text-decoration:none;font-size:.82rem}}
+@media(max-width:520px){{.row{{grid-template-columns:1.8em minmax(0,1fr)}} .rp{{grid-column:2;grid-template-columns:auto 1fr auto;align-items:center;justify-items:start}}}}
+.box{{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}}
+.box details{{border-top:1px solid var(--line);padding:8px 0}} .box details:first-of-type{{border-top:0}} .box summary{{cursor:pointer;font-weight:600}} .box p{{margin:6px 0 0;color:var(--mut);font-size:.9rem}}
+a:focus-visible,button:focus-visible{{outline:2px solid var(--acc);outline-offset:2px}}
+</style></head><body><main>
+<p class=pr>PR：このページには広告リンクを含む場合があります</p>
+<p class=bc><a href="./">TANKA</a> › 格安SIM 1GBあたり料金比較</p>
+<h1>格安SIM 1GBあたり料金比較</h1>
+<p class=lead>毎月使うデータ量を選ぶと、各社でその量を使える一番安いプランを並べます。料金は{SIM_CHECKED}時点の公式の通常料金（音声通話つき・税込）で、キャンペーン割引や家族割引は含みません。</p>
+<section class=pick><h2>毎月どれくらい使う？</h2><div class=uses role=group aria-label="毎月のデータ量">{buttons}</div>
+<ol id=list>{table(10)}</ol></section>
+<section class=box><h2>選び方のポイント</h2><ul>
+<li>まずは最近3か月のデータ使用量を、今の携帯会社のアプリで確認する。多めに見積もりすぎると払いすぎになる</li>
+<li>楽天モバイルとLINEMOは「使った分だけ」の段階制。月によって使用量がばらつく人に向いている</li>
+<li>電話をよくかけるなら、通話無料の条件（アプリ必須、5分以内など）も比べる</li></ul></section>
+<section class=box><h2>よくある質問</h2>{''.join(f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in faq)}</section>
+<p class=pr style="margin-top:16px"><a href="./">トップへ戻る</a> ・ <a href="about.html">このサイトについて</a></p>
+</main>
+<script>
+(function(){{
+  var plans={data}, list=document.getElementById('list');
+  function cost(p,gb){{for(var i=0;i<p.tiers.length;i++){{var c=p.tiers[i][0]; if(c===null||gb<=c) return [p.tiers[i][1],c];}} return null;}}
+  function esc(t){{return String(t).replace(/[&<>"']/g,function(c){{return {{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c]}})}}
+  function render(gb){{
+    var rows=plans.map(function(p){{return [cost(p,gb),p]}}).filter(function(r){{return r[0]}}).sort(function(a,b){{return a[0][0]-b[0][0]}});
+    list.innerHTML=rows.map(function(r,i){{var c=r[0],p=r[1];
+      return '<li class=row><span class="rk'+(i===0?' m1':'')+'">'+(i+1)+'</span><div class=rb><b>'+esc(p.name)+'</b><small>'+esc(p.plan)+'・'+(c[1]===null?'無制限':c[1]+'GBまで')+'</small><small>'+esc(p.note)+'</small></div>'+
+        '<div class=rp><b>'+c[0].toLocaleString()+'<i>円/月</i></b><small>1GBあたり '+Math.round(c[0]/gb).toLocaleString()+'円</small><a class=go href="'+esc(p.href)+'" rel="'+(p.ad?'sponsored ':'')+'noopener" target=_blank>公式サイト</a></div></li>';
+    }}).join('') || '<li class=row>この量を使えるプランがありません</li>';
+  }}
+  [].forEach.call(document.querySelectorAll('.uses button'),function(b){{
+    b.addEventListener('click',function(){{[].forEach.call(document.querySelectorAll('.uses button'),function(x){{x.setAttribute('aria-pressed',x===b)}}); render(+b.dataset.gb);}});
+  }});
+}})();
+</script></body></html>"""
+
+
 def render_about():
     return """<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>このサイトについて｜TANKA</title>
@@ -1078,6 +1202,7 @@ GROUPS = [
                          "sonicare-brush-head", "oralb-brush-head"]),
     ("pet", "ペット", ["dog-food-dry", "cat-food-dry", "pet-sheet", "cat-litter"]),
     ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "water-2l", "sparkling-water-500ml", "soy-sauce", "canola-oil"]),
+    ("phone", "スマホ・通信", ["mobile-battery"]),
     ("manga", "漫画 全巻セット", [f"manga-{m[0]}" for m in MANGA]),
 ]
 
@@ -1125,6 +1250,11 @@ def render_index(summary, updated):
 
     def section(gid, label, sls):
         cs = [by_slug[sl] for sl in sls if sl in by_slug]
+        if gid == "phone":  # 格安SIMはランキングではなく比較ページなので固定のカードを先頭に置く
+            sim = (f"<a class=card href='sim.html' data-k='格安sim 携帯 スマホ 料金 ギガ iijmio mineo 楽天モバイル linemo ahamo'>"
+                   f"<span class=noimg></span><div><h3>格安SIM 1GBあたり料金比較</h3><p class=b>使う量を選ぶだけ</p>"
+                   f"<p class=s>IIJmio・mineo・楽天モバイル・LINEMO・ahamoの公式料金で比較</p></div></a>")
+            return f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>" + sim + "".join(map(card, cs)) + "</div></section>"
         if gid != "manga":
             return f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>" + "".join(map(card, cs)) + "</div></section>"
         first, rest = cs[:12], cs[12:]
@@ -1292,10 +1422,11 @@ def main():
     (OUT / "history.json").write_text(json.dumps(history, ensure_ascii=False), encoding="utf-8")
     (OUT / "index.html").write_text(render_index(summary, updated), encoding="utf-8")
     (OUT / "about.html").write_text(render_about(), encoding="utf-8")
+    (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
     # 検索エンジン向けのサイトマップ
     site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
     day = updated[:10]
-    urls = [site, f"{site}about.html"] + [f"{site}{c['slug']}.html" for c in CATEGORIES]
+    urls = [site, f"{site}about.html", f"{site}sim.html"] + [f"{site}{c['slug']}.html" for c in CATEGORIES]
     xml = "".join(f"<url><loc>{u}</loc><lastmod>{day}</lastmod></url>" for u in urls)
     (OUT / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>' + chr(10)
