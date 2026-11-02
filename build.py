@@ -10,6 +10,7 @@ import os
 import re
 import time
 import urllib.parse
+import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -59,8 +60,13 @@ def fetch(keyword, pages=3):
             "Origin": os.environ.get("SITE_URL", "").rstrip("/"),
             "User-Agent": "Mozilla/5.0",
         })
-        with urllib.request.urlopen(req, timeout=20) as r:
-            data = json.load(r)
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                data = json.load(r)
+        except urllib.error.HTTPError as e:
+            # GitHub Actions の注釈に出してログイン無しで原因を読めるようにする
+            print(f"::error::楽天API {e.code}: {e.read()[:300].decode('utf-8', 'replace')}")
+            raise SystemExit(1)
         items += data.get("Items", [])
         time.sleep(1.1)  # 1秒1リクエスト制限
     return items
