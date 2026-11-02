@@ -4,9 +4,7 @@ on:
     - cron: "0 21 * * *"   # 毎朝6時(JST)
   workflow_dispatch:
   push:
-    paths:
-      - build.py
-      - .github/workflows/**
+    branches: [main]
 permissions:
   contents: write
 jobs:
