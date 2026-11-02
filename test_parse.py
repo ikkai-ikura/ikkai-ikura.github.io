@@ -37,7 +37,10 @@ PRODUCT_CASES = [
 if __name__ == "__main__":
     bad = [(n, build.parse_count(n, w, 2, 10000), e) for w, n, e in CASES if build.parse_count(n, w, 2, 10000) != e]
     bad += [(n, build.parse_product(n, **p), e) for p, n, e in PRODUCT_CASES if build.parse_product(n, **p) != e]
-    CASES = CASES + PRODUCT_CASES
+    VOL_CASES = [("【中古】呪術廻戦 全巻セット 1-29巻 完結", 29), ("鬼滅の刃 全23巻 完結セット 新品", 23),
+                 ("ワンピース 全巻セット 1～111巻", 111), ("進撃の巨人 全巻 34冊セット", 34), ("お好きな巻 1冊から 全巻対応", None)]
+    bad += [(n, build.parse_volumes(n)[0], e) for n, e in VOL_CASES if build.parse_volumes(n)[0] != e]
+    CASES = CASES + PRODUCT_CASES + VOL_CASES
     for b in bad:
         print("NG", *b)
     print(f"{len(CASES) - len(bad)}/{len(CASES)} OK")

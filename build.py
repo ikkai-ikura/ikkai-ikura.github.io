@@ -324,6 +324,30 @@ CATEGORIES = [
     },
 ]
 
+# 漫画の全巻セット: 作品ごとに1ページ。ショップ・新品/中古の違いを比べたいので同一商品のまとめはしない
+MANGA = [("one-piece", "ワンピース", ["ワンピース", "ONE PIECE"]), ("jujutsu", "呪術廻戦", ["呪術廻戦"]),
+         ("kimetsu", "鬼滅の刃", ["鬼滅の刃"]), ("shingeki", "進撃の巨人", ["進撃の巨人"]),
+         ("heroaca", "僕のヒーローアカデミア", ["ヒーローアカデミア"]), ("frieren", "葬送のフリーレン", ["フリーレン"]),
+         ("kusuriya", "薬屋のひとりごと", ["薬屋のひとりごと"]), ("chainsaw", "チェンソーマン", ["チェンソーマン"]),
+         ("spy-family", "SPY×FAMILY", ["SPY", "スパイファミリー"]), ("bluelock", "ブルーロック", ["ブルーロック"]),
+         ("tokyo-revengers", "東京卍リベンジャーズ", ["リベンジャーズ"]), ("kingdom", "キングダム", ["キングダム"]),
+         ("haikyu", "ハイキュー!!", ["ハイキュー"]), ("conan", "名探偵コナン", ["名探偵コナン"]),
+         ("dungeon-meshi", "ダンジョン飯", ["ダンジョン飯"]), ("oshinoko", "【推しの子】", ["推しの子"]),
+         ("kaiju8", "怪獣8号", ["怪獣8号"]), ("slamdunk", "スラムダンク", ["スラムダンク", "SLAM DUNK"]),
+         ("dragonball", "ドラゴンボール", ["ドラゴンボール"]), ("naruto", "NARUTO", ["NARUTO", "ナルト"])]
+MANGA_TIPS = ["中古の全巻セットは1冊あたりがかなり安いが、日焼けや書き込みなどの状態はショップごとに違う。商品ページの状態説明を確認する",
+              "「1〜30巻」のように最新刊まで入っていないセットもある。冊数と巻数の表示を見比べる",
+              "新品セットはきれいな状態で特典が付くこともあるが、1冊あたりは中古より高い"]
+for _slug, _title, _must in MANGA:
+    CATEGORIES.append({
+        "slug": f"manga-{_slug}", "title": f"{_title} 全巻セット 1冊あたり単価ランキング",
+        "keyword": f"{_title.strip('【】')} 全巻セット", "unit": "冊", "base": "冊", "per_text": "1冊あたり",
+        "manga": True, "group": False, "min_reviews": 0, "outlier": 0.2, "tips": MANGA_TIPS,
+        "must": _must, "must_all": ["全巻"],
+        "ng": ["グッズ", "Blu-ray", "DVD", "ポスター", "アクリル", "カード", "フィギュア", "ファンブック", "画集",
+               "小説", "ノベライズ", "ぬいぐるみ", "Tシャツ", "収納", "ブックカバー", "シール", "缶バッジ"],
+    })
+
 CATEGORIES_BY_SLUG = {c["slug"]: c for c in CATEGORIES}
 
 # 楽天以外の提携案件（A8）。ページ下部の紹介枠に出す。link はA8の広告コードそのまま（クリック計測の画像を含む）
@@ -576,6 +600,26 @@ def product_line(name, cat):
     return None
 
 
+def parse_volumes(name):
+    """全巻セットの冊数と状態。'1-30巻 中古' -> (30, '1〜30巻・中古')、'全28巻' -> (28, '全28巻')。読めなければ (None, '')"""
+    s = name.translate(ZEN)
+    if re.search(r"選べる|選択|バラ売り|単品|1冊から|お好きな", s):
+        return None, ""
+    m = re.search(r"(\d{1,3})\s*[-~～〜ー－―]\s*(\d{1,3})\s*巻", s)
+    if m and int(m.group(2)) > int(m.group(1)):
+        a, b = int(m.group(1)), int(m.group(2))
+        n, label = b - a + 1, f"{a}〜{b}巻"
+    else:
+        m = re.search(r"全\s*(\d{1,3})\s*巻", s) or re.search(r"(\d{1,3})\s*冊\s*(?:セット|入)?", s)
+        if not m:
+            return None, ""
+        n, label = int(m.group(1)), (f"全{m.group(1)}巻" if "巻" in m.group(0) else f"{m.group(1)}冊")
+    if not 3 <= n <= 200:
+        return None, ""
+    state = "中古" if "中古" in s else ("新品" if "新品" in s or "新刊" in s else "")
+    return n, label + (f"・{state}" if state else "")
+
+
 def rank(items, cat):
     rows = []
     for it in items:
@@ -583,7 +627,12 @@ def rank(items, cat):
             continue
         if cat.get("must") and not any(w in it["itemName"] for w in cat["must"]):
             continue
-        if cat.get("parser"):  # 「ロール数×長さ」のように2つの数字を掛けるジャンル
+        if any(w not in it["itemName"] for w in cat.get("must_all", [])):
+            continue
+        note = ""
+        if cat.get("manga"):  # 全巻セット: 冊数と新品/中古
+            n, note = parse_volumes(it["itemName"])
+        elif cat.get("parser"):  # 「ロール数×長さ」のように2つの数字を掛けるジャンル
             n = parse_product(it["itemName"], **cat["parser"])
         else:
             n = parse_count(it["itemName"], cat["words"], *cat.get("range", (5, 3000)))
@@ -598,12 +647,17 @@ def rank(items, cat):
             "url": it.get("affiliateUrl") or it.get("itemUrl"),
             "img": (it.get("mediumImageUrls") or [""])[0],
             "rate": float(it.get("affiliateRate") or 0),
+            "note": note,
         })
     rows.sort(key=lambda r: r["unit_price"])
     # 相場の35%未満（純正と互換が混ざるジャンルは15%未満）は数量の読み違いの可能性が高いので載せない
     if len(rows) >= 5:
         med = rows[len(rows) // 2]["unit_price"]
         rows = [r for r in rows if r["unit_price"] >= med * cat.get("outlier", 0.35)]
+    if not cat.get("group", True):  # 全巻セットのようにショップ・状態違いを比べたいジャンル
+        for r in rows:
+            r["others"] = 0
+        return rows[:30]
     # 同じ商品（ショップ違い・袋数違い）は1行にまとめ、1回あたり最安の出品だけを載せる
     groups = []
     for r in rows:  # rows は単価の安い順なので、各グループの先頭が最安
@@ -634,7 +688,7 @@ def clean_name(name, n=60):
     return (s[:n] + "…") if len(s) > n else (s or name[:n])
 
 
-def pick_rows(rows):
+def pick_rows(rows, cat=None):
     """冒頭の「結論」に出す3つ: 最安・高評価で安い・送料無料で安い（同じ商品は1回だけ）"""
     if not rows:
         return []
@@ -643,7 +697,10 @@ def pick_rows(rows):
     label = "いちばん安い" + ("・高評価" if good(first) else "") + ("・送料無料" if first["free_ship"] else "")
     picks, used = [(label, first)], {id(first)}
     # 1位と重なる場合は、条件を満たす次に安い商品を出す
-    for label, test in (("評価が高くて安い", good), ("送料無料で安い", lambda r: r["free_ship"])):
+    tests = (("評価が高くて安い", good), ("送料無料で安い", lambda r: r["free_ship"]))
+    if cat and cat.get("manga"):
+        tests = (("新品で安い", lambda r: "中古" not in r["name"]), ("送料無料で安い", lambda r: r["free_ship"]))
+    for label, test in tests:
         r = next((r for r in rows if test(r) and id(r) not in used), None)
         if r:
             used.add(id(r))
@@ -656,7 +713,7 @@ def render(cat, rows, updated):
     per_text = cat.get('per_text', f"1{cat['unit']}あたり")
     unit = cat["unit"]
     base = cat.get("base", unit + "分")
-    tips = TIPS.get(cat["slug"], [])
+    tips = TIPS.get(cat["slug"]) or cat.get("tips", [])
     tips_html = ("<section class=tips><h2>選び方のポイント</h2><ul>" + "".join(f"<li>{e(t)}</li>" for t in tips)
                  + "</ul></section>") if tips else ""
     promo = PROMOS.get(cat["slug"])
@@ -677,8 +734,8 @@ def render(cat, rows, updated):
 <span class=tag>{e(label)}</span><img src="{e(r['img'])}" alt="" loading=lazy>
 <span class=pn>{e(clean_name(r['name'], 44))}</span>
 <span class=pu><b>{r['unit_price']:.1f}円</b>/{e(unit)}</span>
-<span class=pm>{r['price']:,}円・{r['count']:,.0f}{e(base)}・★{r['rating']:.2f}（{r['reviews']:,}件）{'・送料無料' if r['free_ship'] else ''}</span>
-<span class=btn>楽天で見る</span></a>""" for label, r in pick_rows(rows))
+<span class=pm>{(e(r['note']) + '・') if r.get('note') else ''}{r['price']:,}円・{r['count']:,.0f}{e(base)}・★{r['rating']:.2f}（{r['reviews']:,}件）{'・送料無料' if r['free_ship'] else ''}</span>
+<span class=btn>楽天で見る</span></a>""" for label, r in pick_rows(rows, cat))
         hero = f"<section class=hero><h2>結論：{e(short(cat))}はこれが安い</h2>{saving}<div class=picks>{cards}</div></section>"
 
     medal = {1: "m1", 2: "m2", 3: "m3"}
@@ -686,7 +743,7 @@ def render(cat, rows, updated):
 <span class="rk {medal.get(i, '')}">{i}</span>
 <a class=ri href="{e(r['url'])}" rel="sponsored noopener" target=_blank><img src="{e(r['img'])}" alt="" loading=lazy></a>
 <div class=rb><a class=rn href="{e(r['url'])}" rel="sponsored noopener" target=_blank title="{e(r['name'])}">{e(clean_name(r['name']))}</a>
-<div class=bd>{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class=b>送料別</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
+<div class=bd>{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class=b>送料別</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
 <small>{e(r['shop'])}</small></div>
 <div class=rp><b>{r['unit_price']:.1f}<i>円/{e(unit)}</i></b><small>{r['price']:,}円・{r['count']:,.0f}{e(base)}</small>
 <a class=go href="{e(r['url'])}" rel="sponsored noopener" target=_blank>楽天で見る</a></div></li>"""
@@ -827,6 +884,7 @@ GROUPS = [
                          "sonicare-brush-head", "oralb-brush-head"]),
     ("pet", "ペット", ["dog-food-dry", "cat-food-dry", "pet-sheet", "cat-litter"]),
     ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "water-2l", "sparkling-water-500ml"]),
+    ("manga", "漫画 全巻セット", [f"manga-{m[0]}" for m in MANGA]),
 ]
 
 
