@@ -635,17 +635,19 @@ def clean_name(name, n=60):
 
 
 def pick_rows(rows):
-    """冒頭の「結論」に出す3つ: 最安・高評価で最安・送料無料で最安（重複は出さない）"""
-    picks, used = [], set()
-    cands = [
-        ("いちばん安い", rows[:1]),
-        ("評価が高い中でいちばん安い", [r for r in rows if r["rating"] >= 4.3 and r["reviews"] >= 100][:1]),
-        ("送料無料でいちばん安い", [r for r in rows if r["free_ship"]][:1]),
-    ]
-    for label, rs in cands:
-        if rs and id(rs[0]) not in used:
-            used.add(id(rs[0]))
-            picks.append((label, rs[0]))
+    """冒頭の「結論」に出す3つ: 最安・高評価で安い・送料無料で安い（同じ商品は1回だけ）"""
+    if not rows:
+        return []
+    good = lambda r: r["rating"] >= 4.3 and r["reviews"] >= 100
+    first = rows[0]
+    label = "いちばん安い" + ("・高評価" if good(first) else "") + ("・送料無料" if first["free_ship"] else "")
+    picks, used = [(label, first)], {id(first)}
+    # 1位と重なる場合は、条件を満たす次に安い商品を出す
+    for label, test in (("評価が高くて安い", good), ("送料無料で安い", lambda r: r["free_ship"])):
+        r = next((r for r in rows if test(r) and id(r) not in used), None)
+        if r:
+            used.add(id(r))
+            picks.append((label, r))
     return picks
 
 
