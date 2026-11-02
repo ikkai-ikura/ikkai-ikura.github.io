@@ -363,13 +363,13 @@ for _slug, _title, _must, _minv in MANGA:
     CATEGORIES.append({
         "slug": f"manga-{_slug}", "title": f"{_title} 全巻セット 1冊あたり単価ランキング",
         "keyword": MANGA_KW.get(_slug, re.sub(r'[【】!！。―☆、]', ' ', _title).split()[0]) + " 全巻セット", "unit": "冊", "base": "冊", "per_text": "1冊あたり",
-        "manga": True, "min_vol": _minv, "group": False, "pages": 2, "min_reviews": 0, "outlier": 0.2, "tips": MANGA_TIPS,
+        "manga": True, "min_vol": _minv, "min_price": 500, "group": False, "pages": 2, "min_reviews": 0, "outlier": 0.2, "tips": MANGA_TIPS,
         "must": _must, "must_all": ["全巻"],
         "ng": ["グッズ", "Blu-ray", "DVD", "ポスター", "アクリル", "カード", "フィギュア", "ファンブック", "画集",
                "小説", "ノベライズ", "ぬいぐるみ", "Tシャツ", "収納", "ブックカバー", "シール", "缶バッジ",
                "すまっしゅ", "外伝", "スピンオフ", "モブサイコ", "オメガトライブ", "Before the fall", "ゼロの日常",
                "警察学校", "犯沢", "パーティー", "EPISODE", "エピソード", "ポケット", "ポケモン", "モンスターハンター",
-               "黙示録", "SPARE BIKE", "銀の匙", "転ちゅら", "番外編", "アンソロジー"],
+               "黙示録", "SPARE BIKE", "銀の匙", "転ちゅら", "番外編", "アンソロジー", "リバーシ", "セイの格率"],
     })
 
 CATEGORIES_BY_SLUG = {c["slug"]: c for c in CATEGORIES}
@@ -665,6 +665,8 @@ def rank(items, cat):
         if not n or it.get("reviewCount", 0) < cat["min_reviews"]:
             continue
         price = it["itemPrice"]
+        if price < cat.get("min_price", 0):  # 全巻セットで数百円は1冊だけの出品などの読み違い
+            continue
         rows.append({
             "name": it["itemName"], "shop": it.get("shopName", ""),
             "price": price, "count": n, "unit_price": price / (n / cat.get("per", 1)),

@@ -41,6 +41,9 @@ if __name__ == "__main__":
                  ("ワンピース 全巻セット 1～111巻", 111), ("進撃の巨人 全巻 34冊セット", 34), ("お好きな巻 1冊から 全巻対応", None)]
     bad += [(n, build.parse_volumes(n)[0], e) for n, e in VOL_CASES if build.parse_volumes(n)[0] != e]
     CASES = CASES + PRODUCT_CASES + VOL_CASES
+    # KW_CHECK: 楽天の検索語は1文字の単語を含むとエラーになる
+    bad += [(kw, "1文字の単語", None) for c in build.CATEGORIES for kw in (c.get("keywords") or [c["keyword"]])
+            if any(len(t) == 1 for t in kw.split())]
     for b in bad:
         print("NG", *b)
     print(f"{len(CASES) - len(bad)}/{len(CASES)} OK")
