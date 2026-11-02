@@ -324,6 +324,19 @@ CATEGORIES = [
     },
 ]
 
+# 楽天以外の提携案件（A8）。ページ下部の紹介枠に出す。link はA8の広告コードそのまま（クリック計測の画像を含む）
+PROMOS = {
+    "dog-food-dry": {
+        "title": "原材料にこだわるなら：プレミアムドッグフード",
+        "lead": "上のランキングは一般的なドッグフードの単価順です。グレインフリーや生肉使用など原材料にこだわる場合はプレミアムフードという選択肢もあります。100gあたりは上のフードより高めになるので、定期便の割引も含めて公式サイトで確認してください。",
+        "items": [
+            {"name": "モグワン", "desc": "チキン生肉とサーモンを使ったグレインフリーのドッグフード",
+             "link": '<a href="https://px.a8.net/svt/ejp?a8mat=4BGBN4+8OKLDE+3J8+1BNJ9E" rel="sponsored nofollow noopener" target="_blank">モグワンの公式サイトを見る</a>'
+                     '<img border="0" width="1" height="1" src="https://www19.a8.net/0.gif?a8mat=4BGBN4+8OKLDE+3J8+1BNJ9E" alt="">'},
+        ],
+    },
+}
+
 # 各ページ下部の「選び方のポイント」
 TIPS = {
     "dishwasher-tablet": ["ほとんどのタブレットは1回1個。大容量の袋ほど1回あたりが安くなりやすい", "オールインワンやジェル入りは、すすぎ剤や油汚れ対策の成分が入るぶん単価が高め", "海外製の食洗機（ミーレなど）は、メーカー指定の洗剤を確認してから選ぶ"],
@@ -591,6 +604,11 @@ def render(cat, rows, updated):
     per_text = cat.get('per_text', f"1{cat['unit']}あたり")
     tips = TIPS.get(cat["slug"], [])
     tips_html = ("<h2>選び方のポイント</h2><ul>" + "".join(f"<li>{e(t)}</li>" for t in tips) + "</ul>") if tips else ""
+    promo = PROMOS.get(cat["slug"])
+    if promo:  # link は自分で管理する広告コードなのでエスケープしない
+        tips_html += (f"<section class=promo><p class=pr>PR</p><h2>{e(promo['title'])}</h2><p>{e(promo['lead'])}</p>"
+                      + "".join(f"<div class=pi><b>{e(i['name'])}</b><span>{e(i['desc'])}</span>{i['link']}</div>"
+                                for i in promo["items"]) + "</section>")
     trs = "".join(f"""
 <tr><td class=n>{i}</td>
 <td class=p><a href="{e(r['url'])}" rel="sponsored noopener" target=_blank>
@@ -637,6 +655,8 @@ table{{width:100%;border-collapse:collapse}} td{{border-bottom:1px solid var(--l
 @media(max-width:560px){{.d:last-child{{display:none}} .p span{{font-size:.85rem}}}}
 .oth{{margin-top:24px}} .oth a{{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:inherit;text-decoration:none;font-size:.85rem}}
 .bc{{font-size:.8rem;color:var(--mut)}} .bc a{{color:inherit}}
+.promo{{margin-top:24px;padding:12px 14px;border:1px solid var(--line);border-radius:8px}} .promo h2{{margin:.2em 0}} .promo .pr{{margin:0}}
+.pi{{display:grid;gap:2px;padding:8px 0;border-top:1px dashed var(--line)}} .pi span{{color:var(--mut);font-size:.85rem}} .pi a{{color:var(--acc);font-weight:600}}
 </style></head><body><main>
 <p class=pr>PR：このページは楽天アフィリエイトを利用しています</p>
 <p class=bc><a href="./">TANKA</a> › {e(cat['title'])}</p>
