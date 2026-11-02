@@ -222,6 +222,69 @@ CATEGORIES = [
         "min_reviews": 10, "range": (100, 20000),
         "ng": ["ケース", "スタンド", "耳かき", "イヤースコープ", "カメラ"],
     },
+    {
+        "slug": "rice",
+        "title": "お米 1kgあたり単価ランキング",
+        "keyword": "お米 5kg",
+        "keywords": ["お米 5kg", "お米 10kg", "お米 20kg", "無洗米 5kg"],
+        "unit": "kg", "base": "kg", "per_text": "1kgあたり",
+        "words": {"kg": 1, "キロ": 1},
+        "min_reviews": 10, "range": (2, 60),
+        "must": ["米"],
+        "ng": ["もち米", "米粉", "米ぬか", "パックご飯", "レトルト", "米びつ", "ライスストッカー", "精米機", "玄米茶", "米麹", "酒"],
+    },
+    {
+        "slug": "cat-food-dry",
+        "title": "キャットフード ドライ 100gあたり単価ランキング",
+        "keyword": "キャットフード ドライ",
+        "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
+        "words": {"kg": 1000, "g": 1},
+        "min_reviews": 10, "range": (500, 20000),
+        "must": ["キャットフード", "猫", "ねこ", "キャット"],
+        "ng": ["ウェット", "パウチ", "缶", "おやつ", "ちゅ～る", "ちゅーる", "ふりかけ", "トッピング", "ドッグ"],
+    },
+    {
+        "slug": "dog-food-dry",
+        "title": "ドッグフード ドライ 100gあたり単価ランキング",
+        "keyword": "ドッグフード ドライ",
+        "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
+        "words": {"kg": 1000, "g": 1},
+        "min_reviews": 10, "range": (500, 20000),
+        "must": ["ドッグフード", "犬", "いぬ", "ドッグ"],
+        "ng": ["ウェット", "パウチ", "缶", "おやつ", "ジャーキー", "ふりかけ", "トッピング", "キャット"],
+    },
+    {
+        "slug": "shampoo-refill",
+        "title": "シャンプー 詰め替え 100mlあたり単価ランキング",
+        "keyword": "シャンプー 詰め替え",
+        "keywords": ["シャンプー 詰め替え 大容量", "パンテーン 詰め替え", "TSUBAKI シャンプー 詰め替え", "メリット シャンプー 詰め替え"],
+        "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
+        "words": ML,
+        "min_reviews": 10, "range": (200, 20000),
+        "must": REFILL,
+        "ng": ["コンディショナー", "トリートメント", "リンス", "ボディ", "ペット", "犬", "猫", "ドライ"],
+    },
+    {
+        "slug": "toothpaste",
+        "title": "歯磨き粉 100gあたり単価ランキング",
+        "keyword": "歯磨き粉",
+        "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
+        "words": {"g": 1},
+        "min_reviews": 10, "range": (50, 5000),
+        "must": ["歯磨", "歯みがき", "ハミガキ", "はみがき"],
+        "ng": ["歯ブラシ", "マウスウォッシュ", "洗口液", "フロス", "犬", "猫", "ペット", "シート"],
+    },
+    {
+        "slug": "liquid-laundry-refill",
+        "title": "液体洗濯洗剤 詰め替え 100gあたり単価ランキング",
+        "keyword": "洗濯洗剤 液体 詰め替え",
+        "keywords": ["洗濯洗剤 液体 詰め替え 大容量", "アタック 詰め替え", "アリエール 詰め替え", "トップ スーパーナノックス 詰め替え"],
+        "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
+        "words": {"kg": 1000, "g": 1},
+        "min_reviews": 10, "range": (300, 20000),
+        "must": REFILL,
+        "ng": ["ジェルボール", "柔軟剤", "漂白", "粉末", "おしゃれ着", "ボトル"],
+    },
 ]
 
 # 各ページ下部の「選び方のポイント」
@@ -239,6 +302,12 @@ TIPS = {
     "aa-battery": ["アルカリ乾電池はリモコン・時計など幅広く使える定番", "使用推奨期限（10年など）が長いものは備蓄にも向く", "消費が多い機器なら充電池も検討する（このページは使い切りの乾電池のみ）"],
     "protein": ["ホエイ・ソイ・カゼインで吸収の速さや原料が違う", "100gあたりの価格だけでなく、たんぱく質の含有率も商品ページで確認する", "初めての味は小さい袋で試してから大袋にすると失敗しにくい"],
     "water-2l": ["軟水は日本人になじみやすく、硬水はミネラルが多い", "ケース（6本・9本・12本）単位が安い。重いので送料込みかどうかも見る", "備蓄用なら保存期間の長い商品を選ぶ"],
+    "rice": ["銘柄米・ブレンド米・複数原料米で価格が大きく違う。ブレンド米は安いが産地や品種は混ざる", "10kg・20kgの大袋は1kgあたりが安いが、精米後は早めに食べきるのがおすすめ（夏は特に）", "無洗米は研ぐ手間と水が省けるぶん、少し高めのことが多い"],
+    "cat-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "子猫用・成猫用・シニア用など年齢で栄養バランスが違う", "大袋は割安だが、開封後は酸化しやすいので小分け包装が便利"],
+    "dog-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "小型犬用は粒が小さい。犬種や年齢に合ったものを選ぶ", "大袋は割安だが、開封後は湿気と酸化に注意。小分け包装だと鮮度を保ちやすい"],
+    "shampoo-refill": ["詰め替えは本体ボトルより100mlあたりが安い。大容量パウチほど割安", "ノンシリコン・アミノ酸系などで洗い上がりが違う", "同じシリーズのコンディショナーと合わせると仕上がりがそろいやすい"],
+    "toothpaste": ["フッ素濃度（1450ppmなど）は虫歯予防の目安。年齢によって推奨濃度が違う", "歯周病ケア・ホワイトニング・知覚過敏など目的で選ぶ", "まとめ買い（3本・5本セット）が100gあたり安くなりやすい"],
+    "liquid-laundry-refill": ["濃縮タイプは1回の使用量が少ないので、100gあたりの価格だけで比べると割高に見えることがある", "超特大の詰め替えほど100gあたりが安い", "部屋干し・抗菌・すすぎ1回など、機能で価格帯が分かれる"],
     "hand-soap-refill": ["泡タイプと液体タイプで詰め替え先のボトルが違うので、手持ちのボトルに合うものを選ぶ", "大容量の詰め替え（1L以上）ほど100mlあたりが安い", "薬用（殺菌成分入り）かどうかで値段が変わる"],
     "dish-soap-refill": ["濃縮タイプは1回に使う量が少ないので、100mlあたりの値段だけでなく使用量も考える", "超特大の詰め替えは1回の購入額は高いが、単価は最安になりやすい", "手肌へのやさしさや除菌など、機能で価格帯が分かれる"],
     "body-soap-refill": ["詰め替えは本体ボトルより100mlあたりがかなり安い", "大容量パウチは開け口が大きいと詰め替えやすい", "肌が弱い人は無添加・弱酸性などの表示を確認する"],
@@ -436,6 +505,12 @@ def rank(items, cat):
     return out
 
 
+def short(c):
+    """ナビ用の短い名前: 「ゴミ袋 45L 1枚あたり単価ランキング」→「ゴミ袋 45L」"""
+    per = c.get("per_text", f"1{c['unit']}あたり")
+    return c["title"].replace("単価ランキング", "").replace(per, "").strip()
+
+
 def render(cat, rows, updated):
     e = html.escape
     per_text = cat.get('per_text', f"1{cat['unit']}あたり")
@@ -450,10 +525,29 @@ def render(cat, rows, updated):
 <td class=d>{r['price']:,}円<br><small>{r['count']:,.0f}{cat.get('base', cat['unit'] + '分')}</small></td>
 <td class=d>★{r['rating']:.2f}<br><small>{r['reviews']:,}件</small></td></tr>"""
                   for i, r in enumerate(rows, 1))
+    site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
+    url = f"{site}{cat['slug']}.html"
+    desc = f"{cat['keyword']}を楽天の価格と内容量から{per_text}の値段に換算して毎日自動で比較。同じ商品は最安の出品だけを掲載。"
+    # 検索エンジン向け構造化データ（パンくず＋ランキングの並び）
+    ld = json.dumps([
+        {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "1回いくら", "item": site},
+            {"@type": "ListItem", "position": 2, "name": cat["title"], "item": url}]},
+        {"@context": "https://schema.org", "@type": "ItemList", "name": cat["title"], "itemListElement": [
+            {"@type": "ListItem", "position": i, "name": r["name"][:80]} for i, r in enumerate(rows[:10], 1)]},
+    ], ensure_ascii=False).replace("</", "<\\/")
+    others = "".join(f'<a href="{c["slug"]}.html">{e(short(c))}</a>'
+                     for c in CATEGORIES if c["slug"] != cat["slug"])
+    nav = f'<nav class=oth><h2>ほかのジャンル</h2>{others}</nav><p class=pr><a href="./">トップへ戻る</a></p>'
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
-<title>{e(cat['title'])}</title>
-<meta name=description content="{e(cat['keyword'])}を楽天の価格と内容量から{per_text}の値段に換算して毎日自動で比較。">
+<title>{e(cat['title'])}｜1回いくら</title>
+<meta name=description content="{e(desc)}">
+<link rel=canonical href="{url}">
+<meta property=og:title content="{e(cat['title'])}"><meta property=og:description content="{e(desc)}">
+<meta property=og:url content="{url}"><meta property=og:type content=article><meta property=og:site_name content="1回いくら">
+<meta property=og:image content="{e(rows[0]['img'] if rows else '')}"><meta name=twitter:card content=summary>
+<script type="application/ld+json">{ld}</script>
 <style>
 :root{{--bg:#fff;--fg:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#bf0000}}
 @media(prefers-color-scheme:dark){{:root{{--bg:#111;--fg:#f2f2f7;--mut:#a1a1a6;--line:#333;--acc:#ff5a5a}}}}
@@ -466,13 +560,17 @@ table{{width:100%;border-collapse:collapse}} td{{border-bottom:1px solid var(--l
 .p img{{width:56px;height:56px;object-fit:contain;flex:none}} small{{display:block;color:var(--mut);font-size:.75rem}}
 .d{{text-align:right;white-space:nowrap;font-size:.85rem}}
 @media(max-width:560px){{.d:last-child{{display:none}} .p span{{font-size:.85rem}}}}
+.oth{{margin-top:24px}} .oth a{{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:inherit;text-decoration:none;font-size:.85rem}}
+.bc{{font-size:.8rem;color:var(--mut)}} .bc a{{color:inherit}}
 </style></head><body><main>
 <p class=pr>PR：このページは楽天アフィリエイトを利用しています</p>
+<p class=bc><a href="./">1回いくら</a> › {e(cat['title'])}</p>
 <h1>{e(cat['title'])}</h1>
 <p>楽天市場の商品を「価格 ÷ 内容量」で{per_text}に換算し、安い順に並べています。同じ商品はショップ違い・袋数違いをまとめ、1回あたり最安の出品だけを載せています。毎日自動更新（最終更新 {updated}）。価格は更新時点のもので、送料別の商品は送料を含みません。</p>
 <table>{trs}</table>
 {tips_html}
 <p class=pr>内容量は商品名から自動で読み取っています。セット数の読み違いがある場合があるので、購入前に商品ページで確認してください。</p>
+{nav}
 </main></body></html>"""
 
 
@@ -481,7 +579,7 @@ def render_index(summary, updated):
     cards = []
     for c in CATEGORIES:
         s = summary.get(c["slug"])
-        name = c["title"].replace(" 単価ランキング", "").replace("単価ランキング", "")
+        name = short(c)
         best = (f"<p class=b>最安 <b>{s['unit_price']:.1f}円</b><small>/{e(c['unit'])}</small></p>"
                 f"<p class=s>{e(s['name'])}</p>") if s else "<p class=s>集計中</p>"
         img = f"<img src='{e(s['img'])}' alt='' loading=lazy>" if s and s.get("img") else ""
