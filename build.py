@@ -531,7 +531,7 @@ def render(cat, rows, updated):
     # 検索エンジン向け構造化データ（パンくず＋ランキングの並び）
     ld = json.dumps([
         {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "1回いくら", "item": site},
+            {"@type": "ListItem", "position": 1, "name": "TANKA", "item": site},
             {"@type": "ListItem", "position": 2, "name": cat["title"], "item": url}]},
         {"@context": "https://schema.org", "@type": "ItemList", "name": cat["title"], "itemListElement": [
             {"@type": "ListItem", "position": i, "name": r["name"][:80]} for i, r in enumerate(rows[:10], 1)]},
@@ -541,11 +541,11 @@ def render(cat, rows, updated):
     nav = f'<nav class=oth><h2>ほかのジャンル</h2>{others}</nav><p class=pr><a href="./">トップへ戻る</a></p>'
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
-<title>{e(cat['title'])}｜1回いくら</title>
+<title>{e(cat['title'])}｜TANKA</title>
 <meta name=description content="{e(desc)}">
 <link rel=canonical href="{url}">
 <meta property=og:title content="{e(cat['title'])}"><meta property=og:description content="{e(desc)}">
-<meta property=og:url content="{url}"><meta property=og:type content=article><meta property=og:site_name content="1回いくら">
+<meta property=og:url content="{url}"><meta property=og:type content=article><meta property=og:site_name content="TANKA">
 <meta property=og:image content="{e(rows[0]['img'] if rows else '')}"><meta name=twitter:card content=summary>
 <script type="application/ld+json">{ld}</script>
 <style>
@@ -564,7 +564,7 @@ table{{width:100%;border-collapse:collapse}} td{{border-bottom:1px solid var(--l
 .bc{{font-size:.8rem;color:var(--mut)}} .bc a{{color:inherit}}
 </style></head><body><main>
 <p class=pr>PR：このページは楽天アフィリエイトを利用しています</p>
-<p class=bc><a href="./">1回いくら</a> › {e(cat['title'])}</p>
+<p class=bc><a href="./">TANKA</a> › {e(cat['title'])}</p>
 <h1>{e(cat['title'])}</h1>
 <p>楽天市場の商品を「価格 ÷ 内容量」で{per_text}に換算し、安い順に並べています。同じ商品はショップ違い・袋数違いをまとめ、1回あたり最安の出品だけを載せています。毎日自動更新（最終更新 {updated}）。価格は更新時点のもので、送料別の商品は送料を含みません。</p>
 <table>{trs}</table>
@@ -585,7 +585,7 @@ def render_index(summary, updated):
         img = f"<img src='{e(s['img'])}' alt='' loading=lazy>" if s and s.get("img") else ""
         cards.append(f"<a class=card href='{c['slug']}.html'>{img}<div><h2>{e(name)}</h2>{best}</div></a>")
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>1回いくら｜日用品を1回あたりの値段で比較</title>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>TANKA｜日用品の1回あたり単価比較</title>
 <meta name="google-site-verification" content="A-JyA2Us3KYpkTLgjEMxZSKUwAAWLqE7rWFsJdlSn9o">
 <meta name=description content="洗剤・ゴミ袋・ペットシーツ・コーヒー豆など日用品を、楽天の価格と内容量から1回あたりの値段に換算して毎日自動で比較。">
 <style>
@@ -601,7 +601,7 @@ main{{max-width:960px;margin:auto;padding:16px}} h1{{margin:.2em 0;font-size:1.6
 .s{{margin:0;color:var(--mut);font-size:.75rem;line-height:1.4}} small{{color:var(--mut)}}
 </style></head><body><main>
 <p class=pr>PR：このサイトは楽天アフィリエイトを利用しています</p>
-<h1>1回いくら</h1>
+<h1>TANKA <span style="font-size:.9rem;font-weight:normal;color:var(--mut)">日用品の1回あたり単価比較</span></h1>
 <p class=lead>日用品を「1回あたりの値段」で比べるサイトです。楽天市場の価格と内容量から自動で計算し、毎日更新しています（最終更新 {updated}）。</p>
 <div class=grid>{''.join(cards)}</div>
 </main></body></html>"""
