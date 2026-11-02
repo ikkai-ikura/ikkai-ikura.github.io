@@ -1073,6 +1073,27 @@ SIM_PLANS = [
     {"name": "ahamo", "plan": "ahamo", "url": "https://ahamo.com/plan/",
      "tiers": [(30, 2970), (110, 4950)],
      "note": "5分以内の国内通話無料。2026年12月1日から40GB 3,135円〜120GB 5,115円の段階制に改定予定", "link": ""},
+    {"name": "UQ mobile", "plan": "トクトクプラン2", "url": "https://www.uqwimax.jp/mobile/plan/tokutoku2/",
+     "tiers": [(5, 2948), (30, 4048)], "step": True,
+     "note": "5GB以下の月は自動で安くなる。自宅セット割・au PAYカード払いなどの割引で最大1,628円〜", "link": ""},
+    {"name": "J:COM MOBILE", "plan": "Aプラン ST/SU", "url": "https://www.jcom.co.jp/service/mobile/price/",
+     "tiers": [(1, 1408), (5, 1958), (10, 2508), (20, 3058), (50, 3828)],
+     "note": "J:COMのネットやテレビとセットならデータ増量（データ盛）", "link": ""},
+    {"name": "X-mobile", "plan": "グリーンプラン", "url": "https://xmobile.ne.jp/greenplan/",
+     "tiers": [(1, 715), (3, 968), (5, 1111), (10, 1518), (20, 2178), (30, 3058), (50, 3828), (100, 9328)],
+     "note": "ドコモ回線。容量を細かく選べて、余ったデータは翌月に繰り越し", "link": ""},
+    {"name": "NUROモバイル", "plan": "バリュープラス／NEOプラン", "url": "https://mobile.nuro.jp/plan/",
+     "tiers": [(3, 792), (5, 990), (10, 1485), (15, 1790), (35, 2699), (55, 3980)],
+     "note": "ソニー系。5GB以上はLINEなどのSNSのデータ消費ゼロ（Gigaプラス付き）", "link": ""},
+    {"name": "LIBMO", "plan": "超なっとくプラン", "url": "https://www.libmo.jp/plan/",
+     "tiers": [(5, 990), (10, 1540), (20, 1980), (40, 2970), (60, 3960)],
+     "note": "ドコモ回線。音声SIMは1年以内の解約で月額1か月分の解約金あり", "link": ""},
+    {"name": "ロケットモバイル", "plan": "Dプラン 通話プラン", "url": "https://rokemoba.co.jp/price",
+     "tiers": [(1, 765), (2, 850), (3, 985), (5, 1430), (7, 1980), (20, 4400)],
+     "note": "ドコモ回線。月額料金は初月無料。小容量向け", "link": ""},
+    {"name": "BB.exciteモバイル", "plan": "Flatプラン", "url": "https://bb.excite.co.jp/exmb/sim/plan/",
+     "tiers": [(5, 1210), (14, 1650), (30, 1980), (40, 2970), (50, 4400)],
+     "note": "30GBが安い。初期費用無料、余ったデータは翌月に繰り越し", "link": ""},
 ]
 SIM_USES = [1, 3, 5, 10, 20, 30, 50, 100]
 
@@ -1112,7 +1133,7 @@ def render_sim(updated):
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>格安SIM 1GBあたり料金比較｜TANKA</title>
-<meta name=description content="毎月使うデータ量を選ぶだけで、IIJmio・mineo・楽天モバイル・LINEMO・ahamoの一番安いプランと1GBあたりの料金を比較。{SIM_CHECKED}時点の公式料金。">
+<meta name=description content="毎月使うデータ量を選ぶだけで、IIJmio・mineo・楽天モバイル・LINEMO・ahamo・UQ mobileなど{len(SIM_PLANS)}社の一番安いプランと1GBあたりの料金を比較。{SIM_CHECKED}時点の公式料金。">
 <link rel=canonical href="{url}"><meta property=og:title content="格安SIM 1GBあたり料金比較｜TANKA"><meta property=og:url content="{url}"><meta property=og:site_name content="TANKA">
 <script type="application/ld+json">{ld}</script>
 <style>
@@ -1251,9 +1272,9 @@ def render_index(summary, updated):
     def section(gid, label, sls):
         cs = [by_slug[sl] for sl in sls if sl in by_slug]
         if gid == "phone":  # 格安SIMはランキングではなく比較ページなので固定のカードを先頭に置く
-            sim = (f"<a class=card href='sim.html' data-k='格安sim 携帯 スマホ 料金 ギガ iijmio mineo 楽天モバイル linemo ahamo'>"
+            sim = (f"<a class=card href='sim.html' data-k='格安sim 携帯 スマホ 料金 ギガ iijmio mineo 楽天モバイル linemo ahamo uq jcom nuro libmo excite'>"
                    f"<span class=noimg></span><div><h3>格安SIM 1GBあたり料金比較</h3><p class=b>使う量を選ぶだけ</p>"
-                   f"<p class=s>IIJmio・mineo・楽天モバイル・LINEMO・ahamoの公式料金で比較</p></div></a>")
+                   f"<p class=s>格安SIM・サブブランド12社の公式料金で比較</p></div></a>")
             return f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>" + sim + "".join(map(card, cs)) + "</div></section>"
         if gid != "manga":
             return f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>" + "".join(map(card, cs)) + "</div></section>"
