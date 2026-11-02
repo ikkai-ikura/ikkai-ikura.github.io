@@ -1115,10 +1115,25 @@ def render_index(summary, updated):
                         for i, c in enumerate(deals, 1))
     n_items = sum(s.get("count", 0) for s in summary.values())
     chips = "".join(f"<a href='#{gid}'>{e(label)}<i>{len([s for s in sls if s in by_slug])}</i></a>" for gid, label, sls in groups)
-    sections = "".join(
-        f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>"
-        + "".join(card(by_slug[sl]) for sl in sls if sl in by_slug) + "</div></section>"
-        for gid, label, sls in groups)
+    def tile(c):
+        """漫画用の小さいタイル: 作品名と1冊あたりの最安だけ"""
+        s = summary.get(c["slug"])
+        name = short(c).replace(" 全巻セット", "")
+        words = " ".join([name, c["keyword"]] + c.get("must", []))
+        price = f"<b>{s['unit_price']:.0f}円</b>/冊〜" if s else "集計中"
+        return f"<a class='card tile' href='{c['slug']}.html' data-k='{e(words.lower())}'><h3>{e(name)}</h3><span>{price}</span></a>"
+
+    def section(gid, label, sls):
+        cs = [by_slug[sl] for sl in sls if sl in by_slug]
+        if gid != "manga":
+            return f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>" + "".join(map(card, cs)) + "</div></section>"
+        first, rest = cs[:12], cs[12:]
+        more = (f"<details class=more><summary>すべての作品を見る（{len(cs)}作品）</summary>"
+                f"<div class=tiles>{''.join(map(tile, rest))}</div></details>") if rest else ""
+        return (f"<section class=grp id='{gid}'><h2>{e(label)}<small>1冊あたりの最安</small></h2>"
+                f"<div class=tiles>{''.join(map(tile, first))}</div>{more}</section>")
+
+    sections = "".join(section(*g) for g in groups)
     site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
     desc = (f"洗剤・トイレットペーパー・ペットフード・お米・漫画全巻セットなど{len(CATEGORIES)}ジャンルを、"
             "楽天の価格と内容量から1回あたり・1枚あたり・1冊あたりの値段に換算して毎朝自動で比較。")
@@ -1169,6 +1184,11 @@ h2{{font-size:1.1rem;margin:0 0 10px}}
 .how li{{counter-increment:s;display:grid;gap:2px}} .how li::before{{content:counter(s);width:1.7em;height:1.7em;line-height:1.7em;text-align:center;border-radius:50%;background:var(--acc-soft);color:var(--acc);font-weight:700}}
 .how b{{font-size:.95rem}} .how span{{color:var(--mut);font-size:.85rem}}
 .none{{color:var(--mut);margin-top:16px}}
+.grp h2 small{{font-weight:400;color:var(--mut);font-size:.8rem;margin-left:6px}}
+.tiles{{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}}
+.tile{{display:grid;gap:2px;padding:8px 10px}} .tile h3{{font-size:.85rem;line-height:1.3}} .tile span{{font-size:.75rem;color:var(--mut)}} .tile b{{color:var(--acc);font-size:.95rem}}
+.more{{margin-top:8px}} .more summary{{cursor:pointer;color:var(--acc);font-weight:600;padding:6px 0}} .more .tiles{{margin-top:6px}}
+@media(max-width:480px){{.tiles{{grid-template-columns:repeat(2,minmax(0,1fr))}}}}
 footer{{margin-top:28px;color:var(--mut);font-size:.8rem;display:grid;gap:4px}} footer a{{color:inherit}}
 a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset:2px}}
 </style></head><body><main>
@@ -1197,6 +1217,7 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
   q.addEventListener('input',function(){{
     var w=norm(q.value.trim()), hit=0;
     cards.forEach(function(c){{var ok=!w||norm(c.dataset.k+' '+c.textContent).indexOf(w)>=0; c.hidden=!ok; if(ok)hit++;}});
+    [].forEach.call(document.querySelectorAll('.more'),function(d){{ if(w) d.open=true; }});
     grps.forEach(function(g){{g.hidden=!g.querySelector('.card:not([hidden])');}});
     today.hidden=!!w;
     document.getElementById('none').hidden=hit>0;
