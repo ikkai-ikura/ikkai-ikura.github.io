@@ -22,6 +22,7 @@ API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701"
 
 ML = {"ml": 1, "mL": 1, "ML": 1, "L": 1000, "l": 1000, "リットル": 1000}
 REFILL = ["詰め替え", "詰替", "つめかえ", "詰めかえ"]
+NG_ALL = ["ふるさと納税", "返礼品"]  # 寄付額なので実際の値段と比べられない
 
 # ページごとの設定。unit=表示単位、words=数量の後ろに付く語
 CATEGORIES = [
@@ -163,36 +164,40 @@ CATEGORIES = [
         "slug": "hand-soap-refill",
         "title": "ハンドソープ 詰め替え 100mlあたり単価ランキング",
         "keyword": "ハンドソープ 詰め替え",
+        "keywords": ["ハンドソープ 詰め替え 大容量", "キレイキレイ 詰め替え", "ビオレu 泡ハンドソープ 詰め替え", "ミューズ 詰め替え"],
         "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
         "words": ML,
         "min_reviews": 10, "range": (200, 20000),
         "must": REFILL,
-        "ng": ["ディスペンサー", "オート", "自動", "本体", "ポンプ付"],
+        "ng": ["ディスペンサー", "オート", "自動", "本体", "ポンプ付", "ボディソープ", "食器"],
     },
     {
         "slug": "dish-soap-refill",
         "title": "食器用洗剤 詰め替え 100mlあたり単価ランキング",
         "keyword": "食器用洗剤 詰め替え",
+        "keywords": ["食器用洗剤 詰め替え 大容量", "ジョイ 詰め替え", "キュキュット 詰め替え", "チャーミー 詰め替え"],
         "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
         "words": ML,
         "min_reviews": 10, "range": (200, 20000),
         "must": REFILL,
-        "ng": ["食洗機", "タブレット", "スポンジ", "ボトル"],
+        "ng": ["食洗機", "タブレット", "スポンジ", "ボトル", "ディスペンサー", "洗濯", "ペット用"],
     },
     {
         "slug": "body-soap-refill",
         "title": "ボディソープ 詰め替え 100mlあたり単価ランキング",
         "keyword": "ボディソープ 詰め替え",
+        "keywords": ["ボディソープ 詰め替え 大容量", "ビオレu 詰め替え", "ダヴ ボディウォッシュ 詰め替え", "ナイーブ 詰め替え"],
         "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
         "words": ML,
         "min_reviews": 10, "range": (200, 20000),
         "must": REFILL,
-        "ng": ["本体", "ポンプ", "シャンプー", "ボトル"],
+        "ng": ["本体", "ポンプ", "シャンプー", "ボトル", "ディスペンサー", "ハンドソープ"],
     },
     {
         "slug": "softener-refill",
         "title": "柔軟剤 詰め替え 100mlあたり単価ランキング",
         "keyword": "柔軟剤 詰め替え",
+        "keywords": ["柔軟剤 詰め替え 大容量", "レノア 詰め替え", "ソフラン 詰め替え", "ハミング 詰め替え"],
         "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
         "words": ML,
         "min_reviews": 10, "range": (300, 30000),
@@ -393,7 +398,7 @@ def product_line(name, cat):
 def rank(items, cat):
     rows = []
     for it in items:
-        if any(w in it["itemName"] for w in cat.get("ng", [])):
+        if any(w in it["itemName"] for w in cat.get("ng", []) + NG_ALL):
             continue
         if cat.get("must") and not any(w in it["itemName"] for w in cat["must"]):
             continue
@@ -518,7 +523,14 @@ def main():
     for cat in CATEGORIES:
         if live:
             try:
-                items = fetch(cat["keyword"])
+                # keywords があれば複数の検索語で集めて重複を除く（人気商品が検索上位に出ないジャンル向け）
+                kws = cat.get("keywords") or [cat["keyword"]]
+                items, seen_urls = [], set()
+                for kw in kws:
+                    for it in fetch(kw, pages=3 if len(kws) == 1 else 2):
+                        if it.get("itemUrl") not in seen_urls:
+                            seen_urls.add(it.get("itemUrl"))
+                            items.append(it)
             except RuntimeError as e:
                 # 1ジャンルの失敗で全体を止めない。前回のページはそのまま残る
                 print(f"::warning::{cat['slug']}: {e}")
