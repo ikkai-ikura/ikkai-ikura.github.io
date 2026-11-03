@@ -821,25 +821,30 @@ def clean_name(name, n=60):
     return (s[:n] + "…") if len(s) > n else (s or name[:n])
 
 
+def best_row(rows):
+    """送料を含めて比べやすい「最安」: 送料無料の中の最安。送料無料がなければ表示価格の最安"""
+    return next((r for r in rows if r["free_ship"]), rows[0]) if rows else None
+
+
 def pick_rows(rows, cat=None):
-    """冒頭の「結論」に出す3つ: 最安・高評価で安い・送料無料で安い（同じ商品は1回だけ）"""
+    """冒頭の「結論」に出す3つ。送料別の商品は送料を含まない単価なので、1枠目は送料無料の最安にする"""
     if not rows:
         return []
     good = lambda r: r["rating"] >= 4.3 and r["reviews"] >= 100
-    first = rows[0]
-    is_top = first is max(rows, key=lambda r: r.get("score", 0))
-    label = "いちばん安い" + ("・総合1位" if is_top else ("・高評価" if good(first) else "")) + ("・送料無料" if first["free_ship"] else "")
-    picks, used = [(label, first)], {id(first)}
-    # 1位と重なる場合は、条件を満たす次に安い商品を出す
     top_score = max(rows, key=lambda r: r.get("score", 0))
-    tests = (("総合おすすめ（安さ×評価）", lambda r: r is top_score), ("送料無料で安い", lambda r: r["free_ship"]))
+    first = best_row(rows)
+    label = ("送料込みでいちばん安い" if first["free_ship"] else "いちばん安い（送料別）") +             ("・総合1位" if first is top_score else ("・高評価" if good(first) else ""))
+    picks, used = [(label, first)], {id(first)}
+    tests = [("総合おすすめ（安さ×評価）", lambda r: r is top_score)]
     if cat and cat.get("manga"):
-        tests = (("新品で安い", lambda r: "中古" not in r["name"]), ("送料無料で安い", lambda r: r["free_ship"]))
+        tests = [("新品で安い", lambda r: "中古" not in r["name"])]
+    # 送料別でも表示価格がもっと安いものがあれば、送料別と明記して並べる
+    tests.append(("表示価格の最安（送料別）", lambda r: not r["free_ship"] and r["unit_price"] < first["unit_price"]))
     for label, test in tests:
         r = next((r for r in rows if test(r) and id(r) not in used), None)
         if r:
             used.add(id(r))
-            picks.append((label, r))
+            picks.append((label if r["free_ship"] or "送料別" in label else label + "（送料別）", r))
     return picks
 
 
@@ -899,6 +904,46 @@ def faq_items(cat, rows, updated):
     return qa
 
 
+def per_text_of(cat):
+    return cat.get("per_text", f"1{cat['unit']}あたり")
+
+
+def data_insights(cat, rows, hist):
+    """そのジャンルのその日のデータから書く短い解説（ページごとに中身が変わる）"""
+    if len(rows) < 3:
+        return []
+    unit = cat["unit"]
+    ups = sorted(r["unit_price"] for r in rows)
+    out = [f"掲載している{len(rows)}商品の単価は{ups[0]:,.1f}〜{ups[-1]:,.1f}円/{unit}で、最も高い商品は最も安い商品の{ups[-1] / ups[0]:.1f}倍です。"]
+    # 内容量が多い商品ほど安いか
+    by_n = sorted(rows, key=lambda r: r["count"])
+    half = len(by_n) // 2
+    small = sum(r["unit_price"] for r in by_n[:half]) / half
+    large = sum(r["unit_price"] for r in by_n[-half:]) / half
+    if small > 0 and abs(large / small - 1) >= 0.05:
+        word = "安く" if large < small else "高く"
+        out.append(f"内容量の多い半分の商品は、少ない半分より{per_text_of(cat)}の値段が平均{abs(1 - large / small) * 100:.0f}%{word}なっています。"
+                   + ("まとめ買いのほうが割安な傾向です。" if large < small else "大容量だから安いとは限りません。"))
+    free = sum(r["free_ship"] for r in rows)
+    out.append(f"送料無料は{len(rows)}商品中{free}商品です。" + ("送料別の商品は、送料を足すと単価が上がる点に注意してください。" if free < len(rows) else ""))
+    pts = [p[1] for p in hist[-30:]] if hist else []
+    if len(pts) >= 7 and pts[0] > 0:
+        chg = (pts[-1] / pts[0] - 1) * 100
+        out.append(f"直近{len(pts)}日で、送料無料の最安は{pts[0]:,.1f}円から{pts[-1]:,.1f}円に" +
+                   ("ほぼ変わっていません。" if abs(chg) < 2 else (f"{-chg:.0f}%下がりました。" if chg < 0 else f"{chg:.0f}%上がりました。")))
+    brands = cat.get("brands", {})
+    if brands:
+        low = {}
+        for r in rows:
+            b = next((b for b, al in brands.items() if any(a in r["name"].lower() for a in al)), None)
+            if b and b not in low:
+                low[b] = r["unit_price"]
+        if len(low) >= 2:
+            b1, b2 = sorted(low, key=low.get)[:2]
+            out.append(f"ブランド別の最安は{b1}が{low[b1]:,.1f}円/{unit}、次いで{b2}が{low[b2]:,.1f}円/{unit}です。")
+    return out
+
+
 def render(cat, rows, updated, hist=None):
     e = html.escape
     per_text = cat.get('per_text', f"1{cat['unit']}あたり")
@@ -917,7 +962,7 @@ def render(cat, rows, updated, hist=None):
     hero = ""
     if rows:
         avg = sum(r["unit_price"] for r in rows) / len(rows)
-        best = rows[0]
+        best = best_row(rows)
         diff = avg - best["unit_price"]
         saving = (f"<p class=save>掲載{len(rows)}商品の平均（{avg:.1f}円/{e(unit)}）より "
                   f"<b>{diff:.1f}円（{diff / avg * 100:.0f}%）安い</b></p>") if avg > 0 and diff > 0 else ""
@@ -929,6 +974,9 @@ def render(cat, rows, updated, hist=None):
 <span class=btn>楽天で見る</span></a>""" for label, r in pick_rows(rows, cat))
         hero = (f"<section class=hero><h2>結論：{e(short(cat))}はこれが安い</h2>{saving}{trend_html(hist or [], unit)}"
                 f"<div class=picks>{cards}</div></section>")
+    insights = data_insights(cat, rows, hist or [])
+    tips_html = (f"<section class=tips><h2>データで見る{e(short(cat))}</h2><ul>" + "".join(f"<li>{e(t)}</li>" for t in insights)
+                 + "</ul></section>" if insights else "") + tips_html
     faq = faq_items(cat, rows, updated)
     faq_html = ("<section class=faq><h2>よくある質問</h2>" + "".join(
         f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in faq) + "</section>") if faq else ""
@@ -938,7 +986,7 @@ def render(cat, rows, updated, hist=None):
 <span class="rk {medal.get(i, '')}">{i}</span>
 <a class=ri href="{e(r['url'])}" rel="sponsored noopener" target=_blank><img src="{e(r['img'])}" alt="" loading=lazy></a>
 <div class=rb><a class=rn href="{e(r['url'])}" rel="sponsored noopener" target=_blank title="{e(r['name'])}">{e(clean_name(r['name']))}</a>
-<div class=bd>{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class=b>送料別</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b dn">前回より{r["drop"]:,}円値下がり</span>' if r.get('drop') else ''}{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}<span class=b>総合{r.get('score', 0):.0f}点</span>{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
+<div class=bd>{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class="b sb">送料別（送料を含まない単価）</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b dn">前回より{r["drop"]:,}円値下がり</span>' if r.get('drop') else ''}{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}<span class=b>総合{r.get('score', 0):.0f}点</span>{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
 <small>{e(r['shop'])}</small></div>
 <div class=rp><b>{r['unit_price']:.1f}<i>円/{e(unit)}</i></b><small>{r['price']:,}円・{r['count']:,.0f}{e(base)}</small>
 <a class=go href="{e(r['url'])}" rel="sponsored noopener" target=_blank>楽天で見る</a></div></li>"""
@@ -950,8 +998,11 @@ def render(cat, rows, updated, hist=None):
 
     site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
     url = f"{site}{cat['slug']}.html"
-    desc = (f"{cat['keyword']}を楽天の価格と内容量から{per_text}の値段に換算して毎日自動で比較。"
-            + (f"今日の最安は{rows[0]['unit_price']:.1f}円/{unit}。" if rows else "") + "同じ商品は最安の出品だけを掲載。")
+    name = short(cat)
+    seo_title = (f"{name}の最安はどこ？{per_text}の値段で比較【毎日更新】｜TANKA" if cat.get("manga")
+                 else f"{name}の最安は？安い順・コスパ比較（{per_text}）【毎日更新】｜TANKA")
+    desc = (f"{name}を安い順に比較。楽天市場の価格と内容量から{per_text}の値段に換算して毎日自動で更新。"
+            + (f"今日の最安{'（送料無料）' if best_row(rows)['free_ship'] else ''}は{best_row(rows)['unit_price']:.1f}円/{unit}。" if rows else "") + "同じ商品は最安の出品だけを掲載。")
     # 検索エンジン向け構造化データ（パンくず＋ランキングの並び）
     ld = json.dumps([
         {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
@@ -971,10 +1022,10 @@ def render(cat, rows, updated, hist=None):
            + '<p class=pr><a href="./">トップへ戻る</a> ・ <a href="about.html">このサイトについて</a></p>')
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
-<title>{e(cat['title'])}｜TANKA</title>
+<title>{e(seo_title)}</title>
 <meta name=description content="{e(desc)}">
 <link rel=canonical href="{url}">{"<meta name=robots content=noindex>" if len(rows) < MIN_INDEX else ""}
-<meta property=og:title content="{e(cat['title'])}"><meta property=og:description content="{e(desc)}">
+<meta property=og:title content="{e(seo_title)}"><meta property=og:description content="{e(desc)}">
 <meta property=og:url content="{url}"><meta property=og:type content=article><meta property=og:site_name content="TANKA">
 <meta property=og:image content="{e(rows[0]['img'] if rows else '')}"><meta name=twitter:card content=summary>
 <script type="application/ld+json">{ld}</script>
@@ -1011,7 +1062,7 @@ ol.list{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
 .ri img{{width:64px;height:64px;object-fit:contain;background:#fff;border-radius:8px;display:block}}
 .rb{{min-width:0}} .rn{{color:inherit;text-decoration:none;font-size:.9rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 .rn:hover{{text-decoration:underline}}
-.bd{{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}} .b{{font-size:.7rem;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--mut)}} .b.ok{{color:var(--ok);font-weight:700}} .b.pt{{color:var(--acc);font-weight:700}} .b.dn{{background:var(--acc);color:#fff;font-weight:700}}
+.bd{{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}} .b{{font-size:.7rem;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--mut)}} .b.ok{{color:var(--ok);font-weight:700}} .b.pt{{color:var(--acc);font-weight:700}} .b.dn{{background:var(--acc);color:#fff;font-weight:700}} .b.sb{{color:var(--acc)}}
 small{{display:block;color:var(--mut);font-size:.72rem}}
 .rp{{text-align:right;display:grid;gap:4px;justify-items:end}} .rp b{{font-size:1.2rem;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}} .rp i{{font-style:normal;font-size:.75rem;color:var(--mut);font-weight:400}}
 @media(max-width:560px){{.row{{grid-template-columns:1.8em 52px minmax(0,1fr)}} .ri img{{width:52px;height:52px}} .rp{{grid-column:2/-1;grid-template-columns:auto 1fr auto;align-items:center;text-align:left}} .rp small{{justify-self:start}}}}
@@ -1198,12 +1249,23 @@ var box=a.closest('.row,.pick,.deal,.pi')||a;gtag('event','affiliate_click',{{pa
 item_label:(box.innerText||'').replace(/\\s+/g,' ').slice(0,90),link_domain:a.hostname}});}});</script>"""
 
 
+FAVICON = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#bf0000"/>'
+           '<text x="32" y="46" font-family="Arial,Helvetica,sans-serif" font-size="40" font-weight="800" '
+           'text-anchor="middle" fill="#fff">T</text></svg>')
+
+
 def add_analytics():
-    """docs 内の全ページの head にアクセス解析を入れる（その日に作り直さなかったページも含めて、まだ無いものだけ）"""
+    """docs 内の全ページの head にアクセス解析とファビコンを入れる（その日に作り直さなかったページも含めて、まだ無いものだけ）"""
+    (OUT / "favicon.svg").write_text(FAVICON, encoding="utf-8")
+    icon = '<link rel=icon href="favicon.svg" type="image/svg+xml">'
+    head = "<head><meta charset=utf-8>"
     for f in OUT.glob("*.html"):
         t = f.read_text(encoding="utf-8")
-        if GA_ID not in t and "<head><meta charset=utf-8>" in t:
-            f.write_text(t.replace("<head><meta charset=utf-8>", "<head><meta charset=utf-8>\n" + GA_TAG, 1), encoding="utf-8")
+        if head not in t:
+            continue
+        add = ("" if GA_ID in t else "\n" + GA_TAG) + ("" if "favicon.svg" in t else "\n" + icon)
+        if add:
+            f.write_text(t.replace(head, head + add, 1), encoding="utf-8")
 
 
 def render_about():
@@ -1474,11 +1536,11 @@ def main():
                 item_hist[r["code"]] = (past + [[today, r["price"]]])[-14:]
         if rows and live:
             h = [p for p in history.get(cat["slug"], []) if p[0] != today]
-            history[cat["slug"]] = (h + [[today, round(rows[0]["unit_price"], 2)]])[-90:]
+            history[cat["slug"]] = (h + [[today, round(best_row(rows)["unit_price"], 2)]])[-90:]
         (OUT / f"{cat['slug']}.html").write_text(render(cat, rows, updated, history.get(cat["slug"], [])),
                                                  encoding="utf-8")
         if rows:
-            top = rows[0]
+            top = best_row(rows)
             # 上位10件の「価格×報酬率」の中央値＝このジャンルで1件売れたときの報酬の目安
             fees = sorted(r["price"] * r["rate"] / 100 for r in rows[:10])
             summary[cat["slug"]] = {"unit_price": top["unit_price"], "name": top["name"][:40], "img": top["img"],
