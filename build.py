@@ -534,6 +534,20 @@ TIPS = {
 }
 
 
+def site_url():
+    """公開URL。独自ドメインの CNAME があればそれを優先（GitHub の Secret を変えなくても切り替わるように）"""
+    env = os.environ.get("SITE_URL", "").strip()
+    if env and "github.io" not in env:
+        return env if env.endswith("/") else env + "/"
+    try:
+        cname = (OUT / "CNAME").read_text(encoding="utf-8").strip()
+        if cname:
+            return f"https://{cname}/"
+    except OSError:
+        pass
+    return env or "https://ikkai-ikura.github.io/"
+
+
 def load_env():
     env = ROOT / ".env"
     if env.exists():
@@ -996,7 +1010,7 @@ def render(cat, rows, updated, hist=None):
 <button type=button data-s=n aria-pressed=false>レビューが多い順</button>
 <label><input type=checkbox id=fs> 送料無料のみ</label></div>"""
 
-    site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
+    site = site_url()
     url = f"{site}{cat['slug']}.html"
     name = short(cat)
     seo_title = (f"{name}の最安はどこ？{per_text}の値段で比較【毎日更新】｜TANKA" if cat.get("manga")
@@ -1161,7 +1175,7 @@ def sim_cost(plan, gb):
 
 def render_sim(updated):
     e = html.escape
-    site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
+    site = site_url()
     url = f"{site}sim.html"
     data = json.dumps([{"name": p["name"], "plan": p["plan"], "tiers": p["tiers"], "note": p["note"],
                         "href": p["link"] or p["url"], "ad": bool(p["link"])} for p in SIM_PLANS], ensure_ascii=False)
@@ -1258,7 +1272,7 @@ def add_analytics():
     """docs 内の全ページの head にアクセス解析とファビコンを入れる（その日に作り直さなかったページも含めて、まだ無いものだけ）"""
     (OUT / "favicon.svg").write_text(FAVICON, encoding="utf-8")
     # 独自ドメインの設定ファイル。GitHub Pages の設定画面で作られるが、念のため毎回書き出して消えないようにする
-    domain = os.environ.get("SITE_URL", "").split("//")[-1].strip("/")
+    domain = site_url().split("//")[-1].strip("/")
     if domain and not domain.endswith("github.io"):
         (OUT / "CNAME").write_text(domain + chr(10), encoding="utf-8")
     icon = '<link rel=icon href="favicon.svg" type="image/svg+xml">'
@@ -1384,7 +1398,7 @@ def render_index(summary, updated, drops=None):
                 f"<div class=tiles>{''.join(map(tile, first))}</div>{more}</section>")
 
     sections = "".join(section(*g) for g in groups)
-    site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
+    site = site_url()
     desc = (f"洗剤・トイレットペーパー・ペットフード・お米・漫画全巻セットなど{len(CATEGORIES)}ジャンルを、"
             "楽天の価格と内容量から1回あたり・1枚あたり・1冊あたりの値段に換算して毎朝自動で比較。")
     ld = json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": "TANKA", "url": site,
@@ -1563,7 +1577,7 @@ def main():
     (OUT / "about.html").write_text(render_about(), encoding="utf-8")
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
     # 検索エンジン向けのサイトマップ
-    site = os.environ.get("SITE_URL", "https://ikkai-ikura.github.io/")
+    site = site_url()
     day = updated[:10]
     urls = [site, f"{site}about.html", f"{site}sim.html"] + [f"{site}{c['slug']}.html" for c in CATEGORIES
                                                               if summary.get(c["slug"], {}).get("count", 0) >= MIN_INDEX]
