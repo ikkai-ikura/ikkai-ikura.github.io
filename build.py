@@ -1257,6 +1257,10 @@ FAVICON = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect wi
 def add_analytics():
     """docs 内の全ページの head にアクセス解析とファビコンを入れる（その日に作り直さなかったページも含めて、まだ無いものだけ）"""
     (OUT / "favicon.svg").write_text(FAVICON, encoding="utf-8")
+    # 独自ドメインの設定ファイル。GitHub Pages の設定画面で作られるが、念のため毎回書き出して消えないようにする
+    domain = os.environ.get("SITE_URL", "").split("//")[-1].strip("/")
+    if domain and not domain.endswith("github.io"):
+        (OUT / "CNAME").write_text(domain + chr(10), encoding="utf-8")
     icon = '<link rel=icon href="favicon.svg" type="image/svg+xml">'
     head = "<head><meta charset=utf-8>"
     for f in OUT.glob("*.html"):
