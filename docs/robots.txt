@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://ikkai-ikura.github.io/sitemap.xml
+Sitemap: https://tankahikaku.com/sitemap.xml
