@@ -1,7 +1,7 @@
 name: daily-update
 on:
   schedule:
-    - cron: "0 21 * * *"   # 毎朝6時(JST)
+    - cron: "0 19 * * *"   # 毎朝4時(JST)に開始。GitHub側の遅れで実際は6〜7時ごろに更新が終わる
   workflow_dispatch:
   push:
     branches: [main]
