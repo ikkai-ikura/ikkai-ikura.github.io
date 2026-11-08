@@ -1137,7 +1137,7 @@ SIM_PLANS = [
      "link": "https://hb.afl.rakuten.co.jp/hsc/59164679.5dd65979.5916467a.2e992856/?link_type=pict&rafst=rmn&ut=eyJwYWdlIjoic2hvcCIsInR5cGUiOiJwaWN0IiwiY29sIjoxLCJjYXQiOjEsImJhbiI6MjM3Nzg5NSwiYW1wIjpmYWxzZX0%3D"},
     {"name": "LINEMO", "plan": "ベストプラン／ベストプランV", "url": "https://www.linemo.jp/plan/",
      "tiers": [(3, 990), (10, 2090), (30, 2970)], "step": True,
-     "note": "LINEのトーク・通話はデータ消費ゼロ。30GBは5分以内の通話無料つき", "link": ""},  # VC sid=3787377&pid=892743340 は提携承認後に有効化（11/08時点は既定ページに飛ぶ）
+     "note": "LINEのトーク・通話はデータ消費ゼロ。30GBは5分以内の通話無料つき", "link": "", "pending": "https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3787377&pid=892743340"},
     {"name": "ahamo", "plan": "ahamo", "url": "https://ahamo.com/plan/",
      "tiers": [(30, 2970), (110, 4950)],
      "note": "5分以内の国内通話無料。2026年12月1日から40GB 3,135円〜120GB 5,115円の段階制に改定予定", "link": ""},
@@ -1172,6 +1172,27 @@ def sim_cost(plan, gb):
         if cap is None or gb <= cap:
             return price, cap
     return None
+
+
+def activate_pending_links():
+    """提携待ちのASPリンク(pending)が広告主に飛ぶようになったら自動で有効化する。
+    VCは未提携だと既定ページ(default_banner)か invalid_link に飛ぶ。判定できない時は公式URLのまま。"""
+    for p in SIM_PLANS:
+        if p.get("link") or not p.get("pending"):
+            continue
+        try:
+            req = urllib.request.Request(p["pending"], headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=15) as r:
+                body = r.read(20000).decode("utf-8", "ignore")
+                final = r.geturl()
+        except Exception as ex:
+            print(f"  pending {p['name']}: 確認失敗 {ex}")
+            continue
+        if "invalid_link" in final or "default_banner" in body or "valuecommerce" not in final + body:
+            print(f"  pending {p['name']}: まだ提携待ち")
+        else:
+            p["link"] = p["pending"]
+            print(f"  pending {p['name']}: 有効化")
 
 
 def render_sim(updated):
@@ -1576,6 +1597,7 @@ def main():
     (OUT / "items_history.json").write_text(json.dumps(item_hist, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (OUT / "index.html").write_text(render_index(summary, updated, drops), encoding="utf-8")
     (OUT / "about.html").write_text(render_about(), encoding="utf-8")
+    activate_pending_links()
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
     # 検索エンジン向けのサイトマップ
     site = site_url()
