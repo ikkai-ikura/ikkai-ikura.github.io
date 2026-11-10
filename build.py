@@ -1093,19 +1093,22 @@ def render(cat, rows, updated, hist=None):
         f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in faq) + "</section>") if faq else ""
 
     medal = {1: "m1", 2: "m2", 3: "m3"}
-    items = "".join(f"""<li class=row data-u="{r['unit_price']:.4f}" data-s="{r.get('score', 0)}" data-p="{r.get('eff_unit', r['unit_price']):.4f}" data-r="{r['rating']:.2f}" data-n="{r['reviews']}" data-f="{1 if r['free_ship'] else 0}">
+    items = "".join(f"""<li class=row data-u="{r['unit_price']:.4f}" data-s="{r.get('score', 0)}" data-p="{r.get('eff_unit', r['unit_price']):.4f}" data-pt="{r.get('point', 1)}" data-r="{r['rating']:.2f}" data-n="{r['reviews']}" data-f="{1 if r['free_ship'] else 0}">
 <span class="rk {medal.get(i, '')}">{i}</span>
 <a class=ri href="{e(r['url'])}" rel="sponsored noopener" target=_blank><img src="{e(r['img'])}" alt="" loading=lazy></a>
 <div class=rb><a class=rn href="{e(r['url'])}" rel="sponsored noopener" target=_blank title="{e(r['name'])}">{e(clean_name(r['name']))}</a>
 <div class=bd>{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class="b sb">送料別（送料を含まない単価）</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b dn">前回より{r["drop"]:,}円値下がり</span>' if r.get('drop') else ''}{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}<span class=b>総合{r.get('score', 0):.0f}点</span>{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
 <small>{e(r['shop'])}</small></div>
 <div class=rp><b>{r['unit_price']:.1f}<i>円/{e(unit)}</i></b><small>{r['price']:,}円・{r['count']:,.0f}{e(base)}</small>
-<a class=go href="{e(r['url'])}" rel="sponsored noopener" target=_blank>楽天で見る</a></div></li>"""
+<small class=me hidden></small><a class=go href="{e(r['url'])}" rel="sponsored noopener" target=_blank>楽天で見る</a></div></li>"""
                     for i, r in enumerate(rows, 1))
     controls = """<div class=ctl role=group aria-label="並べ替え">
 <button type=button data-s=u aria-pressed=true>安い順</button><button type=button data-s=s aria-pressed=false>総合おすすめ順</button><button type=button data-s=p aria-pressed=false>ポイント込みで安い順</button><button type=button data-s=r aria-pressed=false>評価が高い順</button>
 <button type=button data-s=n aria-pressed=false>レビューが多い順</button>
-<label><input type=checkbox id=fs> 送料無料のみ</label></div>"""
+<label><input type=checkbox id=fs> 送料無料のみ</label></div>
+<div class=spu><label for=spu>あなたの楽天ポイント倍率（SPU）</label>
+<select id=spu><option value=0>未設定</option>""" + "".join(f"<option value={k}>{k}倍</option>" for k in range(1, 21)) + """</select>
+<span>入れると全ページの単価が<b>あなたの実質価格</b>に変わります（一度入れれば次から自動）。<a href="https://event.rakuten.co.jp/campaign/point-up/everyday/point/" rel="noopener" target=_blank>自分の倍率を確認</a></span></div>"""
 
     site = site_url()
     url = f"{site}{cat['slug']}.html"
@@ -1166,6 +1169,9 @@ h1{{font-size:1.35rem;margin:.2em 0;text-wrap:balance}} h2{{font-size:1.05rem;ma
 .ctl button{{font:inherit;font-size:.85rem;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}}
 .ctl button[aria-pressed=true]{{background:var(--fg);color:var(--bg);border-color:var(--fg)}}
 .ctl label{{font-size:.85rem;margin-left:4px}}
+.spu{{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;background:var(--acc-soft);border-radius:10px;padding:8px 10px;margin:0 0 10px;font-size:.82rem}}
+.spu label{{font-weight:700}} .spu select{{font:inherit;padding:3px 6px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--fg)}} .spu span{{color:var(--mut)}}
+.me{{color:var(--acc);font-weight:700;font-size:.78rem}}
 ol.list{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
 .row{{display:grid;grid-template-columns:2em 64px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}}
 .rk{{font-weight:700;color:var(--mut);text-align:center}} .rk.m1,.rk.m2,.rk.m3{{color:#fff;border-radius:50%;width:1.8em;height:1.8em;line-height:1.8em}}
@@ -1214,6 +1220,24 @@ a:focus-visible,button:focus-visible,input:focus-visible{{outline:2px solid var(
     b.addEventListener('click',function(){{ key=b.dataset.s; [].forEach.call(document.querySelectorAll('.ctl button'),function(x){{x.setAttribute('aria-pressed',x===b)}}); apply(); }});
   }});
   fs.addEventListener('change',apply);
+  // あなたのSPU: 楽天のポイントは税抜価格に付くので 倍率/110 を差し引く。ショップのポイントアップ分（pt-1）も足す
+  var sel=document.getElementById('spu'), pb=document.querySelector('.ctl button[data-s=p]'), UNIT={json.dumps(unit)};
+  rows.forEach(function(r){{r.dataset.p0=r.dataset.p}});
+  function spu(v,first){{
+    rows.forEach(function(r){{
+      var me=r.querySelector('.me');
+      if(v>0){{var t=v+(+r.dataset.pt||1)-1, ef=r.dataset.u*(1-t/110); r.dataset.p=ef;
+        me.textContent='あなたの実質 '+ef.toFixed(ef<10?2:1)+'円/'+UNIT+'（'+t+'倍）'; me.hidden=false;}}
+      else{{r.dataset.p=r.dataset.p0; me.hidden=true;}}
+    }});
+    pb.textContent=v>0?'あなたの実質価格で安い順':'ポイント込みで安い順';
+    if(v>0&&!first){{key='p'; [].forEach.call(document.querySelectorAll('.ctl button'),function(x){{x.setAttribute('aria-pressed',x===pb)}});}}
+    apply();
+  }}
+  var saved=0; try{{saved=+localStorage.getItem('tanka_spu')||0}}catch(e){{}}
+  if(saved){{sel.value=saved; spu(saved,true);}}
+  sel.addEventListener('change',function(){{var v=+sel.value; try{{localStorage.setItem('tanka_spu',v)}}catch(e){{}} spu(v,false);
+    if(window.gtag) gtag('event','set_spu',{{value:v}});}});
 }})();
 </script></body></html>"""
 
