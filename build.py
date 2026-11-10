@@ -32,6 +32,7 @@ _SZ = lambda x: rf"(?<![A-Za-z]){x}(?:サイズ|\s*\d|[\s)）】\]/／]|$)"
 DIAPER_SIZE = {"新生児": r"新生児", "S": _SZ("S"), "M": _SZ("M"), "L": _SZ("L"),
                "ビッグ": rf"ビッグ(?!より)|BIG(?![A-Za-z]|\s*より)|{_SZ('XL')}",
                "ビッグより大きい": r"ビッグより大きい|BIGより大きい|XXL|(?<![A-Za-z])BIGGER"}
+BUY_LABEL = {0: "過去30日で最安値", 1: "過去30日で安い水準"}
 DIAPER_SLUG = {"新生児": "nb", "S": "s", "M": "m", "L": "l", "ビッグ": "big", "ビッグより大きい": "xbig"}
 DIAPER_TIPS = {
     "パンツ": ["同じサイズでもメーカーで対象体重が少しずつ違う。体に合わないと漏れやすいので、まずは小パックで試してからケース買いにする",
@@ -126,7 +127,7 @@ CATEGORIES = [
         "unit": "本", "base": "本",
         "words": ["本入り", "本入", "本組", "本", "個入り", "個入", "個"],
         "min_reviews": 10, "range": (2, 100), "outlier": 0.15,
-        "ng": ["本体", "充電器", "ケース", "スタンド", "ホルダー", "付き", "モード", "ブラウン", "オーラル"],
+        "ng": ["本体", "充電器", "ケース", "スタンド", "ホルダー", "付き", "モード", "ブラウン", "オーラル"], "compat": True,
     },
     {
         "slug": "oralb-brush-head",
@@ -135,7 +136,7 @@ CATEGORIES = [
         "unit": "本", "base": "本",
         "words": ["本入り", "本入", "本組", "本", "個入り", "個入", "個"],
         "min_reviews": 10, "range": (2, 100), "outlier": 0.15,
-        "ng": ["本体", "充電器", "ケース", "スタンド", "ホルダー", "付き", "モード", "ソニッケアー", "フィリップス"],
+        "ng": ["本体", "充電器", "ケース", "スタンド", "ホルダー", "付き", "モード", "ソニッケアー", "フィリップス"], "compat": True,
     },
     {
         "slug": "coffee-beans",
@@ -187,13 +188,26 @@ CATEGORIES = [
     },
     {
         "slug": "protein",
-        "title": "プロテイン 100gあたり単価ランキング",
-        "keyword": "プロテイン 1kg",
+        "title": "ホエイプロテイン 100gあたり単価ランキング",
+        "keyword": "ホエイプロテイン 1kg",
+        "keywords": ["ホエイプロテイン 3kg", "ホエイプロテイン 1kg", "ザバス ホエイ", "マイプロテイン ホエイ", "ビーレジェンド ホエイ", "エクスプロージョン ホエイ"],
         "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
         "words": {"kg": 1000, "g": 1},
         "min_reviews": 10, "range": (300, 10000),
-        "must": ["プロテイン"],
-        "ng": ["シェイカー", "バー", "サンプル", "お試し", "ドリンク", "ml", "クッキー", "大豆ミート", "黒豆", "黒千石", "おから"],
+        "must": ["ホエイ", "ホエー", "WPC", "WPI"],
+        "ng": ["シェイカー", "バー", "サンプル", "お試し", "ドリンク", "ml", "クッキー", "ソイ", "大豆", "ジュニア", "選べる"],
+    },
+    {
+        "slug": "protein-soy",
+        "title": "ソイプロテイン 100gあたり単価ランキング",
+        "keyword": "ソイプロテイン 1kg",
+        "keywords": ["ソイプロテイン 3kg", "大豆プロテイン 1kg", "ザバス ソイ", "マイプロテイン ソイ", "ソイプロテイン 無添加"],
+        "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
+        "words": {"kg": 1000, "g": 1},
+        "min_reviews": 10, "range": (300, 10000),
+        "must": ["ソイ", "大豆プロテイン"],
+        "ng": ["シェイカー", "バー", "サンプル", "お試し", "ドリンク", "ml", "クッキー", "大豆ミート", "黒豆", "黒千石", "おから",
+               "ホエイ", "ホエー", "ジュニア", "選べる", "粘性", "ペースト"],
     },
     {
         "slug": "water-2l",
@@ -256,7 +270,7 @@ CATEGORIES = [
         "words": ML,
         "min_reviews": 10, "range": (300, 30000),
         "must": REFILL,
-        "ng": ["本体", "ボトル", "ビーズ", "シート", "ミスト"],
+        "ng": ["本体", "ボトル", "ビーズ", "シート", "ミスト", "洗濯洗剤", "液体洗剤", "せっけん"],
     },
     {
         "slug": "disinfect-wipes",
@@ -297,6 +311,8 @@ CATEGORIES = [
         "min_reviews": 10, "range": (500, 20000),
         "must": ["キャットフード", "猫", "ねこ", "キャット"],
         "ng": ["ウェット", "パウチ", "缶", "おやつ", "ちゅ～る", "ちゅーる", "ふりかけ", "トッピング", "ドッグ", "犬"],
+        "tags": [(r"シニア|高齢|7歳|1[015]歳", "シニア用"), (r"子猫|キトン|幼猫", "子猫用"), (r"避妊|去勢", "避妊・去勢後"),
+                 (r"体重管理|ライト|肥満|減量", "体重管理")],
     },
     {
         "slug": "dog-food-dry",
@@ -308,6 +324,8 @@ CATEGORIES = [
         "min_reviews": 10, "range": (500, 20000),
         "must": ["ドッグフード", "犬", "いぬ", "ドッグ"],
         "ng": ["ウェット", "パウチ", "缶", "おやつ", "ジャーキー", "ふりかけ", "トッピング", "キャット", "猫"],
+        "tags": [(r"シニア|高齢|7歳|1[013]歳", "シニア用"), (r"子犬|パピー|幼犬", "子犬用"), (r"大型犬|マキシ|ラージ", "大型犬用"),
+                 (r"小型犬|ミニ(?!チュア)|小粒", "小型犬・小粒"), (r"体重管理|ライト|肥満|減量", "体重管理")],
     },
     {
         "slug": "shampoo-refill",
@@ -404,6 +422,9 @@ CATEGORIES = [
         "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
         "words": {"kg": 1000, "g": 1}, "min_reviews": 5, "range": (300, 20000),
         "strip": r"\(?\d+\s*[ヵヶか]?月?\s*[~～〜\-]\s*\d+\s*(?:[ヵヶか]月|歳)\)?|\d+\s*[ヵヶか]月[^\s]*|\d+\s*歳[^\s]*",
+        "brands": {"ほほえみ": ["ほほえみ"], "はいはい": ["はいはい"], "すこやか": ["すこやか"], "はぐくみ": ["はぐくみ"],
+                   "アイクレオ": ["アイクレオ"], "E赤ちゃん": ["e赤ちゃん"], "ぴゅあ": ["ぴゅあ"]},
+        "lines": {b: [("キューブ", "キューブ"), ("スティック", "スティック"), ("詰め替え", "エコらく|詰替|詰め替え|つめかえ|袋"), ("缶", "")] for b in ["ほほえみ", "はいはい", "すこやか", "はぐくみ", "アイクレオ", "E赤ちゃん", "ぴゅあ"]},
         "ng": ["液体", "らくらくミルク", "フォローアップ", "ステップ", "チルミル", "つよいこ", "グローアップ", "ポット", "哺乳", "ケース",
                "大人", "シニア", "スキムミルク", "牛乳", "選べる"],
     },
@@ -571,7 +592,8 @@ TIPS = {
     "cat-litter": ["紙・木・おから・ベントナイト（鉱物）で、固まり方や処分方法が違う", "ここでは容量（L）で比べている。重さ（kg）表記の商品は含まれない", "トイレに流せるタイプかどうかは商品ごとに確認する"],
     "baby-wipes": ["厚手は1枚で拭ける範囲が広く、薄手は単価が安い", "水99%などの成分や、手口ふき兼用かどうかで選ぶ", "ケース買い（12個入りなど）が1枚あたり最安になりやすい"],
     "aa-battery": ["アルカリ乾電池はリモコン・時計など幅広く使える定番", "使用推奨期限（10年など）が長いものは備蓄にも向く", "消費が多い機器なら充電池も検討する（このページは使い切りの乾電池のみ）"],
-    "protein": ["ホエイ・ソイ・カゼインで吸収の速さや原料が違う", "100gあたりの価格だけでなく、たんぱく質の含有率も商品ページで確認する", "初めての味は小さい袋で試してから大袋にすると失敗しにくい"],
+    "protein": ["WPC（一般的なホエイ）とWPI（乳糖を減らした精製タイプ）で価格が違う。お腹がゆるくなりやすい人はWPI", "100gあたりの価格だけでなく、たんぱく質の含有率も商品ページで確認する", "初めての味は小さい袋で試してから大袋にすると失敗しにくい"],
+    "protein-soy": ["大豆が原料で、ホエイより吸収がゆっくり。乳製品でお腹をこわしやすい人にも向く", "100gあたりの価格だけでなく、たんぱく質の含有率も商品ページで確認する", "溶けにくい商品もあるので、レビューで飲みやすさを確認する"],
     "water-2l": ["軟水は日本人になじみやすく、硬水はミネラルが多い", "ケース（6本・9本・12本）単位が安い。重いので送料込みかどうかも見る", "備蓄用なら保存期間の長い商品を選ぶ"],
     "toilet-paper-double": ["ダブルは2枚重ねなので、同じ長さでもシングルより紙の量が多い。ここではダブル同士で比べている", "1.5倍巻・2倍巻などの長巻きは交換の手間が減り、収納場所も節約できる", "芯なしタイプは長さが長いぶん、ホルダーに入るサイズか確認する"],
     "toilet-paper-single": ["シングルは1枚なので、ダブルより長く巻かれていて交換回数が少ない", "再生紙（古紙）100%は安く、パルプ100%はやわらかい傾向", "長巻き（1.5倍・2倍）は1mあたりが安くなりやすい"],
@@ -583,8 +605,8 @@ TIPS = {
     "canola-oil": ["1000gクラスのボトルや業務用の大容量が100gあたり安い", "開封後は酸化しやすいので、使い切れる量を選ぶ", "なたね油（キャノーラ油）は加熱調理向けでクセが少ない"],
     "mobile-battery": ["容量（mAh）が大きいほど1000mAhあたりは安いが、重く大きくなる。持ち歩くなら10000mAh前後が目安", "スマホを急速充電したいなら、出力（W数）やPD対応かどうかも確認する", "飛行機に持ち込めるのは一般に160Wh以下。大容量品は持ち込み条件を確認する"],
     "rice": ["銘柄米・ブレンド米・複数原料米で価格が大きく違う。ブレンド米は安いが産地や品種は混ざる", "10kg・20kgの大袋は1kgあたりが安いが、精米後は早めに食べきるのがおすすめ（夏は特に）", "無洗米は研ぐ手間と水が省けるぶん、少し高めのことが多い"],
-    "cat-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "子猫用・成猫用・シニア用など年齢で栄養バランスが違う", "大袋は割安だが、開封後は酸化しやすいので小分け包装が便利"],
-    "dog-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "小型犬用は粒が小さい。犬種や年齢に合ったものを選ぶ", "大袋は割安だが、開封後は湿気と酸化に注意。小分け包装だと鮮度を保ちやすい"],
+    "cat-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "子猫用・成猫用・シニア用など年齢で栄養バランスが違う。安さより先に、年齢に合うものに絞る（各商品の「シニア用」などの印が目安）", "大袋は割安だが、開封後は酸化しやすいので小分け包装が便利"],
+    "dog-food-dry": ["総合栄養食かどうかを確認する（主食にするなら総合栄養食）", "子犬・成犬・シニア、小型犬・大型犬で粒の大きさも栄養も違う。安さより先に、愛犬に合うものに絞る（各商品の「シニア用」などの印が目安）", "大袋は割安だが、開封後は湿気と酸化に注意。小分け包装だと鮮度を保ちやすい"],
     "shampoo-refill": ["詰め替えは本体ボトルより100mlあたりが安い。大容量パウチほど割安", "ノンシリコン・アミノ酸系などで洗い上がりが違う", "同じシリーズのコンディショナーと合わせると仕上がりがそろいやすい"],
     "toothpaste": ["フッ素濃度（1450ppmなど）は虫歯予防の目安。年齢によって推奨濃度が違う", "歯周病ケア・ホワイトニング・知覚過敏など目的で選ぶ", "まとめ買い（3本・5本セット）が100gあたり安くなりやすい"],
     "liquid-laundry-refill": ["濃縮タイプは1回の使用量が少ないので、100gあたりの価格だけで比べると割高に見えることがある", "超特大の詰め替えほど100gあたりが安い", "部屋干し・抗菌・すすぎ1回など、機能で価格帯が分かれる"],
@@ -660,6 +682,18 @@ def fetch(keyword, pages=3):
     return items
 
 
+def is_variant_list(s):
+    """「×6袋 4袋 2袋」のように同じ単位の個数が並ぶのは選択式。表示価格がどの数量のものか分からない"""
+    if re.search(r"\d\s*[・/／]\s*\d+\s*(?:個|袋|本|箱|缶|ケース|パック)", s):  # 「4・6個セット」
+        return True
+    if re.search(r"\d\s*(?:kg|g|ml|mL|L)\s*[・/／]\s*\d+(?:\.\d+)?\s*(?:kg|g|ml|mL|L)(?![x*\d])", s):  # 「1kg／3kg」
+        return True
+    for m in re.finditer(r"(?<![x*\d])(\d{1,2})\s*(袋|個|本|箱|ケース|パック|缶)\s+(\d{1,2})\s*\2(?!\s*入)", s):
+        if m.group(1) != m.group(3):
+            return True
+    return False
+
+
 ZEN = str.maketrans("０１２３４５６７８９×Ｘｘ", "0123456789xxx")
 
 
@@ -668,7 +702,7 @@ def parse_product(name, size, pack, lo, hi):
     例 トイレットペーパー '30m 12ロール×4パック' -> 1440、ティッシュ '160組 5箱×12パック' -> 9600
     size, pack は正規表現（数字を1つ目のグループで取る）。読めなければ None"""
     s = name.translate(ZEN).replace(",", "")
-    if re.search(r"選べる|選択|単品.*セット|セット.*単品|\d\s*[~～〜]\s*\d|\d\s*[・/]\s*\d+\s*(?:個|箱|ロール)", s):
+    if re.search(r"選べる|選択|単品.*セット|セット.*単品|\d\s*[~～〜]\s*\d|\d\s*[・/]\s*\d+\s*(?:個|箱|ロール)", s) or is_variant_list(s):
         return None  # 「50・90個」のような選択式
     sizes = {float(x) for x in re.findall(size, s)}
     if len(sizes) != 1:  # 「シングル60m ダブル30m」のように複数あると価格との対応が分からない
@@ -701,7 +735,7 @@ def parse_count(name, words, lo=5, hi=3000):
         words = {w: 1 for w in words}
     s = name.translate(ZEN).replace(",", "")
     # 「1袋～3袋 選べる」のようなバリエーション商品は価格と数量が対応しないので除外
-    if re.search(r"選べる|選択|単品.*セット|セット.*単品|\d\s*[~～〜]\s*\d", s):
+    if re.search(r"選べる|選択|単品.*セット|セット.*単品|\d\s*[~～〜]\s*\d", s) or is_variant_list(s):
         return None
     w = "|".join(map(re.escape, sorted(words, key=len, reverse=True)))
     # 「3個セット」のセット数を拾わないよう、直後がセットの数字は除く。一番大きい量を内容量とみなす
@@ -853,6 +887,10 @@ def rank(items, cat):
             n = parse_count(pname, cat["words"], *cat.get("range", (5, 3000)))
         if not n or it.get("reviewCount", 0) < cat["min_reviews"]:
             continue
+        if cat.get("compat"):  # 替えブラシ: 純正と互換で値段の桁が違うので印を付ける
+            note = "互換品" if re.search(r"互換|交換用|対応", it["itemName"]) else ("純正" if re.search(r"純正|正規品", it["itemName"]) else "")
+        if cat.get("tags"):  # ペットフード: 年齢・体格の印
+            note = "・".join(lb for pat, lb in cat["tags"] if re.search(pat, it["itemName"]))
         price = it["itemPrice"]
         if price < cat.get("min_price", 0):  # 全巻セットで数百円は1冊だけの出品などの読み違い
             continue
@@ -920,6 +958,12 @@ def typical_avg(rows):
     return sum(keep) / len(keep)
 
 
+def median_unit(rows):
+    """単価の中央値（相場）。割高な純正品や中古・新品の混在に引っぱられない"""
+    us = sorted(r["unit_price"] for r in rows)
+    return us[len(us) // 2]
+
+
 def best_row(rows):
     """送料を含めて比べやすい「最安」: 送料無料の中の最安。送料無料がなければ表示価格の最安"""
     return next((r for r in rows if r["free_ship"]), rows[0]) if rows else None
@@ -935,6 +979,8 @@ def pick_rows(rows, cat=None):
     label = ("送料込みでいちばん安い" if first["free_ship"] else "いちばん安い（送料別）") +             ("・総合1位" if first is top_score else ("・高評価" if good(first) else ""))
     picks, used = [(label, first)], {id(first)}
     tests = [("総合おすすめ（安さ×評価）", lambda r: r is top_score)]
+    if cat and cat.get("compat"):  # 替えブラシは純正を探す人も多い
+        tests.insert(0, ("純正でいちばん安い", lambda r: r.get("note") == "純正"))
     if cat and cat.get("manga"):
         new = lambda r: "新品" in r.get("note", "")
         old = lambda r: "中古" in r.get("note", "")
@@ -999,19 +1045,18 @@ def faq_items(cat, rows, updated):
     qa = [(f"{name}でいちばん安いのはどれ？",
            f"{updated[:10].replace('-', '/')}時点では「{clean_name(best['name'], 50)}」が{best['unit_price']:.1f}円/{unit}で最安です"
            f"（{best['price']:,}円・{best['count']:,.0f}{base}）。"),
-          (f"{name}の1{unit}あたりの平均はいくら？",
-           f"掲載している{len(rows)}商品の平均は{avg:.1f}円/{unit}です。最安の商品は平均より{(1 - best['unit_price'] / avg) * 100:.0f}%安くなっています。")]
+          (f"{name}の{per_text_of(cat)}の相場は？",
+           f"掲載している{len(rows)}商品の中央値は{median_unit(rows):.1f}円/{unit}です。最安の商品は相場より{(1 - best['unit_price'] / median_unit(rows)) * 100:.0f}%安くなっています。")]
     free = next((r for r in rows if r["free_ship"]), None)
     if free:
         qa.append((f"送料無料で安い{name}は？", f"送料無料の中では「{clean_name(free['name'], 50)}」が{free['unit_price']:.1f}円/{unit}で最安です。"))
     if cat.get("manga"):
-        used = [r for r in rows if "中古" in r["name"]]
-        new = [r for r in rows if "中古" not in r["name"]]
+        used = [r for r in rows if "中古" in r.get("note", "")]
+        new = [r for r in rows if "新品" in r.get("note", "")]
         if used and new:
             qa.append(("新品と中古、どちらが安い？",
-                       f"1冊あたりでは中古の最安が{used[0]['unit_price']:.0f}円、新品（中古表記なし）の最安が{new[0]['unit_price']:.0f}円です。"
+                       f"1冊あたりでは中古の最安が{used[0]['unit_price']:.0f}円、新品の最安が{new[0]['unit_price']:.0f}円です。"
                        "中古は状態の説明を確認してから選んでください。"))
-    qa.append(("価格はいつ更新される？", "毎朝6時ごろに楽天市場の最新価格を取得して自動で更新しています。購入前に商品ページで価格を確認してください。"))
     return qa
 
 
@@ -1025,7 +1070,7 @@ def data_insights(cat, rows, hist):
         return []
     unit = cat["unit"]
     ups = sorted(r["unit_price"] for r in rows)
-    out = [f"掲載している{len(rows)}商品の単価は{ups[0]:,.1f}〜{ups[-1]:,.1f}円/{unit}で、最も高い商品は最も安い商品の{ups[-1] / ups[0]:.1f}倍です。"]
+    out = []
     # 内容量が多い商品ほど安いか
     by_n = sorted(rows, key=lambda r: r["count"])
     half = len(by_n) // 2
@@ -1072,10 +1117,10 @@ def render(cat, rows, updated, hist=None):
     # 結論ボックス
     hero = ""
     if rows:
-        avg = typical_avg(rows)
+        avg = median_unit(rows)
         best = best_row(rows)
         diff = avg - best["unit_price"]
-        saving = (f"<p class=save>掲載{len(rows)}商品の平均（{avg:.1f}円/{e(unit)}）より "
+        saving = (f"<p class=save>掲載{len(rows)}商品の相場（中央値 {avg:.1f}円/{e(unit)}）より "
                   f"<b>{diff:.1f}円（{diff / avg * 100:.0f}%）安い</b></p>") if avg > 0 and diff > 0 else ""
         cards = "".join(f"""<a class=pick href="{e(r['url'])}" rel="sponsored noopener" target=_blank>
 <span class=tag>{e(label)}</span><img src="{e(r['img'])}" alt="" loading=lazy>
@@ -1097,7 +1142,7 @@ def render(cat, rows, updated, hist=None):
 <span class="rk {medal.get(i, '')}">{i}</span>
 <a class=ri href="{e(r['url'])}" rel="sponsored noopener" target=_blank><img src="{e(r['img'])}" alt="" loading=lazy></a>
 <div class=rb><a class=rn href="{e(r['url'])}" rel="sponsored noopener" target=_blank title="{e(r['name'])}">{e(clean_name(r['name']))}</a>
-<div class=bd>{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class="b sb">送料別（送料を含まない単価）</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b dn">前回より{r["drop"]:,}円値下がり</span>' if r.get('drop') else ''}{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}<span class=b>総合{r.get('score', 0):.0f}点</span>{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
+<div class=bd>{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class="b sb">送料別（送料を含まない単価）</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b dn">前回より{r["drop"]:,}円値下がり</span>' if r.get('drop') else ''}{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
 <small>{e(r['shop'])}</small></div>
 <div class=rp><b>{r['unit_price']:.1f}<i>円/{e(unit)}</i></b><small>{r['price']:,}円・{r['count']:,.0f}{e(base)}</small>
 <small class=me hidden></small><a class=go href="{e(r['url'])}" rel="sponsored noopener" target=_blank>楽天で見る</a></div></li>"""
@@ -1108,7 +1153,7 @@ def render(cat, rows, updated, hist=None):
 <label><input type=checkbox id=fs> 送料無料のみ</label></div>
 <div class=spu><label for=spu>あなたの楽天ポイント倍率（SPU）</label>
 <select id=spu><option value=0>未設定</option>""" + "".join(f"<option value={k}>{k}倍</option>" for k in range(1, 21)) + """</select>
-<span>入れると全ページの単価が<b>あなたの実質価格</b>に変わります（一度入れれば次から自動）。<a href="https://event.rakuten.co.jp/campaign/point-up/everyday/point/" rel="noopener" target=_blank>自分の倍率を確認</a></span></div>"""
+<span>選ぶと<b>あなたの実質価格</b>で表示（全ページ共通）<a href="https://event.rakuten.co.jp/campaign/point-up/everyday/point/" rel="noopener" target=_blank>倍率を確認</a></span></div>"""
 
     site = site_url()
     url = f"{site}{cat['slug']}.html"
@@ -1129,10 +1174,11 @@ def render(cat, rows, updated, hist=None):
         ensure_ascii=False).replace("</", "<\\/")
     gid = next((g for g, _, sls in GROUPS if cat["slug"] in sls), None)
     same = [CATEGORIES_BY_SLUG[s] for g, _, sls in GROUPS if g == gid for s in sls if s != cat["slug"] and s in CATEGORIES_BY_SLUG]
-    rest = [c for c in CATEGORIES if c["slug"] != cat["slug"] and c not in same]
+    rest = [CATEGORIES_BY_SLUG[sl] for sl in POPULAR if sl != cat["slug"] and sl in CATEGORIES_BY_SLUG
+            and CATEGORIES_BY_SLUG[sl] not in same][:8]
     chip = lambda c: f'<a href="{c["slug"]}.html">{e(short(c))}</a>'
     nav = (("<nav class=oth><h2>同じカテゴリのジャンル</h2>" + "".join(map(chip, same)) + "</nav>" if same else "")
-           + "<nav class=oth><h2>ほかのジャンル</h2>" + "".join(map(chip, rest)) + "</nav>"
+           + "<nav class=oth><h2>人気のジャンル</h2>" + "".join(map(chip, rest)) + '<a href="./#paper">すべてのジャンル →</a></nav>'
            + '<p class=pr><a href="./">トップへ戻る</a> ・ <a href="calc.html">単価計算ツール</a> ・ <a href="about.html">このサイトについて</a></p>')
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
@@ -1158,9 +1204,10 @@ h1{{font-size:1.35rem;margin:.2em 0;text-wrap:balance}} h2{{font-size:1.05rem;ma
 .tr{{font-size:.72rem;color:var(--mut);font-variant-numeric:tabular-nums}}
 .faq{{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}}
 .faq details{{border-top:1px solid var(--line);padding:8px 0}} .faq details:first-of-type{{border-top:0}} .faq summary{{cursor:pointer;font-weight:600}} .faq p{{margin:6px 0 0;color:var(--mut);font-size:.9rem}}
-.picks{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}}
-.pick{{display:grid;gap:4px;justify-items:start;padding:10px;border:1px solid var(--line);border-radius:10px;color:inherit;text-decoration:none;background:var(--bg)}}
-.pick:hover{{border-color:var(--acc)}} .pick img{{width:84px;height:84px;object-fit:contain;background:#fff;border-radius:8px}}
+.picks{{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}}
+.pick{{display:grid;grid-template-columns:64px minmax(0,1fr);grid-template-areas:"tag tag" "img pn" "img pu" "img pm";column-gap:10px;row-gap:2px;align-items:start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;color:inherit;text-decoration:none;background:var(--bg)}}
+.pick:hover{{border-color:var(--acc)}} .pick img{{grid-area:img;width:64px;height:64px;object-fit:contain;background:#fff;border-radius:8px}}
+.pick .tag{{grid-area:tag;justify-self:start}} .pick .pn{{grid-area:pn;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}} .pick .pu{{grid-area:pu}} .pick .pm{{grid-area:pm}} .pick .btn{{display:none}}
 .tag{{font-size:.72rem;font-weight:700;color:#fff;background:var(--acc);padding:2px 8px;border-radius:999px}}
 .pn{{font-size:.85rem;line-height:1.4}} .pu b{{font-size:1.5rem;color:var(--acc)}} .pu{{color:var(--mut);font-size:.85rem}}
 .pm{{font-size:.75rem;color:var(--mut)}}
@@ -1281,13 +1328,13 @@ SIM_PLANS = [
      "tiers": [(1, 765), (2, 850), (3, 985), (5, 1430), (7, 1980), (20, 4400)],
      "note": "ドコモ回線。月額料金は初月無料。小容量向け", "link": ""},
     # 以下3社は2026年11月10日に確認（povo・日本通信は公式、ワイモバイルは2026年6月2日改定後の割引前料金）
-    {"name": "povo2.0", "plan": "データトッピング", "url": "https://povo.jp/spec/",
+    {"name": "povo2.0", "checked": "2026年11月10日", "plan": "データトッピング", "url": "https://povo.jp/spec/",
      "tiers": [(3, 990), (30, 2780)],
      "note": "基本料0円で、使う月だけデータを買うトッピング制。120GB(365日)21,600円のまとめ買いなら月あたり1,800円", "link": ""},
-    {"name": "日本通信SIM", "plan": "合理的シンプル290／みんなのプラン／50GBプラン", "url": "https://www.nihontsushin.com/",
+    {"name": "日本通信SIM", "checked": "2026年11月10日", "plan": "合理的シンプル290／みんなのプラン／50GBプラン", "url": "https://www.nihontsushin.com/",
      "tiers": [(1, 290), (2, 510), (3, 730), (4, 950), (5, 1170), (20, 1390), (50, 2178)],
      "note": "ドコモ回線。1GBなら290円で、超えた分は1GBごと220円。20GB・50GBは5分かけ放題か月70分の無料通話つき", "link": ""},
-    {"name": "ワイモバイル", "plan": "シンプル3 S/M/L", "url": "https://www.ymobile.jp/plan/",
+    {"name": "ワイモバイル", "checked": "2026年11月10日", "plan": "シンプル3 S/M/L", "url": "https://www.ymobile.jp/plan/",
      "tiers": [(5, 3278), (30, 4378), (35, 5478)],
      "note": "ソフトバンク回線のサブブランド。表示は割引前。家族割・おうち割・PayPayカード割で大きく下がる", "link": ""},
     {"name": "BB.exciteモバイル", "plan": "Flatプラン", "url": "https://bb.excite.co.jp/exmb/sim/plan/",
@@ -1330,7 +1377,8 @@ def render_sim(updated):
     e = html.escape
     site = site_url()
     url = f"{site}sim.html"
-    data = json.dumps([{"name": p["name"], "plan": p["plan"], "tiers": p["tiers"], "note": p["note"],
+    data = json.dumps([{"name": p["name"], "plan": p["plan"], "tiers": p["tiers"],
+                        "note": p["note"] + f"（料金確認 {p.get('checked', SIM_CHECKED)}）",
                         "href": p["link"] or p["url"], "ad": bool(p["link"])} for p in SIM_PLANS], ensure_ascii=False)
 
     def table(gb):
@@ -1379,7 +1427,7 @@ a:focus-visible,button:focus-visible{{outline:2px solid var(--acc);outline-offse
 <p class=pr>PR：このページには広告リンクを含む場合があります</p>
 <p class=bc><a href="./">TANKA</a> › 格安SIM 1GBあたり料金比較</p>
 <h1>格安SIM 1GBあたり料金比較</h1>
-<p class=lead>毎月使うデータ量を選ぶと、各社でその量を使える一番安いプランを並べます。料金は{SIM_CHECKED}時点の公式の通常料金（音声通話つき・税込）で、キャンペーン割引や家族割引は含みません。</p>
+<p class=lead>毎月使うデータ量を選ぶと、各社でその量を使える一番安いプランを並べます。料金は各社の公式の通常料金（音声通話つき・税込、確認日は各社の欄に記載）で、キャンペーン割引や家族割引は含みません。</p>
 <section class=pick><h2>毎月どれくらい使う？</h2><div class=uses role=group aria-label="毎月のデータ量">{buttons}</div>
 <ol id=list>{table(10)}</ol></section>
 <section class=box><h2>選び方のポイント</h2><ul>
@@ -1468,6 +1516,9 @@ h2{font-size:1.1rem;margin-top:1.6em}.mut{color:var(--mut);font-size:.85rem}</st
 </main></body></html>"""
 
 
+POPULAR = ["toilet-paper-double", "diaper-pants-m", "rice", "laundry-gelball", "dog-food-dry", "water-2l", "dishwasher-tablet",
+           "baby-formula", "cat-litter", "tissue", "protein"]
+
 GROUPS = [
     ("laundry", "洗濯・キッチン", ["dishwasher-tablet", "dish-soap-refill", "laundry-gelball", "liquid-laundry-refill", "softener-refill",
                                "kitchen-paper", "food-wrap"]),
@@ -1479,27 +1530,32 @@ GROUPS = [
     ("care", "バス・ケア", ["hand-soap-refill", "body-soap-refill", "shampoo-refill", "toothpaste",
                          "sonicare-brush-head", "oralb-brush-head"]),
     ("pet", "ペット", ["dog-food-dry", "cat-food-dry", "pet-sheet", "pet-sheet-wide", "cat-litter"]),
-    ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "water-2l", "sparkling-water-500ml", "soy-sauce", "canola-oil"]),
+    ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "protein-soy", "water-2l", "sparkling-water-500ml", "soy-sauce", "canola-oil"]),
     ("phone", "スマホ・通信", ["mobile-battery"]),
     ("manga", "漫画 全巻セット", [f"manga-{m[0]}" for m in MANGA]),
 ]
 
 
-def render_index(summary, updated, drops=None):
+def render_index(summary, updated, drops=None, history=None):
     e = html.escape
     by_slug = {c["slug"]: c for c in CATEGORIES}
     grouped = {sl for _, _, sls in GROUPS for sl in sls}
     groups = GROUPS + ([("other", "その他", [c["slug"] for c in CATEGORIES if c["slug"] not in grouped])]
                        if any(c["slug"] not in grouped for c in CATEGORIES) else [])
 
-    def off(s):
-        """最安が掲載商品の平均より何%安いか"""
-        return (1 - s["unit_price"] / s["avg"]) * 100 if s and s.get("avg") else 0
+    # 買い時: 過去30日の最安単価の記録と比べて、今日が最安値（0）か安い水準（1）のジャンル。7日分たまってから判定
+    buy = {}
+    for slug, h in (history or {}).items():
+        vals = [v for _, v in h[-30:]]
+        if len(vals) >= 7:
+            if vals[-1] <= min(vals):
+                buy[slug] = 0
+            elif vals[-1] <= sorted(vals)[len(vals) // 4]:
+                buy[slug] = 1
 
     def card(c):
         s = summary.get(c["slug"])
-        pct = off(s)
-        badge = f"<span class=off>平均より{pct:.0f}%安い</span>" if pct >= 5 else ""
+        badge = f"<span class=off>{BUY_LABEL[buy[c['slug']]]}</span>" if c["slug"] in buy else ""
         best = (f"<p class=b>最安 <b class=up data-u='{s['unit_price']:.4f}' data-pt='{s.get('pt', 1)}'>{s['unit_price']:.1f}円</b><small>/{e(c['unit'])}</small>{badge}</p>"
                 f"<p class=s>{e(s.get('clean') or s['name'])}</p>") if s else "<p class=s>集計中</p>"
         img = f"<img src='{e(s['img'])}' alt='' loading=lazy>" if s and s.get("img") else "<span class=noimg></span>"
@@ -1507,21 +1563,24 @@ def render_index(summary, updated, drops=None):
         return (f"<a class=card href='{c['slug']}.html' data-k='{e(words.lower())}'>{img}"
                 f"<div><h3>{e(short(c))}</h3>{best}</div></a>")
 
-    # 今日のお得: 最安と平均の差が大きいジャンル（漫画は中古と新品の差が出るだけなので除く）
-    deals = sorted((c for c in CATEGORIES if not c.get("manga") and summary.get(c["slug"])),
-                   key=lambda c: -off(summary[c["slug"]]) * (1 + summary[c["slug"]].get("fee", 0) / 500))[:6]
+    deals = sorted((c for c in CATEGORIES if c["slug"] in buy and not c.get("manga") and summary.get(c["slug"])),
+                   key=lambda c: (buy[c["slug"]], -summary[c["slug"]].get("fee", 0)))[:6]
     deal_html = "".join(f"""<a class=deal href='{c['slug']}.html'>
 <span class=rank>{i}</span><img src='{e(summary[c['slug']].get('img', ''))}' alt='' loading=lazy>
 <span class=dn>{e(short(c))}</span>
 <span class=dp><b class=up data-u='{summary[c['slug']]['unit_price']:.4f}' data-pt='{summary[c['slug']].get('pt', 1)}'>{summary[c['slug']]['unit_price']:.1f}円</b>/{e(c['unit'])}</span>
-<span class=dd>平均 {summary[c['slug']]['avg']:.1f}円 → <strong>{off(summary[c['slug']]):.0f}%安い</strong></span></a>"""
+<span class=dd><strong>{BUY_LABEL[buy[c['slug']]]}</strong></span></a>"""
                         for i, c in enumerate(deals, 1))
     n_items = sum(s.get("count", 0) for s in summary.values())
     # 今日値下がりした商品: 値下がり率と1件あたりの報酬の両方で選ぶ（同じジャンルは2件まで）
-    picked, per_cat = [], {}
-    for d in sorted(drops or [], key=lambda d: -d["pct"] * (1 + d["fee"] / 300)):
-        if d["pct"] >= 3 and per_cat.get(d["slug"], 0) < 2 and (d["name"], d["price"]) not in {(x["name"], x["price"]) for x in picked}:
+    # 日用品を優先し、漫画（中古セットの出品入れ替えで値下がりが出やすい）は合わせて2件まで
+    picked, per_cat, manga_n = [], {}, 0
+    for d in sorted(drops or [], key=lambda d: (d["slug"].startswith("manga-"), -d["pct"] * (1 + d["fee"] / 300))):
+        is_manga = d["slug"].startswith("manga-")
+        if d["pct"] >= 3 and per_cat.get(d["slug"], 0) < 2 and not (is_manga and manga_n >= 2) \
+                and (d["name"], d["price"]) not in {(x["name"], x["price"]) for x in picked}:
             per_cat[d["slug"]] = per_cat.get(d["slug"], 0) + 1
+            manga_n += is_manga
             picked.append(d)
     drop_html = ("<section class=today id=drops><h2>今日値下がりした商品<small>前回の価格より安くなったもの</small></h2><div class=deals>"
                  + "".join(f"""<a class=deal href='{e(d['url'])}' rel='sponsored noopener' target=_blank>
@@ -1629,9 +1688,9 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 <div class=stats><span><b>{len(CATEGORIES)}</b> ジャンル</span><span><b>{n_items:,}</b> 商品を比較</span><span>毎朝6時に自動更新（{updated[5:10].replace('-', '/')} {updated[11:]}）</span></div>
 </section>
 <div class=bar><input id=q type=search placeholder="さがす（例：洗剤、猫、トイレットペーパー、キュキュット、呪術廻戦）" aria-label="ジャンルをさがす" autocomplete=off>
-<nav class=chips aria-label="カテゴリ">{"<a href='#drops'>値下がり</a>" if picked else ""}<a href="#today">今日のお得</a><a href="calc.html">単価計算ツール</a>{chips}</nav></div>
+<nav class=chips aria-label="カテゴリ">{"<a href='#drops'>値下がり</a>" if picked else ""}{"<a href='#today'>今が買い時</a>" if deal_html else ""}<a href="calc.html">単価計算ツール</a>{chips}</nav></div>
 {drop_html}
-<section class=today id=today><h2>今日のお得ランキング<small>最安が平均より大きく安いジャンル</small></h2><div class=deals>{deal_html}</div></section>
+{f"<section class=today id=today><h2>今が買い時のジャンル<small>最安の単価が過去30日の中で安いもの</small></h2><div class=deals>{deal_html}</div></section>" if deal_html else ""}
 {sections}
 <p class=none id=none hidden>見つかりませんでした。別の言葉でさがしてみてください。</p>
 <section class=how><h2>TANKAの比べ方</h2><ol>
@@ -1751,7 +1810,7 @@ def main():
     cutoff = (datetime.now(JST) - timedelta(days=14)).strftime("%Y-%m-%d")
     item_hist = {k: v for k, v in item_hist.items() if v and v[-1][0] >= cutoff}
     (OUT / "items_history.json").write_text(json.dumps(item_hist, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    (OUT / "index.html").write_text(render_index(summary, updated, drops), encoding="utf-8")
+    (OUT / "index.html").write_text(render_index(summary, updated, drops, history), encoding="utf-8")
     (OUT / "about.html").write_text(render_about(), encoding="utf-8")
     activate_pending_links()
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
