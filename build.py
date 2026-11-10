@@ -1500,7 +1500,7 @@ def render_index(summary, updated, drops=None):
         s = summary.get(c["slug"])
         pct = off(s)
         badge = f"<span class=off>平均より{pct:.0f}%安い</span>" if pct >= 5 else ""
-        best = (f"<p class=b>最安 <b>{s['unit_price']:.1f}円</b><small>/{e(c['unit'])}</small>{badge}</p>"
+        best = (f"<p class=b>最安 <b class=up data-u='{s['unit_price']:.4f}' data-pt='{s.get('pt', 1)}'>{s['unit_price']:.1f}円</b><small>/{e(c['unit'])}</small>{badge}</p>"
                 f"<p class=s>{e(s.get('clean') or s['name'])}</p>") if s else "<p class=s>集計中</p>"
         img = f"<img src='{e(s['img'])}' alt='' loading=lazy>" if s and s.get("img") else "<span class=noimg></span>"
         words = " ".join([short(c), c["keyword"]] + c.get("keywords", []) + list(c.get("brands", {})))
@@ -1513,7 +1513,7 @@ def render_index(summary, updated, drops=None):
     deal_html = "".join(f"""<a class=deal href='{c['slug']}.html'>
 <span class=rank>{i}</span><img src='{e(summary[c['slug']].get('img', ''))}' alt='' loading=lazy>
 <span class=dn>{e(short(c))}</span>
-<span class=dp><b>{summary[c['slug']]['unit_price']:.1f}円</b>/{e(c['unit'])}</span>
+<span class=dp><b class=up data-u='{summary[c['slug']]['unit_price']:.4f}' data-pt='{summary[c['slug']].get('pt', 1)}'>{summary[c['slug']]['unit_price']:.1f}円</b>/{e(c['unit'])}</span>
 <span class=dd>平均 {summary[c['slug']]['avg']:.1f}円 → <strong>{off(summary[c['slug']]):.0f}%安い</strong></span></a>"""
                         for i, c in enumerate(deals, 1))
     n_items = sum(s.get("count", 0) for s in summary.values())
@@ -1534,15 +1534,15 @@ def render_index(summary, updated, drops=None):
         s = summary.get(c["slug"])
         name = short(c).replace(" 全巻セット", "")
         words = " ".join([name, c["keyword"]] + c.get("must", []))
-        price = f"<b>{s['unit_price']:.0f}円</b>/冊〜" if s else "集計中"
+        price = f"<b class=up data-d=0 data-u='{s['unit_price']:.4f}' data-pt='{s.get('pt', 1)}'>{s['unit_price']:.0f}円</b>/冊〜" if s else "集計中"
         return f"<a class='card tile' href='{c['slug']}.html' data-k='{e(words.lower())}'><h3>{e(name)}</h3><span>{price}</span></a>"
 
     def section(gid, label, sls):
         cs = [by_slug[sl] for sl in sls if sl in by_slug]
         if gid == "phone":  # 格安SIMはランキングではなく比較ページなので固定のカードを先頭に置く
-            sim = (f"<a class=card href='sim.html' data-k='格安sim 携帯 スマホ 料金 ギガ iijmio mineo 楽天モバイル linemo ahamo uq jcom nuro libmo excite'>"
+            sim = (f"<a class=card href='sim.html' data-k='格安sim 携帯 スマホ 料金 ギガ iijmio mineo 楽天モバイル linemo ahamo uq jcom nuro libmo excite povo 日本通信 ワイモバイル'>"
                    f"<span class=noimg></span><div><h3>格安SIM 1GBあたり料金比較</h3><p class=b>使う量を選ぶだけ</p>"
-                   f"<p class=s>格安SIM・サブブランド12社の公式料金で比較</p></div></a>")
+                   f"<p class=s>格安SIM・サブブランド{len(SIM_PLANS)}社の公式料金で比較</p></div></a>")
             return f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>" + sim + "".join(map(card, cs)) + "</div></section>"
         if gid != "manga":
             return f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>" + "".join(map(card, cs)) + "</div></section>"
@@ -1554,16 +1554,16 @@ def render_index(summary, updated, drops=None):
 
     sections = "".join(section(*g) for g in groups)
     site = site_url()
-    desc = (f"洗剤・トイレットペーパー・ペットフード・お米・漫画全巻セットなど{len(CATEGORIES)}ジャンルを、"
-            "楽天の価格と内容量から1回あたり・1枚あたり・1冊あたりの値段に換算して毎朝自動で比較。")
+    desc = (f"おむつ・洗剤・トイレットペーパー・ペットフード・お米・漫画全巻セットなど{len(CATEGORIES)}ジャンルを、"
+            "楽天の価格と内容量から1回・1枚・1冊あたりの値段に換算して毎朝自動で比較。あなたの楽天ポイント倍率（SPU）込みの実質価格も分かります。")
     ld = json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": "TANKA", "url": site,
                      "description": desc}, ensure_ascii=False).replace("</", "<\\/")
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>TANKA｜日用品の1回あたり単価比較</title>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>TANKA｜楽天の日用品を1回あたり単価で比較【ポイント込み・毎日更新】</title>
 <meta name="google-site-verification" content="A-JyA2Us3KYpkTLgjEMxZSKUwAAWLqE7rWFsJdlSn9o">
 <meta name=description content="{e(desc)}">
 <link rel=canonical href="{site}">
-<meta property=og:title content="TANKA｜日用品の1回あたり単価比較"><meta property=og:description content="{e(desc)}">
+<meta property=og:title content="TANKA｜楽天の日用品を1回あたり単価で比較【ポイント込み・毎日更新】"><meta property=og:description content="{e(desc)}">
 <meta property=og:url content="{site}"><meta property=og:type content=website><meta property=og:site_name content="TANKA">
 <meta name=twitter:card content=summary>
 <script type="application/ld+json">{ld}</script>
@@ -1577,6 +1577,11 @@ main{{max-width:1000px;margin:auto;padding:0 16px 24px}} .pr{{color:var(--mut);f
 .hero{{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 18px;display:grid;gap:12px}}
 .hero h1{{margin:0;font-size:clamp(1.4rem,4.5vw,2rem);line-height:1.3;text-wrap:balance}} .hero h1 em{{font-style:normal;color:var(--acc)}}
 .hero p{{margin:0;color:var(--mut)}}
+.feat{{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}}
+.feat li{{background:var(--bg);border-radius:10px;padding:8px 10px;font-size:.82rem;color:var(--mut)}} .feat b{{display:block;color:var(--fg);font-size:.92rem}}
+.spu{{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;background:var(--acc-soft);border-radius:10px;padding:8px 12px;font-size:.85rem}}
+.spu label{{font-weight:700}} .spu select{{font:inherit;padding:3px 6px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--fg)}} .spu a{{color:var(--acc)}} #spumsg{{color:var(--mut);font-size:.78rem}}
+.tools{{display:flex;flex-wrap:wrap;gap:8px}} .tools a{{border:1px solid var(--acc);color:var(--acc);border-radius:999px;padding:4px 12px;text-decoration:none;font-size:.85rem;font-weight:600}}
 .stats{{display:flex;flex-wrap:wrap;gap:8px}} .stats span{{background:var(--bg);border-radius:999px;padding:4px 12px;font-size:.82rem}} .stats b{{font-variant-numeric:tabular-nums}}
 .bar{{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:grid;gap:8px;margin-top:14px;border-bottom:1px solid var(--line)}}
 .bar input{{font:inherit;font-size:1rem;padding:11px 14px;border:2px solid var(--line);border-radius:999px;background:var(--card);color:var(--fg);width:100%;box-sizing:border-box}}
@@ -1613,8 +1618,14 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 </style></head><body><main>
 <div class=top><a class=logo href="./">TAN<i>KA</i></a><span class=pr>PR：楽天アフィリエイトを利用しています</span></div>
 <section class=hero>
-<h1>そのまとめ買い、<em>本当に得？</em><br>1回あたりの値段で比べよう</h1>
+<h1>楽天のまとめ買い、<em>本当に得？</em><br>ポイント込みの「1回あたり」で比べよう</h1>
 <p>大容量や○個セットは、総額だけでは割安か分かりません。TANKAは楽天市場の商品を「価格 ÷ 内容量」で計算し、1回・1枚・100g・1冊あたりの安い順に並べています。</p>
+<ul class=feat><li><b>あなたのポイント込み</b>SPUの倍率を選ぶと、全ページが実質価格に</li>
+<li><b>送料込みの最安が先頭</b>送料別の安さにだまされない</li>
+<li><b>毎朝更新・値下がりも</b>価格の推移と今日の値下がりを表示</li></ul>
+<div class=spu><label for=spu>あなたの楽天ポイント倍率（SPU）</label><select id=spu><option value=0>未設定</option>""" + "".join(f"<option value={k}>{k}倍</option>" for k in range(1, 21)) + f"""</select>
+<a href="https://event.rakuten.co.jp/campaign/point-up/everyday/point/" rel="noopener" target=_blank>自分の倍率を確認</a><span id=spumsg></span></div>
+<p class=tools><a href="calc.html">単価計算ツール</a><a href="sim.html">格安SIM料金比較</a></p>
 <div class=stats><span><b>{len(CATEGORIES)}</b> ジャンル</span><span><b>{n_items:,}</b> 商品を比較</span><span>毎朝6時に自動更新（{updated[5:10].replace('-', '/')} {updated[11:]}）</span></div>
 </section>
 <div class=bar><input id=q type=search placeholder="さがす（例：洗剤、猫、トイレットペーパー、キュキュット、呪術廻戦）" aria-label="ジャンルをさがす" autocomplete=off>
@@ -1627,6 +1638,7 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 <li><b>楽天市場から毎朝取得</b><span>人気の商品の価格・レビュー数・評価を自動で集めます</span></li>
 <li><b>内容量で割って単価にする</b><span>「150個入×3袋」なども商品名から読み取って計算します</span></li>
 <li><b>同じ商品は最安だけ掲載</b><span>ショップ違い・袋数違いをまとめ、いちばん安い出品を表示します</span></li>
+<li><b>あなたのポイントで実質価格に</b><span>楽天のポイント倍率（SPU）を選ぶと、ショップのポイントアップも足して実質の単価を出します</span></li>
 </ol></section>
 <footer><a href="about.html">このサイトについて（計算方法・広告について）</a><span>価格は取得時点のものです。購入前に商品ページで確認してください。</span></footer>
 </main>
@@ -1642,6 +1654,17 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
     today.hidden=!!w;
     document.getElementById('none').hidden=hit>0;
   }});
+  // SPU: カテゴリページと同じ保存先。楽天のポイントは税抜価格に付くので 倍率/110 を差し引く
+  var sel=document.getElementById('spu'), msg=document.getElementById('spumsg'), ups=[].slice.call(document.querySelectorAll('.up'));
+  function spu(v){{
+    ups.forEach(function(b){{var u=+b.dataset.u, d=b.dataset.d==='0'?0:1;
+      if(v>0){{var ef=u*(1-(v+(+b.dataset.pt||1)-1)/110); b.textContent='実質'+ef.toFixed(d)+'円';}} else b.textContent=u.toFixed(d)+'円';}});
+    msg.textContent=v>0?'表示中の単価は '+v+'倍＋ショップのポイントアップで計算した実質価格です':'';
+  }}
+  var saved=0; try{{saved=+localStorage.getItem('tanka_spu')||0}}catch(e){{}}
+  if(saved){{sel.value=saved; spu(saved);}}
+  sel.addEventListener('change',function(){{var v=+sel.value; try{{localStorage.setItem('tanka_spu',v)}}catch(e){{}} spu(v);
+    if(window.gtag) gtag('event','set_spu',{{value:v}});}});
 }})();
 </script></body></html>"""
 
@@ -1720,7 +1743,7 @@ def main():
                                     "count": len(rows), "fee": round(fees[len(fees) // 2]),
                                     "rate": round(sorted(r["rate"] for r in rows[:10])[min(len(rows), 10) // 2], 1),
                                     "price": sorted(r["price"] for r in rows[:10])[min(len(rows), 10) // 2],
-                                    "avg": typical_avg(rows),
+                                    "avg": typical_avg(rows), "pt": top.get("point", 1),
                                     "clean": clean_name(top["name"], 40)}
         print(f"{cat['slug']}: 取得{len(items)}件 → 掲載{len(rows)}件 ({'本番' if live else 'サンプル'})")
     (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False), encoding="utf-8")
