@@ -1246,7 +1246,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{{outline:2px solid var(
 <p class=none id=none hidden>条件に合う商品がありません。</p></section>
 {tips_html}
 {faq_html}
-<p class=pr>内容量は商品名から自動で読み取っています。セット数の読み違いがある場合があるので、購入前に商品ページで確認してください。</p>
+<p class=pr>内容量は商品名から自動で読み取っています。セット数の読み違いがある場合があるので、購入前に商品ページで確認してください。読み違いを見つけたら<a href="https://docs.google.com/forms/d/e/1FAIpQLSfBVVJ6Xf8ITCX5A0yD8tgEKXCrrFu7GIhalRzAjiYh2lXFtg/viewform" rel="noopener" target=_blank>お知らせください</a>。</p>
 {nav}
 </main>
 <script>
@@ -1511,7 +1511,7 @@ h2{font-size:1.1rem;margin-top:1.6em}.mut{color:var(--mut);font-size:.85rem}</st
 <ul><li><b>Google アナリティクス</b>（Google LLC）：閲覧したページ、リンクのクリック、端末やブラウザの種類、Cookie などの識別子。利用状況の分析に使います。詳しくは <a href="https://policies.google.com/technologies/partner-sites?hl=ja" rel="noopener">Google のポリシー</a> をご覧ください。</li>
 <li><b>楽天アフィリエイト</b>（楽天グループ株式会社）・<b>A8.net</b>（株式会社ファンコミュニケーションズ）：広告リンクの表示やクリック、購入の計測。紹介料の計算に使われます。</li></ul>
 <h2>お問い合わせ</h2>
-<p>掲載内容の誤り（内容量の読み違いなど）のご指摘は、<a href="https://github.com/ikkai-ikura/ikkai-ikura.github.io/issues" rel="noopener">こちら</a>からお知らせください。</p>
+<p>掲載内容の誤り（内容量の読み違いなど）のご指摘や、追加してほしいジャンルは、<a href="https://docs.google.com/forms/d/e/1FAIpQLSfBVVJ6Xf8ITCX5A0yD8tgEKXCrrFu7GIhalRzAjiYh2lXFtg/viewform" rel="noopener" target=_blank>お問い合わせフォーム</a>からお知らせください。</p>
 <p class=mut><a href="./">トップへ戻る</a></p>
 </main></body></html>"""
 
