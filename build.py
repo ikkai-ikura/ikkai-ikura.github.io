@@ -25,6 +25,41 @@ ML = {"ml": 1, "mL": 1, "ML": 1, "L": 1000, "l": 1000, "リットル": 1000}
 REFILL = ["詰め替え", "詰替", "つめかえ", "詰めかえ"]
 TP_PARSER = {"size": r"(\d{2,3}(?:\.\d)?)\s*m(?![ml])", "pack": r"ロール|R(?![a-z])", "lo": 100, "hi": 20000}
 NG_ALL = ["ふるさと納税", "返礼品"]
+
+# 紙おむつのサイズ表記。「MamyPoko」の M や「XL」の L に当たらないよう、直後がサイズ・数字・区切りの時だけ一致
+_SZ = lambda x: rf"(?<![A-Za-z]){x}(?:サイズ|\s*\d|[\s)）】\]/／]|$)"
+DIAPER_SIZE = {"新生児": r"新生児", "S": _SZ("S"), "M": _SZ("M"), "L": _SZ("L"),
+               "ビッグ": rf"ビッグ(?!より)|BIG(?![A-Za-z])|{_SZ('XL')}"}
+DIAPER_SLUG = {"新生児": "nb", "S": "s", "M": "m", "L": "l", "ビッグ": "big"}
+DIAPER_TIPS = {
+    "パンツ": ["同じサイズでもメーカーで対象体重が少しずつ違う。体に合わないと漏れやすいので、まずは小パックで試してからケース買いにする",
+             "ケース買い（3〜4パック）が1枚あたり最安になりやすい",
+             "肌ざわりや吸収量で価格帯が分かれる。夜だけ「おやすみパンツ」など、昼と夜でメーカーを使い分ける家庭も多い"],
+    "テープ": ["テープタイプはねんね期向け。成長が早い時期なので、まとめ買いしすぎるとサイズアウトで余ることがある",
+             "同じサイズでもメーカーで対象体重が違う。足まわりが赤くなったら1つ上のサイズかメーカー変更を考える",
+             "ケース買いが1枚あたり最安になりやすい"],
+}
+
+
+def DIAPER(kind, size):
+    """紙おむつのカテゴリ。商品名の「6〜11kg」などの体重範囲は数量の読み取り前に取り除く"""
+    other = "テープ" if kind == "パンツ" else "パンツ"
+    label = size if size in ("新生児", "ビッグ") else f"{size}サイズ"
+    kw = f"おむつ {kind} {label}"
+    return {
+        "slug": f"diaper-{'pants' if kind == 'パンツ' else 'tape'}-{DIAPER_SLUG[size]}",
+        "title": f"紙おむつ {kind} {label} 1枚あたり単価ランキング",
+        "keyword": kw,
+        "keywords": [f"{kw} ケース"] + [f"{b} {kind} {label}" for b in ["メリーズ", "パンパース", "ムーニー", "グーン", "マミーポコ"]],
+        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 3, "range": (30, 3000),
+        "must_all": [kind],
+        "size_re": DIAPER_SIZE[size],
+        "size_ng_re": "|".join(v for k, v in DIAPER_SIZE.items() if k != size) + r"|ビッグより|XXL",
+        "strip": r"\(?\d+(?:\.\d+)?\s*(?:kg)?\s*[~～〜\-ー－]\s*\d+(?:\.\d+)?\s*kg\)?|生後[^\s]*|\d+\s*[ヵヶか]月[^\s]*",
+        "ng": [other, "大人", "介護", "ライフリー", "アテント", "リリーフ", "水遊び", "スイミング", "ゴミ箱", "ポーチ",
+               "ケーキ", "マスキング", "選べる", "おむつカバー", "布おむつ"],
+        "tips": DIAPER_TIPS[kind],
+    }
 MIN_INDEX = 5  # 掲載がこれ未満のページは中身が薄いので検索エンジンに載せない（サイトマップからも外す）  # 寄付額なので実際の値段と比べられない
 
 # ページごとの設定。unit=表示単位、words=数量の後ろに付く語
@@ -324,24 +359,8 @@ CATEGORIES = [
         "must": ["ティッシュ"],
         "ng": ["ウェット", "ポケット", "ケース付", "カバー", "トイレット", "キッチン", "除菌"],
     },
-    {
-        "slug": "diaper-pants-m",
-        "title": "紙おむつ パンツ Mサイズ 1枚あたり単価ランキング",
-        "keyword": "おむつ パンツ Mサイズ",
-        "keywords": ["おむつ パンツ Mサイズ ケース", "メリーズ パンツ Mサイズ", "パンパース パンツ Mサイズ", "ムーニー パンツ Mサイズ", "グーン パンツ Mサイズ"],
-        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 10, "range": (30, 3000),
-        "must": ["M"], "must_all": ["パンツ"],
-        "ng": ["テープ", "Lサイズ", "Sサイズ", "BIG", "ビッグ", "新生児", "大人", "介護", "水遊び", "スイミング", "ゴミ箱", "ポーチ"],
-    },
-    {
-        "slug": "diaper-tape-s",
-        "title": "紙おむつ テープ Sサイズ 1枚あたり単価ランキング",
-        "keyword": "おむつ テープ Sサイズ",
-        "keywords": ["おむつ テープ Sサイズ ケース", "メリーズ テープ Sサイズ", "パンパース テープ Sサイズ", "ムーニー テープ Sサイズ", "グーン テープ Sサイズ"],
-        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 10, "range": (30, 3000),
-        "must": ["S"], "must_all": ["テープ"],
-        "ng": ["パンツ", "Mサイズ", "Lサイズ", "新生児", "大人", "介護", "ゴミ箱", "ポーチ", "マスキング"],
-    },
+    *[DIAPER(t, sz) for t, sz in [("パンツ", "M"), ("パンツ", "L"), ("パンツ", "ビッグ"),
+                                  ("テープ", "新生児"), ("テープ", "S"), ("テープ", "M")]],
     {
         "slug": "sanitary-napkin",
         "title": "生理用ナプキン 昼用 1枚あたり単価ランキング",
@@ -510,8 +529,6 @@ TIPS = {
     "toilet-paper-double": ["ダブルは2枚重ねなので、同じ長さでもシングルより紙の量が多い。ここではダブル同士で比べている", "1.5倍巻・2倍巻などの長巻きは交換の手間が減り、収納場所も節約できる", "芯なしタイプは長さが長いぶん、ホルダーに入るサイズか確認する"],
     "toilet-paper-single": ["シングルは1枚なので、ダブルより長く巻かれていて交換回数が少ない", "再生紙（古紙）100%は安く、パルプ100%はやわらかい傾向", "長巻き（1.5倍・2倍）は1mあたりが安くなりやすい"],
     "tissue": ["「組」は2枚1組の数。150組と200組では1箱で使える量が違うので、100組あたりで比べている", "保湿ティッシュ（鼻セレブなど）は単価が高いが、鼻をよくかむ時期にはやさしい", "5箱パック×数パックのケース買いが最安になりやすい"],
-    "diaper-pants-m": ["同じMサイズでもメーカーで対象体重が少しずつ違う。体に合わないと漏れやすいので、まずは小パックで試してからケース買いにする", "ケース買い（3〜4パック）が1枚あたり最安になりやすい", "肌ざわりや吸収量で価格帯が分かれる。昼と夜でメーカーを使い分ける家庭も多い"],
-    "diaper-tape-s": ["テープタイプはねんね期向け。成長が早い時期なので、まとめ買いしすぎるとサイズアウトで余ることがある", "同じSサイズでもメーカーで対象体重が違う", "ケース買いが1枚あたり最安になりやすい"],
     "sanitary-napkin": ["ここでは昼用で比べている。羽つき・羽なし、長さ（cm）で使い心地が変わる", "多い日用や夜用は1枚あたりが高めなので、日によって使い分けると節約になる", "肌が弱い人は、素材（コットンなど）を確認して選ぶ"],
     "kitchen-paper": ["1ロールのカット数（枚数）がメーカーで違うので、100カットあたりで比べている", "厚手・2枚重ねは1枚で拭ける量が多いぶん、カット数あたりは高め", "ボックスタイプとロールタイプで、置き場所や取り出しやすさが違う"],
     "food-wrap": ["ここでは幅30cmで比べている。長さ（50m・100mなど）が長いほど10mあたりが安い", "業務用の長巻きは安いが、ケースが大きいので収納場所を確認する", "電子レンジでの耐熱温度は製品ごとに違う"],
@@ -742,7 +759,8 @@ def parse_volumes(name):
         n, label = int(m.group(1)), (f"全{m.group(1)}巻" if "巻" in m.group(0) else f"{m.group(1)}冊")
     if not 3 <= n <= 200:
         return None, ""
-    state = "中古" if "中古" in s else ("新品" if "新品" in s or "新刊" in s else "")
+    used = re.search(r"中古|レンタル落ち|レンタルアップ|USED|古本|コンディション|状態[:：(（]", s, re.I)
+    state = "中古" if used else ("新品" if "新品" in s or "新刊" in s else "")
     return n, label + (f"・{state}" if state else "")
 
 
@@ -770,15 +788,22 @@ def rank(items, cat):
             continue
         if any(w not in it["itemName"] for w in cat.get("must_all", [])):
             continue
+        if cat.get("size_re"):  # 紙おむつ: 狙いのサイズがあり、ほかのサイズが混ざっていない
+            zn = it["itemName"].translate(ZEN)
+            if not re.search(cat["size_re"], zn) or re.search(cat["size_ng_re"], zn):
+                continue
         note = ""
         if cat.get("manga"):  # 全巻セット: 冊数と新品/中古
             n, note = parse_volumes(it["itemName"])
+            if n and it.get("shopName") == "楽天ブックス" and "中古" not in note and "新品" not in note:
+                note += "・新品"  # 楽天ブックスは新品のみ
             if n and n < cat.get("min_vol", 0):
                 continue
         elif cat.get("parser"):  # 「ロール数×長さ」のように2つの数字を掛けるジャンル
             n = parse_product(it["itemName"], **cat["parser"])
         else:
-            n = parse_count(it["itemName"], cat["words"], *cat.get("range", (5, 3000)))
+            pname = re.sub(cat["strip"], " ", it["itemName"].translate(ZEN)) if cat.get("strip") else it["itemName"]
+            n = parse_count(pname, cat["words"], *cat.get("range", (5, 3000)))
         if not n or it.get("reviewCount", 0) < cat["min_reviews"]:
             continue
         price = it["itemPrice"]
@@ -802,9 +827,14 @@ def rank(items, cat):
         med = rows[len(rows) // 2]["unit_price"]
         rows = [r for r in rows if r["unit_price"] >= med * cat.get("outlier", 0.35)]
     if not cat.get("group", True):  # 全巻セットのようにショップ・状態違いを比べたいジャンル
-        for r in rows:
-            r["others"] = 0
-        return add_scores(rows[:30])
+        seen, uniq = set(), []
+        for r in rows:  # 同じショップが同じ値段・冊数で二重に出品しているものは1行に
+            key = (r["shop"], r["price"], r["count"])
+            if key not in seen:
+                seen.add(key)
+                r["others"] = 0
+                uniq.append(r)
+        return add_scores(uniq[:30])
     # 同じ商品（ショップ違い・袋数違い）は1行にまとめ、1回あたり最安の出品だけを載せる
     groups = []
     for r in rows:  # rows は単価の安い順なので、各グループの先頭が最安
@@ -835,6 +865,14 @@ def clean_name(name, n=60):
     return (s[:n] + "…") if len(s) > n else (s or name[:n])
 
 
+def typical_avg(rows):
+    """平均単価。相場（中央値）の3倍を超える割高品は平均を押し上げて「○%安い」を誇張するので除く"""
+    us = sorted(r["unit_price"] for r in rows)
+    med = us[len(us) // 2]
+    keep = [u for u in us if u <= med * 3] or us
+    return sum(keep) / len(keep)
+
+
 def best_row(rows):
     """送料を含めて比べやすい「最安」: 送料無料の中の最安。送料無料がなければ表示価格の最安"""
     return next((r for r in rows if r["free_ship"]), rows[0]) if rows else None
@@ -851,7 +889,19 @@ def pick_rows(rows, cat=None):
     picks, used = [(label, first)], {id(first)}
     tests = [("総合おすすめ（安さ×評価）", lambda r: r is top_score)]
     if cat and cat.get("manga"):
-        tests = [("新品で安い", lambda r: "中古" not in r["name"])]
+        new = lambda r: "新品" in r.get("note", "")
+        old = lambda r: "中古" in r.get("note", "")
+        picks, used = [], set()
+        for label, test in [("新品でいちばん安い", new), ("中古でいちばん安い", old)]:
+            r = next((r for r in rows if test(r) and r["free_ship"]), None) or next((r for r in rows if test(r)), None)
+            if r:
+                used.add(id(r))
+                picks.append((label + ("" if r["free_ship"] else "（送料別）"), r))
+        r = next((r for r in rows if id(r) not in used), None)
+        if r and r["unit_price"] < min(p[1]["unit_price"] for p in picks or [(0, {"unit_price": 1e9})]):
+            picks.append(("新品・中古の表記なしで最安" + ("" if r["free_ship"] else "（送料別）"), r))
+        if picks:
+            return picks
     # 送料別でも表示価格がもっと安いものがあれば、送料別と明記して並べる
     tests.append(("表示価格の最安（送料別）", lambda r: not r["free_ship"] and r["unit_price"] < first["unit_price"]))
     for label, test in tests:
@@ -898,7 +948,7 @@ def faq_items(cat, rows, updated):
         return []
     unit, base, name = cat["unit"], cat.get("base", cat["unit"] + "分"), short(cat)
     best = rows[0]
-    avg = sum(r["unit_price"] for r in rows) / len(rows)
+    avg = typical_avg(rows)
     qa = [(f"{name}でいちばん安いのはどれ？",
            f"{updated[:10].replace('-', '/')}時点では「{clean_name(best['name'], 50)}」が{best['unit_price']:.1f}円/{unit}で最安です"
            f"（{best['price']:,}円・{best['count']:,.0f}{base}）。"),
@@ -975,7 +1025,7 @@ def render(cat, rows, updated, hist=None):
     # 結論ボックス
     hero = ""
     if rows:
-        avg = sum(r["unit_price"] for r in rows) / len(rows)
+        avg = typical_avg(rows)
         best = best_row(rows)
         diff = avg - best["unit_price"]
         saving = (f"<p class=save>掲載{len(rows)}商品の平均（{avg:.1f}円/{e(unit)}）より "
@@ -1342,7 +1392,8 @@ GROUPS = [
                                "kitchen-paper", "food-wrap"]),
     ("paper", "紙・生活用品", ["toilet-paper-double", "toilet-paper-single", "tissue", "garbage-bag-45l", "mask",
                           "disinfect-wipes", "cotton-swab", "aa-battery"]),
-    ("baby", "ベビー・衛生用品", ["diaper-pants-m", "diaper-tape-s", "baby-wipes", "sanitary-napkin"]),
+    ("baby", "ベビー・衛生用品", ["diaper-pants-m", "diaper-pants-l", "diaper-pants-big", "diaper-tape-nb", "diaper-tape-s",
+                                 "diaper-tape-m", "baby-wipes", "sanitary-napkin"]),
     ("care", "バス・ケア", ["hand-soap-refill", "body-soap-refill", "shampoo-refill", "toothpaste",
                          "sonicare-brush-head", "oralb-brush-head"]),
     ("pet", "ペット", ["dog-food-dry", "cat-food-dry", "pet-sheet", "cat-litter"]),
@@ -1387,7 +1438,7 @@ def render_index(summary, updated, drops=None):
     # 今日値下がりした商品: 値下がり率と1件あたりの報酬の両方で選ぶ（同じジャンルは2件まで）
     picked, per_cat = [], {}
     for d in sorted(drops or [], key=lambda d: -d["pct"] * (1 + d["fee"] / 300)):
-        if d["pct"] >= 3 and per_cat.get(d["slug"], 0) < 2:
+        if d["pct"] >= 3 and per_cat.get(d["slug"], 0) < 2 and (d["name"], d["price"]) not in {(x["name"], x["price"]) for x in picked}:
             per_cat[d["slug"]] = per_cat.get(d["slug"], 0) + 1
             picked.append(d)
     drop_html = ("<section class=today id=drops><h2>今日値下がりした商品<small>前回の価格より安くなったもの</small></h2><div class=deals>"
@@ -1587,7 +1638,7 @@ def main():
                                     "count": len(rows), "fee": round(fees[len(fees) // 2]),
                                     "rate": round(sorted(r["rate"] for r in rows[:10])[min(len(rows), 10) // 2], 1),
                                     "price": sorted(r["price"] for r in rows[:10])[min(len(rows), 10) // 2],
-                                    "avg": sum(r["unit_price"] for r in rows) / len(rows),
+                                    "avg": typical_avg(rows),
                                     "clean": clean_name(top["name"], 40)}
         print(f"{cat['slug']}: 取得{len(items)}件 → 掲載{len(rows)}件 ({'本番' if live else 'サンプル'})")
     (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False), encoding="utf-8")
