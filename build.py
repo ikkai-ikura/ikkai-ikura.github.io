@@ -439,6 +439,36 @@ CATEGORIES = [
         "ng": ["粉", "アタッチメント", "乳首", "ニップル", "哺乳", "ミルクケース", "選べる", "ステップ"],
     },
     {
+        "slug": "contact-1day",
+        "title": "1dayコンタクトレンズ 1枚あたり単価ランキング",
+        "keyword": "ワンデー コンタクト",
+        "keywords": ["1day コンタクト 90枚", "ワンデーアキュビュー オアシス", "ワンデーアキュビュー モイスト", "デイリーズ トータルワン",
+                     "マイデイ コンタクト", "シード ワンデーピュア", "メニコン ワンデー", "1day コンタクト 30枚入"],
+        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 10, "range": (10, 2000),
+        "must": ["1day", "1DAY", "ワンデー", "1日使い捨て", "ONEDAY", "1Day", "デイリーズ", "マイデイ"],
+        "strip": r"[+\-－−]?\d{1,2}\.\d{2}\s*[~～〜]\s*[+\-－−]?\d{1,2}\.\d{2}|BC\s*\d+\.\d+|DIA\s*\d+\.\d+|選べる|選択",
+        "ng": ["カラコン", "カラー", "サークル", "ディファイン", "乱視", "トーリック", "遠近", "マルチフォーカル", "ケア", "保存液",
+               "洗浄", "ケース", "目薬", "装着液", "お試し", "ソフトレンズ用", "ハード"] + ["2week", "2WEEK", "2ウィーク", "マンスリー", "1ヶ月"],
+        "boxes": True,
+        "tips": ["両目で使うなら1日2枚。1枚あたりの値段×2が1日の費用", "90枚入りなど大箱のほうが1枚あたりは安い。ただし度数が変わりそうな人は小箱で",
+     "コンタクトは高度管理医療機器。初めての人や度数が合わない人は、ネットで買う前に眼科で検査を受ける"],
+    },
+    {
+        "slug": "contact-2week",
+        "title": "2weekコンタクトレンズ 1枚あたり単価ランキング",
+        "keyword": "2week コンタクト",
+        "keywords": ["2ウィーク コンタクト 6枚", "2ウィーク アキュビュー", "アキュビュー オアシス 2week", "エアオプティクス", "2week メニコン",
+                     "2week コンタクト 4箱"],
+        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 10, "range": (6, 300),
+        "must": ["2week", "2WEEK", "2ウィーク", "2週間", "2Week", "エアオプティクス"],
+        "strip": r"[+\-－−]?\d{1,2}\.\d{2}\s*[~～〜]\s*[+\-－−]?\d{1,2}\.\d{2}|BC\s*\d+\.\d+|DIA\s*\d+\.\d+|選べる|選択",
+        "ng": ["カラコン", "カラー", "サークル", "ディファイン", "乱視", "トーリック", "遠近", "マルチフォーカル", "ケア", "保存液",
+               "洗浄", "ケース", "目薬", "装着液", "お試し", "ソフトレンズ用", "ハード"] + ["1day", "1DAY", "ワンデー", "1日使い捨て", "マンスリー", "1ヶ月", "1か月"],
+        "boxes": True,
+        "tips": ["1枚を2週間使う。両目なら1箱6枚で約6週間分", "毎日の洗浄・保存液の費用もかかるので、1dayと比べるなら液代も足して考える",
+     "コンタクトは高度管理医療機器。初めての人や度数が合わない人は、ネットで買う前に眼科で検査を受ける"],
+    },
+    {
         "slug": "kitchen-paper",
         "title": "キッチンペーパー 100カットあたり単価ランキング",
         "keyword": "キッチンペーパー",
@@ -682,6 +712,12 @@ def fetch(keyword, pages=3):
     return items
 
 
+def box_sets(s):
+    """コンタクトなど: 「6枚入 2箱」「【2箱】」の箱数をセット数として読めるようにする。「1箱30枚入」の1箱は消す"""
+    s = re.sub(r"(?<![\d.])1\s*箱", " ", s)
+    return re.sub(r"(?<![\d.])(\d{1,2})\s*箱(?!\s*(?:セット|入))", r"\1箱セット", s)
+
+
 def is_variant_list(s):
     """「×6袋 4袋 2袋」のように同じ単位の個数が並ぶのは選択式。表示価格がどの数量のものか分からない"""
     if re.search(r"\d\s*[・/／]\s*\d+\s*(?:個|袋|本|箱|缶|ケース|パック)", s):  # 「4・6個セット」
@@ -884,6 +920,8 @@ def rank(items, cat):
             n = parse_product(it["itemName"], **cat["parser"])
         else:
             pname = re.sub(cat["strip"], " ", it["itemName"].translate(ZEN)) if cat.get("strip") else it["itemName"]
+            if cat.get("boxes"):
+                pname = box_sets(pname)
             n = parse_count(pname, cat["words"], *cat.get("range", (5, 3000)))
         if not n or it.get("reviewCount", 0) < cat["min_reviews"]:
             continue
@@ -1517,7 +1555,7 @@ h2{font-size:1.1rem;margin-top:1.6em}.mut{color:var(--mut);font-size:.85rem}</st
 
 
 POPULAR = ["toilet-paper-double", "diaper-pants-m", "rice", "laundry-gelball", "dog-food-dry", "water-2l", "dishwasher-tablet",
-           "baby-formula", "cat-litter", "tissue", "protein"]
+           "baby-formula", "contact-1day", "cat-litter", "tissue", "protein"]
 
 GROUPS = [
     ("laundry", "洗濯・キッチン", ["dishwasher-tablet", "dish-soap-refill", "laundry-gelball", "liquid-laundry-refill", "softener-refill",
@@ -1531,6 +1569,7 @@ GROUPS = [
                          "sonicare-brush-head", "oralb-brush-head"]),
     ("pet", "ペット", ["dog-food-dry", "cat-food-dry", "pet-sheet", "pet-sheet-wide", "cat-litter"]),
     ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "protein-soy", "water-2l", "sparkling-water-500ml", "soy-sauce", "canola-oil"]),
+    ("eye", "コンタクトレンズ", ["contact-1day", "contact-2week"]),
     ("phone", "スマホ・通信", ["mobile-battery"]),
     ("manga", "漫画 全巻セット", [f"manga-{m[0]}" for m in MANGA]),
 ]
