@@ -1732,7 +1732,7 @@ def main():
     (OUT / "about.html").write_text(render_about(), encoding="utf-8")
     activate_pending_links()
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
-    (OUT / "calc.html").write_text(render_calc(site, GROUPS, CATEGORIES_BY_SLUG, short, per_text_of), encoding="utf-8")
+    (OUT / "calc.html").write_text(render_calc(site_url(), GROUPS, CATEGORIES_BY_SLUG, short, per_text_of), encoding="utf-8")
     # 検索エンジン向けのサイトマップ
     site = site_url()
     day = updated[:10]
