@@ -1137,7 +1137,7 @@ SIM_PLANS = [
      "link": "https://hb.afl.rakuten.co.jp/hsc/59164679.5dd65979.5916467a.2e992856/?link_type=pict&rafst=rmn&ut=eyJwYWdlIjoic2hvcCIsInR5cGUiOiJwaWN0IiwiY29sIjoxLCJjYXQiOjEsImJhbiI6MjM3Nzg5NSwiYW1wIjpmYWxzZX0%3D"},
     {"name": "LINEMO", "plan": "ベストプラン／ベストプランV", "url": "https://www.linemo.jp/plan/",
      "tiers": [(3, 990), (10, 2090), (30, 2970)], "step": True,
-     "note": "LINEのトーク・通話はデータ消費ゼロ。30GBは5分以内の通話無料つき", "link": "", "pending": "https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3787377&pid=892743340"},
+     "note": "LINEのトーク・通話はデータ消費ゼロ。30GBは5分以内の通話無料つき", "link": ""},  # VC提携は2026-11-10却下。再承認されたら "pending" に新しいリンクを入れる
     {"name": "ahamo", "plan": "ahamo", "url": "https://ahamo.com/plan/",
      "tiers": [(30, 2970), (110, 4950)],
      "note": "5分以内の国内通話無料。2026年12月1日から40GB 3,135円〜120GB 5,115円の段階制に改定予定", "link": ""},
