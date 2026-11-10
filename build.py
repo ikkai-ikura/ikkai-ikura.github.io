@@ -5,6 +5,7 @@
 .env が無い場合は sample_items.json を使って見た目だけ確認できる。
 """
 import html
+from calc_page import render_calc
 import json
 import os
 import re
@@ -29,8 +30,9 @@ NG_ALL = ["ふるさと納税", "返礼品"]
 # 紙おむつのサイズ表記。「MamyPoko」の M や「XL」の L に当たらないよう、直後がサイズ・数字・区切りの時だけ一致
 _SZ = lambda x: rf"(?<![A-Za-z]){x}(?:サイズ|\s*\d|[\s)）】\]/／]|$)"
 DIAPER_SIZE = {"新生児": r"新生児", "S": _SZ("S"), "M": _SZ("M"), "L": _SZ("L"),
-               "ビッグ": rf"ビッグ(?!より)|BIG(?![A-Za-z])|{_SZ('XL')}"}
-DIAPER_SLUG = {"新生児": "nb", "S": "s", "M": "m", "L": "l", "ビッグ": "big"}
+               "ビッグ": rf"ビッグ(?!より)|BIG(?![A-Za-z]|\s*より)|{_SZ('XL')}",
+               "ビッグより大きい": r"ビッグより大きい|BIGより大きい|XXL|(?<![A-Za-z])BIGGER"}
+DIAPER_SLUG = {"新生児": "nb", "S": "s", "M": "m", "L": "l", "ビッグ": "big", "ビッグより大きい": "xbig"}
 DIAPER_TIPS = {
     "パンツ": ["同じサイズでもメーカーで対象体重が少しずつ違う。体に合わないと漏れやすいので、まずは小パックで試してからケース買いにする",
              "ケース買い（3〜4パック）が1枚あたり最安になりやすい",
@@ -44,7 +46,7 @@ DIAPER_TIPS = {
 def DIAPER(kind, size):
     """紙おむつのカテゴリ。商品名の「6〜11kg」などの体重範囲は数量の読み取り前に取り除く"""
     other = "テープ" if kind == "パンツ" else "パンツ"
-    label = size if size in ("新生児", "ビッグ") else f"{size}サイズ"
+    label = size if size in ("新生児", "ビッグ", "ビッグより大きい") else f"{size}サイズ"
     kw = f"おむつ {kind} {label}"
     return {
         "slug": f"diaper-{'pants' if kind == 'パンツ' else 'tape'}-{DIAPER_SLUG[size]}",
@@ -54,7 +56,8 @@ def DIAPER(kind, size):
         "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 3, "range": (30, 3000),
         "must_all": [kind],
         "size_re": DIAPER_SIZE[size],
-        "size_ng_re": "|".join(v for k, v in DIAPER_SIZE.items() if k != size) + r"|ビッグより|XXL",
+        "size_ng_re": "|".join(v for k, v in DIAPER_SIZE.items() if k != size)
+                      + ("" if size == "ビッグより大きい" else r"|ビッグより|XXL"),
         "strip": r"\(?\d+(?:\.\d+)?\s*(?:kg)?\s*[~～〜\-ー－]\s*\d+(?:\.\d+)?\s*kg\)?|生後[^\s]*|\d+\s*[ヵヶか]月[^\s]*",
         "ng": [other, "大人", "介護", "ライフリー", "アテント", "リリーフ", "水遊び", "スイミング", "ゴミ箱", "ポーチ",
                "ケーキ", "マスキング", "選べる", "おむつカバー", "布おむつ"],
@@ -95,6 +98,17 @@ CATEGORIES = [
         "words": ["枚入り", "枚入", "枚"],
         "min_reviews": 10, "range": (20, 3000),
         "ng": ["トレー", "トレイ", "ケース", "ワイド", "ハーフ"],
+    },
+    {
+        "slug": "pet-sheet-wide",
+        "title": "ペットシーツ ワイド 1枚あたり単価ランキング",
+        "keyword": "ペットシーツ ワイド",
+        "keywords": ["ペットシーツ ワイド まとめ買い", "ペットシーツ ワイド 厚型", "ペットシーツ ワイド 薄型", "デオシート ワイド", "ユニチャーム ペットシーツ ワイド"],
+        "unit": "枚", "base": "枚",
+        "words": ["枚入り", "枚入", "枚"],
+        "min_reviews": 10, "range": (20, 3000),
+        "must": ["ワイド"],
+        "ng": ["スーパーワイド", "トレー", "トレイ", "ケース", "レギュラー", "ハーフ", "選べる"],
     },
     {
         "slug": "mask",
@@ -154,10 +168,12 @@ CATEGORIES = [
         "slug": "baby-wipes",
         "title": "おしりふき 1枚あたり単価ランキング",
         "keyword": "おしりふき",
+        "keywords": ["おしりふき まとめ買い", "おしりふき ケース買い", "おしりナップ", "ムーニー おしりふき", "パンパース おしりふき",
+                     "グーン おしりふき", "水99.9 おしりふき"],
         "unit": "枚", "base": "枚",
         "words": ["枚入り", "枚入", "枚"],
         "min_reviews": 10, "range": (50, 10000),
-        "ng": ["ケース", "ふた", "フタ", "ウォーマー"],
+        "ng": ["ケースのみ", "おしりふきケース", "ふたのみ", "フタのみ", "ビタット", "ウォーマー", "ポーチ", "バッグ", "大人", "介護", "ホルダー"],
     },
     {
         "slug": "aa-battery",
@@ -360,7 +376,7 @@ CATEGORIES = [
         "ng": ["ウェット", "ポケット", "ケース付", "カバー", "トイレット", "キッチン", "除菌"],
     },
     *[DIAPER(t, sz) for t, sz in [("パンツ", "M"), ("パンツ", "L"), ("パンツ", "ビッグ"),
-                                  ("テープ", "新生児"), ("テープ", "S"), ("テープ", "M")]],
+                                  ("パンツ", "ビッグより大きい"), ("テープ", "新生児"), ("テープ", "S"), ("テープ", "M")]],
     {
         "slug": "sanitary-napkin",
         "title": "生理用ナプキン 昼用 1枚あたり単価ランキング",
@@ -369,6 +385,37 @@ CATEGORIES = [
         "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 10, "range": (15, 2000),
         "must": ["昼"],
         "ng": ["夜用", "ショーツ", "布ナプキン", "吸水ショーツ", "おりもの", "ライナー", "ポーチ", "ケース", "尿もれ"],
+    },
+    {
+        "slug": "sanitary-napkin-night",
+        "title": "生理用ナプキン 夜用 1枚あたり単価ランキング",
+        "keyword": "生理用ナプキン 夜用",
+        "keywords": ["生理用ナプキン 夜用 まとめ買い", "ソフィ 夜用", "ロリエ 夜用", "エリス 夜用", "センターイン 夜用", "はだおもい 夜用"],
+        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 10, "range": (8, 1000),
+        "must": ["夜用"],
+        "ng": ["昼用", "ショーツ", "布ナプキン", "吸水ショーツ", "おりもの", "ライナー", "ポーチ", "ケース", "尿もれ", "選べる"],
+    },
+    {
+        "slug": "baby-formula",
+        "title": "粉ミルク 100gあたり単価ランキング",
+        "keyword": "粉ミルク",
+        "keywords": ["粉ミルク 大缶 2缶", "ほほえみ 粉ミルク", "はいはい 粉ミルク", "すこやかM1 大缶", "はぐくみ 粉ミルク", "アイクレオ バランスミルク",
+                     "ほほえみ らくらくキューブ"],
+        "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
+        "words": {"kg": 1000, "g": 1}, "min_reviews": 5, "range": (300, 20000),
+        "strip": r"\(?\d+\s*[ヵヶか]?月?\s*[~～〜\-]\s*\d+\s*(?:[ヵヶか]月|歳)\)?|\d+\s*[ヵヶか]月[^\s]*|\d+\s*歳[^\s]*",
+        "ng": ["液体", "らくらくミルク", "フォローアップ", "ステップ", "チルミル", "つよいこ", "グローアップ", "ポット", "哺乳", "ケース",
+               "大人", "シニア", "スキムミルク", "牛乳", "選べる"],
+    },
+    {
+        "slug": "liquid-milk",
+        "title": "液体ミルク 100mlあたり単価ランキング",
+        "keyword": "液体ミルク",
+        "keywords": ["液体ミルク まとめ買い", "ほほえみ らくらくミルク", "すこやかM1 液体ミルク", "アイクレオ 液体ミルク", "はぐくみ 液体ミルク"],
+        "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
+        "words": ML, "min_reviews": 3, "range": (500, 20000),
+        "strip": r"\(?\d+\s*[ヵヶか]?月?\s*[~～〜\-]\s*\d+\s*(?:[ヵヶか]月|歳)\)?|\d+\s*[ヵヶか]月[^\s]*|\d+\s*歳[^\s]*",
+        "ng": ["粉", "アタッチメント", "乳首", "ニップル", "哺乳", "ケース", "選べる"],
     },
     {
         "slug": "kitchen-paper",
@@ -443,7 +490,7 @@ MANGA = [  # (slug, 作品名, 商品名に必要な語, 最低巻数: スピン
     ("tensura", "転生したらスライムだった件", ["スライムだった件"], 20), ("dandadan", "ダンダダン", ["ダンダダン"], 15),
     ("sakamoto", "SAKAMOTO DAYS", ["SAKAMOTO", "サカモトデイズ"], 17), ("yowapeda", "弱虫ペダル", ["弱虫ペダル"], 80),
     ("nanatsu", "七つの大罪", ["七つの大罪"], 40), ("lion", "3月のライオン", ["3月のライオン"], 16),
-    ("chihaya", "ちはやふる", ["ちはやふる"], 48), ("yotsuba", "よつばと!", ["よつばと"], 14),
+    ("chihaya", "ちはやふる", ["ちはやふる"], 48), ("chiikawa", "ちいかわ", ["ちいかわ"], 5), ("yotsuba", "よつばと!", ["よつばと"], 14),
     ("kiseiju", "寄生獣", ["寄生獣"], 8), ("monster", "MONSTER", ["MONSTER"], 9),
     ("yuyu", "幽☆遊☆白書", ["幽遊白書", "幽☆遊☆白書"], 15), ("kenshin", "るろうに剣心", ["るろうに剣心"], 22),
     ("worldtrigger", "ワールドトリガー", ["ワールドトリガー"], 24), ("jigokuraku", "地獄楽", ["地獄楽"], 13),
@@ -664,11 +711,11 @@ def parse_count(name, words, lo=5, hi=3000):
         return None
     # セット数の候補: 「×3」「/箱×3」「3袋セット」「【3個セット】」「2ケース」
     # ただしジャンルの単位と同じ語（水なら「12本セット」）は合計数量なので、セット数ではなく量の候補に回す
-    units = ["袋", "箱", "個", "本", "パック", "冊", "ケース"]
+    units = ["袋", "箱", "個", "本", "パック", "冊", "ケース", "缶"]
     own = [u for u in units if any(k.startswith(u) for k in words)]
     pack = "|".join(u for u in units if u not in own)
     ks_set = [int(x) for x in re.findall(rf"(\d{{1,2}})\s*(?:{pack})\s*(?:セット)?(?![入\d])", s)
-              if re.search(rf"{x}\s*(?:{pack})\s*セット|{x}\s*ケース", s)]
+              if re.search(rf"{x}\s*(?:{pack})\s*セット|{x}\s*(?:ケース|缶)", s)]
     if own:
         top = max(v for v, _ in ms)
         for x in re.findall(rf"(\d{{1,4}})\s*(?:{'|'.join(own)})\s*セット", s):
@@ -694,7 +741,7 @@ def parse_count(name, words, lo=5, hi=3000):
         k = int(k.group(1)) if k else next(iter(ks_set), None)
         if k:
             n *= k
-        elif re.search(r"(?<![x*\d])\s*\d\s*(?:袋|箱|冊|パック|ケース)(?!\s*(?:入|セット))", s):
+        elif re.search(r"(?<![x*\d])\s*\d\s*(?:袋|箱|冊|パック|ケース|缶)(?!\s*(?:入|セット))", s):
             return None  # 「112枚 4袋」のように袋数の掛け方が読めない
     return n if lo <= n <= hi else None
 
@@ -1083,7 +1130,7 @@ def render(cat, rows, updated, hist=None):
     chip = lambda c: f'<a href="{c["slug"]}.html">{e(short(c))}</a>'
     nav = (("<nav class=oth><h2>同じカテゴリのジャンル</h2>" + "".join(map(chip, same)) + "</nav>" if same else "")
            + "<nav class=oth><h2>ほかのジャンル</h2>" + "".join(map(chip, rest)) + "</nav>"
-           + '<p class=pr><a href="./">トップへ戻る</a> ・ <a href="about.html">このサイトについて</a></p>')
+           + '<p class=pr><a href="./">トップへ戻る</a> ・ <a href="calc.html">単価計算ツール</a> ・ <a href="about.html">このサイトについて</a></p>')
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>{e(seo_title)}</title>
@@ -1209,6 +1256,16 @@ SIM_PLANS = [
     {"name": "ロケットモバイル", "plan": "Dプラン 通話プラン", "url": "https://rokemoba.co.jp/price",
      "tiers": [(1, 765), (2, 850), (3, 985), (5, 1430), (7, 1980), (20, 4400)],
      "note": "ドコモ回線。月額料金は初月無料。小容量向け", "link": ""},
+    # 以下3社は2026年11月10日に確認（povo・日本通信は公式、ワイモバイルは2026年6月2日改定後の割引前料金）
+    {"name": "povo2.0", "plan": "データトッピング", "url": "https://povo.jp/spec/",
+     "tiers": [(3, 990), (30, 2780)],
+     "note": "基本料0円で、使う月だけデータを買うトッピング制。120GB(365日)21,600円のまとめ買いなら月あたり1,800円", "link": ""},
+    {"name": "日本通信SIM", "plan": "合理的シンプル290／みんなのプラン／50GBプラン", "url": "https://www.nihontsushin.com/",
+     "tiers": [(1, 290), (2, 510), (3, 730), (4, 950), (5, 1170), (20, 1390), (50, 2178)],
+     "note": "ドコモ回線。1GBなら290円で、超えた分は1GBごと220円。20GB・50GBは5分かけ放題か月70分の無料通話つき", "link": ""},
+    {"name": "ワイモバイル", "plan": "シンプル3 S/M/L", "url": "https://www.ymobile.jp/plan/",
+     "tiers": [(5, 3278), (30, 4378), (35, 5478)],
+     "note": "ソフトバンク回線のサブブランド。表示は割引前。家族割・おうち割・PayPayカード割で大きく下がる", "link": ""},
     {"name": "BB.exciteモバイル", "plan": "Flatプラン", "url": "https://bb.excite.co.jp/exmb/sim/plan/",
      "tiers": [(5, 1210), (14, 1650), (30, 1980), (40, 2970), (50, 4400)],
      "note": "30GBが安い。初期費用無料、余ったデータは翌月に繰り越し", "link": ""},
@@ -1306,7 +1363,7 @@ a:focus-visible,button:focus-visible{{outline:2px solid var(--acc);outline-offse
 <li>楽天モバイルとLINEMOは「使った分だけ」の段階制。月によって使用量がばらつく人に向いている</li>
 <li>電話をよくかけるなら、通話無料の条件（アプリ必須、5分以内など）も比べる</li></ul></section>
 <section class=box><h2>よくある質問</h2>{''.join(f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in faq)}</section>
-<p class=pr style="margin-top:16px"><a href="./">トップへ戻る</a> ・ <a href="about.html">このサイトについて</a></p>
+<p class=pr style="margin-top:16px"><a href="./">トップへ戻る</a> ・ <a href="calc.html">単価計算ツール</a> ・ <a href="about.html">このサイトについて</a></p>
 </main>
 <script>
 (function(){{
@@ -1393,10 +1450,11 @@ GROUPS = [
     ("paper", "紙・生活用品", ["toilet-paper-double", "toilet-paper-single", "tissue", "garbage-bag-45l", "mask",
                           "disinfect-wipes", "cotton-swab", "aa-battery"]),
     ("baby", "ベビー・衛生用品", ["diaper-pants-m", "diaper-pants-l", "diaper-pants-big", "diaper-tape-nb", "diaper-tape-s",
-                                 "diaper-tape-m", "baby-wipes", "sanitary-napkin"]),
+                                 "diaper-pants-xbig", "diaper-tape-m", "baby-formula", "liquid-milk", "baby-wipes",
+                                 "sanitary-napkin", "sanitary-napkin-night"]),
     ("care", "バス・ケア", ["hand-soap-refill", "body-soap-refill", "shampoo-refill", "toothpaste",
                          "sonicare-brush-head", "oralb-brush-head"]),
-    ("pet", "ペット", ["dog-food-dry", "cat-food-dry", "pet-sheet", "cat-litter"]),
+    ("pet", "ペット", ["dog-food-dry", "cat-food-dry", "pet-sheet", "pet-sheet-wide", "cat-litter"]),
     ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "water-2l", "sparkling-water-500ml", "soy-sauce", "canola-oil"]),
     ("phone", "スマホ・通信", ["mobile-battery"]),
     ("manga", "漫画 全巻セット", [f"manga-{m[0]}" for m in MANGA]),
@@ -1536,7 +1594,7 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 <div class=stats><span><b>{len(CATEGORIES)}</b> ジャンル</span><span><b>{n_items:,}</b> 商品を比較</span><span>毎朝6時に自動更新（{updated[5:10].replace('-', '/')} {updated[11:]}）</span></div>
 </section>
 <div class=bar><input id=q type=search placeholder="さがす（例：洗剤、猫、トイレットペーパー、キュキュット、呪術廻戦）" aria-label="ジャンルをさがす" autocomplete=off>
-<nav class=chips aria-label="カテゴリ">{"<a href='#drops'>値下がり</a>" if picked else ""}<a href="#today">今日のお得</a>{chips}</nav></div>
+<nav class=chips aria-label="カテゴリ">{"<a href='#drops'>値下がり</a>" if picked else ""}<a href="#today">今日のお得</a><a href="calc.html">単価計算ツール</a>{chips}</nav></div>
 {drop_html}
 <section class=today id=today><h2>今日のお得ランキング<small>最安が平均より大きく安いジャンル</small></h2><div class=deals>{deal_html}</div></section>
 {sections}
@@ -1650,10 +1708,11 @@ def main():
     (OUT / "about.html").write_text(render_about(), encoding="utf-8")
     activate_pending_links()
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
+    (OUT / "calc.html").write_text(render_calc(site, GROUPS, CATEGORIES_BY_SLUG, short, per_text_of), encoding="utf-8")
     # 検索エンジン向けのサイトマップ
     site = site_url()
     day = updated[:10]
-    urls = [site, f"{site}about.html", f"{site}sim.html"] + [f"{site}{c['slug']}.html" for c in CATEGORIES
+    urls = [site, f"{site}about.html", f"{site}sim.html", f"{site}calc.html"] + [f"{site}{c['slug']}.html" for c in CATEGORIES
                                                               if summary.get(c["slug"], {}).get("count", 0) >= MIN_INDEX]
     xml = "".join(f"<url><loc>{u}</loc><lastmod>{day}</lastmod></url>" for u in urls)
     (OUT / "sitemap.xml").write_text(
