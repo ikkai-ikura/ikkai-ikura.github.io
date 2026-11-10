@@ -1575,7 +1575,7 @@ main{{max-width:1000px;margin:auto;padding:0 16px 24px}} .pr{{color:var(--mut);f
 .top{{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0}}
 .logo{{font-weight:800;letter-spacing:.12em;font-size:1.2rem;color:var(--fg);text-decoration:none}} .logo i{{font-style:normal;color:var(--acc)}}
 .hero{{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 18px;display:grid;gap:12px}}
-.hero h1{{margin:0;font-size:clamp(1.4rem,4.5vw,2rem);line-height:1.3;text-wrap:balance}} .hero h1 em{{font-style:normal;color:var(--acc)}}
+.hero h1{{margin:0;font-size:clamp(1.4rem,4.5vw,2rem);line-height:1.3;text-wrap:balance}} .hero h1 em{{font-style:normal;color:var(--acc)}} .hero h1 span{{display:inline-block}}
 .hero p{{margin:0;color:var(--mut)}}
 .feat{{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}}
 .feat li{{background:var(--bg);border-radius:10px;padding:8px 10px;font-size:.82rem;color:var(--mut)}} .feat b{{display:block;color:var(--fg);font-size:.92rem}}
@@ -1618,7 +1618,7 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 </style></head><body><main>
 <div class=top><a class=logo href="./">TAN<i>KA</i></a><span class=pr>PR：楽天アフィリエイトを利用しています</span></div>
 <section class=hero>
-<h1>楽天のまとめ買い、<em>本当に得？</em><br>ポイント込みの「1回あたり」で比べよう</h1>
+<h1><span>楽天のまとめ買い、</span><span><em>本当に得？</em></span><br><span>ポイント込みの</span><span>「1回あたり」で</span><span>比べよう</span></h1>
 <p>大容量や○個セットは、総額だけでは割安か分かりません。TANKAは楽天市場の商品を「価格 ÷ 内容量」で計算し、1回・1枚・100g・1冊あたりの安い順に並べています。</p>
 <ul class=feat><li><b>あなたのポイント込み</b>SPUの倍率を選ぶと、全ページが実質価格に</li>
 <li><b>送料込みの最安が先頭</b>送料別の安さにだまされない</li>
