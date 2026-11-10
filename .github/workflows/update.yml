@@ -27,3 +27,4 @@ jobs:
           git add docs
           git diff --cached --quiet || git commit -m "daily update"
           git push
+      - run: python indexnow.py
