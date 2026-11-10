@@ -42,7 +42,7 @@ details{border-bottom:1px solid var(--line);padding:8px 0}summary{cursor:pointer
 </main>
 <script>
 (function(){
-var U=[["個","個",1],["枚","枚",1],["g","100g",100],["ml","100ml",100],["m","100m",100],["回","回",1],["kg","1kg",1]];
+var U=[["個","1個",1],["枚","1枚",1],["g","100g",100],["ml","100ml",100],["m","100m",100],["回","1回",1],["kg","1kg",1]];
 var u=0,N=4,R=document.getElementById("rows"),B=document.getElementById("units");
 U.forEach(function(x,i){var b=document.createElement("button");b.type="button";b.textContent=x[1]+"あたり";b.onclick=function(){u=i;draw();calc()};B.appendChild(b)});
 for(var i=0;i<N;i++){R.insertAdjacentHTML("beforeend","<div class=row id=r"+i+"><b class=nm>商品"+"ABCD"[i]+"</b>"+
