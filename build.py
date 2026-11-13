@@ -32,7 +32,7 @@ _SZ = lambda x: rf"(?<![A-Za-z]){x}(?:サイズ|\s*\d|[\s)）】\]/／]|$)"
 DIAPER_SIZE = {"新生児": r"新生児", "S": _SZ("S"), "M": _SZ("M"), "L": _SZ("L"),
                "ビッグ": rf"ビッグ(?!より)|BIG(?![A-Za-z]|\s*より)|{_SZ('XL')}",
                "ビッグより大きい": r"ビッグより大きい|BIGより大きい|XXL|(?<![A-Za-z])BIGGER"}
-BUY_LABEL = {0: "過去30日で最安値", 1: "過去30日で安い水準"}
+BUY_LABEL = lambda b: f"過去{b[1]}日で" + ("最安値" if b[0] == 0 else "安い水準")
 DIAPER_SLUG = {"新生児": "nb", "S": "s", "M": "m", "L": "l", "ビッグ": "big", "ビッグより大きい": "xbig"}
 DIAPER_TIPS = {
     "パンツ": ["同じサイズでもメーカーで対象体重が少しずつ違う。体に合わないと漏れやすいので、まずは小パックで試してからケース買いにする",
@@ -1053,11 +1053,11 @@ def trend_html(hist, unit):
     if len(pts) < 7:
         badge = f"<span class=tb>価格を記録中（{len(pts)}日目）</span>"
     elif now <= min(vals):
-        badge = "<span class='tb hot'>過去30日で最安値</span>"
+        badge = f"<span class='tb hot'>過去{len(vals)}日で最安値</span>"
     elif now <= sorted(vals)[len(vals) // 4]:
-        badge = "<span class='tb ok'>過去30日の中でも安い水準</span>"
+        badge = f"<span class='tb ok'>過去{len(vals)}日の中でも安い水準</span>"
     else:
-        badge = f"<span class=tb>過去30日の最安は {min(vals):.1f}円/{html.escape(unit)}</span>"
+        badge = f"<span class=tb>過去{len(vals)}日の最安は {min(vals):.1f}円/{html.escape(unit)}</span>"
     svg = ""
     if len(pts) >= 2:
         W, H, P = 240, 48, 4
@@ -1588,13 +1588,13 @@ def render_index(summary, updated, drops=None, history=None):
         vals = [v for _, v in h[-30:]]
         if len(vals) >= 7:
             if vals[-1] <= min(vals):
-                buy[slug] = 0
+                buy[slug] = (0, len(vals))
             elif vals[-1] <= sorted(vals)[len(vals) // 4]:
-                buy[slug] = 1
+                buy[slug] = (1, len(vals))
 
     def card(c):
         s = summary.get(c["slug"])
-        badge = f"<span class=off>{BUY_LABEL[buy[c['slug']]]}</span>" if c["slug"] in buy else ""
+        badge = f"<span class=off>{BUY_LABEL(buy[c['slug']])}</span>" if c["slug"] in buy else ""
         best = (f"<p class=b>最安 <b class=up data-u='{s['unit_price']:.4f}' data-pt='{s.get('pt', 1)}'>{s['unit_price']:.1f}円</b><small>/{e(c['unit'])}</small>{badge}</p>"
                 f"<p class=s>{e(s.get('clean') or s['name'])}</p>") if s else "<p class=s>集計中</p>"
         img = f"<img src='{e(s['img'])}' alt='' loading=lazy>" if s and s.get("img") else "<span class=noimg></span>"
@@ -1608,7 +1608,7 @@ def render_index(summary, updated, drops=None, history=None):
 <span class=rank>{i}</span><img src='{e(summary[c['slug']].get('img', ''))}' alt='' loading=lazy>
 <span class=dn>{e(short(c))}</span>
 <span class=dp><b class=up data-u='{summary[c['slug']]['unit_price']:.4f}' data-pt='{summary[c['slug']].get('pt', 1)}'>{summary[c['slug']]['unit_price']:.1f}円</b>/{e(c['unit'])}</span>
-<span class=dd><strong>{BUY_LABEL[buy[c['slug']]]}</strong></span></a>"""
+<span class=dd><strong>{BUY_LABEL(buy[c['slug']])}</strong></span></a>"""
                         for i, c in enumerate(deals, 1))
     n_items = sum(s.get("count", 0) for s in summary.values())
     # 今日値下がりした商品: 値下がり率と1件あたりの報酬の両方で選ぶ（同じジャンルは2件まで）
