@@ -1729,7 +1729,7 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 <div class=bar><input id=q type=search placeholder="さがす（例：洗剤、猫、トイレットペーパー、キュキュット、呪術廻戦）" aria-label="ジャンルをさがす" autocomplete=off>
 <nav class=chips aria-label="カテゴリ">{"<a href='#drops'>値下がり</a>" if picked else ""}{"<a href='#today'>今が買い時</a>" if deal_html else ""}<a href="calc.html">単価計算ツール</a>{chips}</nav></div>
 {drop_html}
-{f"<section class=today id=today><h2>今が買い時のジャンル<small>最安の単価が過去30日の中で安いもの</small></h2><div class=deals>{deal_html}</div></section>" if deal_html else ""}
+{f"<section class=today id=today><h2>今が買い時のジャンル<small>最安の単価がこれまでの記録（最大30日）の中で安いもの</small></h2><div class=deals>{deal_html}</div></section>" if deal_html else ""}
 {sections}
 <p class=none id=none hidden>見つかりませんでした。別の言葉でさがしてみてください。</p>
 <section class=how><h2>TANKAの比べ方</h2><ol>
