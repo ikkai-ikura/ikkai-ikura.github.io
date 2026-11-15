@@ -1455,10 +1455,10 @@ def activate_pending_links():
             continue
         # 公式URLのドメイン（ahamo.com / iijmio.jp など）。どの会社のコードか分からない時は飛び先で判定する
         dom = ".".join(urllib.parse.urlparse(p["url"]).hostname.split(".")[-2:])
-        if "invalid_link" in final or "default_banner" in body or "valuecommerce" not in final + body:
+        if "invalid_link" in final or "default_banner" in body:
             print(f"  pending {p['name']}: まだ提携待ち")
-        elif dom not in final:
-            print(f"::warning::pending {p['name']}: 飛び先が {dom} ではない（{final[:80]}）。別の会社のコードか、途中の計測ページ")
+        elif dom not in (urllib.parse.urlparse(final).hostname or ""):
+            print(f"  pending {p['name']}: 飛び先が {dom} ではない（{final[:80]}）。別の会社のコードか提携待ち")
         else:
             p["link"] = p["pending"]
             print(f"  pending {p['name']}: 有効化")
