@@ -1380,7 +1380,8 @@ SIM_CHECKED = "2026年11月2日"
 SIM_PLANS = [
     {"name": "IIJmio", "plan": "ギガプラン", "url": "https://www.iijmio.jp/hdc/spec/",
      "tiers": [(2, 850), (5, 950), (10, 1400), (15, 1600), (25, 2000), (35, 2400), (45, 3300), (55, 3900)],
-     "note": "5GB単位で選ぶ定額。余ったデータは翌月に繰り越し", "link": ""},
+     "note": "5GB単位で選ぶ定額。余ったデータは翌月に繰り越し", "link": "",
+     "pending": "https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3787377&pid=892748398"},  # 2026-11-15 VC提携待ちのコード（ahamoかIIJmioか不明。飛び先のドメインが合う方だけ有効化）
     {"name": "mineo", "plan": "マイピタ", "url": "https://mineo.jp/price/",
      "tiers": [(3, 1298), (7, 1518), (15, 1958), (30, 2178), (50, 2948)],
      "note": "容量を使い切った後も最大200kbps。パケット放題（無料の速度制限付き使い放題）と組み合わせ可", "link": ""},
@@ -1393,7 +1394,8 @@ SIM_PLANS = [
      "note": "LINEのトーク・通話はデータ消費ゼロ。30GBは5分以内の通話無料つき", "link": ""},  # VC提携は2026-11-10却下。再承認されたら "pending" に新しいリンクを入れる
     {"name": "ahamo", "plan": "ahamo", "url": "https://ahamo.com/plan/",
      "tiers": [(30, 2970), (110, 4950)],
-     "note": "5分以内の国内通話無料。2026年12月1日から40GB 3,135円〜120GB 5,115円の段階制に改定予定", "link": ""},
+     "note": "5分以内の国内通話無料。2026年12月1日から40GB 3,135円〜120GB 5,115円の段階制に改定予定", "link": "",
+     "pending": "https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3787377&pid=892748398"},
     {"name": "UQ mobile", "plan": "トクトクプラン2", "url": "https://www.uqwimax.jp/mobile/plan/tokutoku2/",
      "tiers": [(5, 2948), (30, 4048)], "step": True,
      "note": "5GB以下の月は自動で安くなる。自宅セット割・au PAYカード払いなどの割引で最大1,628円〜", "link": ""},
@@ -1451,8 +1453,12 @@ def activate_pending_links():
         except Exception as ex:
             print(f"  pending {p['name']}: 確認失敗 {ex}")
             continue
+        # 公式URLのドメイン（ahamo.com / iijmio.jp など）。どの会社のコードか分からない時は飛び先で判定する
+        dom = ".".join(urllib.parse.urlparse(p["url"]).hostname.split(".")[-2:])
         if "invalid_link" in final or "default_banner" in body or "valuecommerce" not in final + body:
             print(f"  pending {p['name']}: まだ提携待ち")
+        elif dom not in final:
+            print(f"::warning::pending {p['name']}: 飛び先が {dom} ではない（{final[:80]}）。別の会社のコードか、途中の計測ページ")
         else:
             p["link"] = p["pending"]
             print(f"  pending {p['name']}: 有効化")
