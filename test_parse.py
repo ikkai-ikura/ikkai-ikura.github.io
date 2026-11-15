@@ -20,7 +20,9 @@ CASES = [
     (GW, "オキシクリーン 5.26kg 大容量", 5260), (GW, "オキシクリーン 1500g×2個セット", 3000),
     (["個入り", "個入", "個", "枚入り", "枚入", "枚", "P入", "P"], "貼るカイロ 30個入×8箱", 240),
     (["個入り", "個入", "個", "枚入り", "枚入", "枚", "P入", "P"], "ホッカイロ 貼る 30P", 30),
-    (BW, "伊右衛門 525ml×24本", 24), (BW, "お〜いお茶 600ml×24本×2ケース", 48),
+    (BW, "伊右衛門 525ml×24本", 24),
+    (BW, "伊賀の天然水 強炭酸水 500ml×2ケース 48本炭酸", 48), (BW, "強炭酸水 500ml 48本 送料無料 2ケース PET", 48),
+    (BW, "おいしい水 富士山 2000ml 【2L×12本(2ケース)】", 12), (BW, "2L×6本入り 2ケース", 12), (BW, "お〜いお茶 600ml×24本×2ケース", 48),
     (GW, "ソイプロテイン 無添加 1kg／3kg(1kg×3袋)", None), (GW, "【4・6個セット】レノア 650g", None),
     (GW, "はいはい 810g 2缶パック", 1620), (GW, "ほほえみ 800g×2缶", 1600), (GW, "はぐくみ 800g×8缶 ケース", 6400),
     (MW, "ハンドソープ 詰め替え 770ml×3袋", 2310), (MW, "食器用洗剤 詰め替え 超特大 1.2L", 1200),
@@ -50,6 +52,13 @@ if __name__ == "__main__":
     VOL_CASES = [("【中古】呪術廻戦 全巻セット 1-29巻 完結", 29), ("鬼滅の刃 全23巻 完結セット 新品", 23),
                  ("ワンピース 全巻セット 1～111巻", 111), ("進撃の巨人 全巻 34冊セット", 34), ("お好きな巻 1冊から 全巻対応", None)]
     bad += [(n, build.parse_volumes(n)[0], e) for n, e in VOL_CASES if build.parse_volumes(n)[0] != e]
+    LIMIT_CASES = [  # 購入・同梱の上限は数量ではない
+        (lambda n: build.parse_product(build.strip_limits(n), **build.CATEGORIES_BY_SLUG["food-wrap"]["parser"]), "【お一人様2個まで】旭化成 業務用サランラップ BOXタイプ 30cm×50m", 50),
+        (lambda n: build.parse_product(build.strip_limits(n), **build.CATEGORIES_BY_SLUG["liquid-milk"]["parser"]), "明治ほほえみ らくらくミルク240ml 6本入り【0から1歳用】【2セットまで】", 1440),
+        (lambda n: build.parse_volumes(build.strip_limits(n))[0], "【中古】HUNTER×HUNTER 37巻全巻セット150冊迄同梱ok 2k-0953", None),
+    ]
+    bad += [(n, f(n), e) for f, n, e in LIMIT_CASES if f(n) != e]
+    VOL_CASES = VOL_CASES + LIMIT_CASES
     CASES = CASES + PRODUCT_CASES + VOL_CASES
     # KW_CHECK: 楽天の検索語は1文字の単語を含むとエラーになる
     bad += [(kw, "1文字の単語", None) for c in build.CATEGORIES for kw in (c.get("keywords") or [c["keyword"]])

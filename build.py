@@ -27,7 +27,7 @@ RAKUTEN_ORIGIN = os.environ.get("RAKUTEN_ORIGIN", "https://ikkai-ikura.github.io
 ML = {"ml": 1, "mL": 1, "ML": 1, "L": 1000, "l": 1000, "リットル": 1000}
 REFILL = ["詰め替え", "詰替", "つめかえ", "詰めかえ"]
 TP_PARSER = {"size": r"(\d{2,3}(?:\.\d)?)\s*m(?![ml])", "pack": r"ロール|R(?![a-z])", "lo": 100, "hi": 20000}
-NG_ALL = ["ふるさと納税", "返礼品", "初回限定", "初回購入限定", "お一人様1回"]  # 一度しか買えない価格は最安として出さない
+NG_ALL = ["ふるさと納税", "返礼品", "初回限定", "初回購入限定", "お一人様1回", "お試し価格"]  # 一度しか買えない価格は最安として出さない
 
 # 紙おむつのサイズ表記。「MamyPoko」の M や「XL」の L に当たらないよう、直後がサイズ・数字・区切りの時だけ一致
 _SZ = lambda x: rf"(?<![A-Za-z]){x}(?:サイズ|\s*\d|[\s)）】\]/／]|$)"
@@ -532,7 +532,7 @@ CATEGORIES = [
         "unit": "100カット", "base": "カット", "per": 100, "per_text": "100カットあたり",
         "parser": {"size": r"(\d{2,3})\s*(?:カット|枚|組)", "pack": r"ロール|R(?![a-z])|個|パック|袋", "lo": 100, "hi": 20000},
         "min_reviews": 10,
-        "ng": ["ホルダー", "スタンド", "ケース付", "ラック", "トイレット", "ティッシュ"],
+        "ng": ["ホルダー", "スタンド", "ケース付", "ラック", "トイレット", "ティッシュ", "小判", "中判", "スマートタイプ"],  # 小判・中判=手ふき用の折りたたみペーパータオル
     },
     {
         "slug": "food-wrap",
@@ -540,7 +540,7 @@ CATEGORIES = [
         "keyword": "ラップ 30cm",
         "keywords": ["食品用ラップ 30cm 50m", "サランラップ 30cm", "クレラップ 30cm", "業務用ラップ 30cm"],
         "unit": "10m", "base": "m", "per": 10, "per_text": "10mあたり",
-        "parser": {"size": r"(\d{2,3})\s*m(?![ml])", "pack": r"本|個|箱", "lo": 20, "hi": 20000},
+        "parser": {"size": r"(\d{2,3})\s*m(?![ml])", "pack": r"本|個|箱", "lo": 20, "hi": 20000, "single": True},
         "min_reviews": 10, "must": ["30cm", "30センチ"],
         "ng": ["ホルダー", "ケース", "カッター", "ボックス", "シリコン", "ストレッチフィルム", "梱包", "22cm", "15cm"],
     },
@@ -778,6 +778,14 @@ def box_sets(s):
 
 RK24 = re.compile(r"(\d{1,3})\s*([袋缶本個箱包])入\s*x\s*(\d{1,2})\s*セット\s*[(（]\s*1\s*\2\s*(\d+(?:\.\d+)?)\s*([^\s)）]{1,3})\s*[)）]")
 BIZ_RE = r"一斗缶|法人限定|法人様|(?<![\d.])(?:1\d|[2-9]\d)(?:\.\d+)?\s*(?:L|kg|ℓ|リットル)(?![a-zA-Z])"  # 1つで10L・10kg以上（液体・油のジャンルだけで判定）
+LIMIT_RE = re.compile(r"(?:お一人様|おひとり様|1人|一人)?\s*\d{1,3}\s*(?:個|点|セット|本|袋|箱|ケース|パック|缶|冊)\s*(?:まで|迄|限り)(?:\s*同梱(?:ok|OK|可)?)?")
+
+
+def strip_limits(name):
+    """「お一人様2個まで」「2セットまで」「150冊迄同梱ok」は購入・同梱の上限で、内容量ではない"""
+    return LIMIT_RE.sub(" ", name.translate(ZEN))
+
+
 VARIANT_ONE = re.compile(r"(?<![\d.])1\s*(?:袋|個|箱|本|セット|ケース|パック|缶)(?!\s*入|\d)")
 
 
@@ -812,7 +820,7 @@ def is_variant_list(s):
 ZEN = str.maketrans("０１２３４５６７８９×Ｘｘ", "0123456789xxx")
 
 
-def parse_product(name, size, pack, lo, hi):
+def parse_product(name, size, pack, lo, hi, single=False):
     """1個あたりの量（size）×個数（pack）で総量を出す。
     例 トイレットペーパー '30m 12ロール×4パック' -> 1440、ティッシュ '160組 5箱×12パック' -> 9600
     size, pack は正規表現（数字を1つ目のグループで取る）。読めなければ None"""
@@ -829,7 +837,9 @@ def parse_product(name, size, pack, lo, hi):
         cands.append(int(m.group(1)) * (int(m.group(2)) if m.group(2) else 1))
         used_x |= bool(m.group(2))
     if not cands:
-        return None
+        if not single:  # single=True のジャンル（ラップ）は個数の書いていない出品を1本として読む
+            return None
+        cands = [1]
     # 「80個 90個」のように掛け算の関係にない個数が並ぶのはサイズ違いの羅列
     plain = set(cands)
     if not used_x and len(plain) >= 2 and max(plain) not in {a * b for a in plain for b in plain}:
@@ -894,7 +904,14 @@ def parse_count(name, words, lo=5, hi=3000):
             return n if lo <= n <= hi else None
         k = re.match(r"\s*(?:\S{0,3}?)[x*]\s*(\d{1,2}|\d{3}(?=\s*(?:袋|包|個|本|缶|パック|\)|）|$|\s)))(?!\d|\.\d|\s*(?:g|kg|ml|L))",
                      s[m.end():m.end() + 15])
-        k = int(k.group(1)) if k else next(iter(ks_set), None)
+        if k:
+            k = int(k.group(1))
+        else:
+            k = next(iter(ks_set), None)
+            own_total = m.group(2) in own and m.group(2) in ("本", "缶")  # 「本入り」でなく「48本」
+            case_only = k and not re.search(rf"{k}\s*(?:{pack})\s*セット", s) and re.search(rf"{k}\s*ケース", s)
+            if own_total and case_only:
+                return n if lo <= n <= hi else None
         if k:
             n *= k
         elif re.search(r"(?<![x*\d])\s*\d\s*(?:袋|箱|冊|パック|ケース|缶)(?!\s*(?:入|セット))", s):
@@ -997,15 +1014,16 @@ def rank(items, cat):
                 continue
         note = ""
         if cat.get("manga"):  # 全巻セット: 冊数と新品/中古
-            n, note = parse_volumes(it["itemName"])
+            n, note = parse_volumes(strip_limits(it["itemName"]))
             if n and it.get("shopName") == "楽天ブックス" and "中古" not in note and "新品" not in note:
                 note += "・新品"  # 楽天ブックスは新品のみ
             if n and n < cat.get("min_vol", 0):
                 continue
         elif cat.get("parser"):  # 「ロール数×長さ」のように2つの数字を掛けるジャンル
-            n = parse_product(it["itemName"], **cat["parser"])
+            n = parse_product(strip_limits(it["itemName"]), **cat["parser"])
         else:
-            pname = re.sub(cat["strip"], " ", it["itemName"].translate(ZEN)) if cat.get("strip") else it["itemName"]
+            pname = strip_limits(it["itemName"])
+            pname = re.sub(cat["strip"], " ", pname) if cat.get("strip") else pname
             if cat.get("boxes"):
                 pname = box_sets(pname)
             n = parse_count(pname, cat["words"], *cat.get("range", (5, 3000)))
