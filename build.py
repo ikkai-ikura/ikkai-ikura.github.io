@@ -7,6 +7,7 @@
 import html
 from calc_page import render_calc
 from features import FEATURES, feature_cards, render_feature
+from cooccur import BRANDS as KYOKI_BRANDS, brand_of
 import json
 import os
 import re
@@ -1187,6 +1188,33 @@ def faq_items(cat, rows, updated):
             qa.append(("新品と中古、どちらが安い？",
                        f"1冊あたりでは中古の最安が{used[0]['unit_price']:.0f}円、新品の最安が{new[0]['unit_price']:.0f}円です。"
                        "中古は状態の説明を確認してから選んでください。"))
+        return qa
+    # 共起語: 「◯◯ 最安値」で一緒に調べられる「メーカー」「まとめ買い」「安い時期」「ポイント」に、その日のデータで答える
+    low = brand_lows(cat, rows)
+    if len(low) >= 2:
+        qa.append((f"{name}はどのメーカーがいちばん安い？",
+                   f"{per_text_of(cat)}で比べると、" + "、".join(f"{b}が{u:,.1f}円" for b, u in low[:5])
+                   + "です（各メーカーの最安の商品で比較）。同じメーカーでも内容量やセット数で単価が変わります。"))
+    if len(rows) >= 6:
+        by_n = sorted(rows, key=lambda r: r["count"])
+        half = len(by_n) // 2
+        sm = sum(r["unit_price"] for r in by_n[:half]) / half
+        lg = sum(r["unit_price"] for r in by_n[-half:]) / half
+        if sm > 0:
+            d = (1 - lg / sm) * 100
+            qa.append((f"{name}はまとめ買いのほうが安い？",
+                       (f"このページの商品では、内容量の多い半分のほうが{per_text_of(cat)}で平均{d:.0f}%安く、まとめ買い・ケース買いが割安です。"
+                        if d >= 5 else f"このページの商品では、内容量の多い商品のほうが平均{-d:.0f}%高く、大容量だから安いとは限りません。"
+                        if d <= -5 else "このページの商品では、内容量の多い少ないで単価にほとんど差がありません。")
+                       + "使い切れる量かどうかもあわせて選んでください。"))
+    qa.append((f"{name}が安くなる時期は？",
+               "楽天市場では、楽天スーパーセール（例年3・6・9・12月）とお買い物マラソンの期間に、ショップのポイントアップや買い回りで実質価格が下がりやすくなります。"
+               "このページは毎日更新しているので、上の最安値の推移で今が安い水準かを確認できます。"))
+    pt = max(rows, key=lambda r: r.get("point", 1))
+    if pt.get("point", 1) >= 2:
+        qa.append((f"楽天ポイントを含めると{name}の実質最安は？",
+                   f"今日いちばんポイント倍率が高いのは「{clean_name(pt['name'], 40)}」のポイント{pt['point']}倍で、ポイントを引いた実質は{pt.get('eff_unit', pt['unit_price']):.1f}円/{unit}です。"
+                   "「あなたの楽天ポイント倍率（SPU）」を選ぶと、全商品を自分の実質価格で並べ替えられます。"))
     return qa
 
 
@@ -1217,17 +1245,23 @@ def data_insights(cat, rows, hist):
         chg = (pts[-1] / pts[0] - 1) * 100
         out.append(f"直近{len(pts)}日で、送料無料の最安は{pts[0]:,.1f}円から{pts[-1]:,.1f}円に" +
                    ("ほぼ変わっていません。" if abs(chg) < 2 else (f"{-chg:.0f}%下がりました。" if chg < 0 else f"{chg:.0f}%上がりました。")))
-    brands = cat.get("brands", {})
-    if brands:
-        low = {}
-        for r in rows:
-            b = next((b for b, al in brands.items() if any(a in r["name"].lower() for a in al)), None)
-            if b and b not in low:
-                low[b] = r["unit_price"]
-        if len(low) >= 2:
-            b1, b2 = sorted(low, key=low.get)[:2]
-            out.append(f"ブランド別の最安は{b1}が{low[b1]:,.1f}円/{unit}、次いで{b2}が{low[b2]:,.1f}円/{unit}です。")
+    low = brand_lows(cat, rows)
+    if len(low) >= 2:
+        out.append(f"メーカー・種類別の最安（{per_text_of(cat)}）は、" + "、".join(f"{b} {u:,.1f}円" for b, u in low[:6]) + "です。")
     return out
+
+
+def brand_lows(cat, rows):
+    """メーカー（ブランド）ごとの最安単価。[(ブランド, 単価)] を安い順に。業務用サイズは除く"""
+    brands = cat.get("brands") or KYOKI_BRANDS.get(cat["slug"], {})
+    low = {}
+    for r in rows:
+        if r.get("biz"):
+            continue
+        b = brand_of(r["name"].translate(ZEN), brands) if brands else None
+        if b and b not in low:
+            low[b] = r["unit_price"]
+    return sorted(low.items(), key=lambda kv: kv[1])
 
 
 def render(cat, rows, updated, hist=None):
@@ -1712,7 +1746,7 @@ def render_index(summary, updated, drops=None, history=None):
         best = (f"<p class=b>最安 <b class=up data-u='{s['unit_price']:.4f}' data-pt='{s.get('pt', 1)}'>{s['unit_price']:.1f}円</b><small>/{e(c['unit'])}</small>{badge}</p>"
                 f"<p class=s>{e(s.get('clean') or s['name'])}</p>") if s else "<p class=s>集計中</p>"
         img = f"<img src='{e(s['img'])}' alt='' loading=lazy>" if s and s.get("img") else "<span class=noimg></span>"
-        words = " ".join([short(c), c["keyword"]] + c.get("keywords", []) + list(c.get("brands", {})))
+        words = " ".join([short(c), c["keyword"]] + c.get("keywords", []) + list(c.get("brands", {})) + list(KYOKI_BRANDS.get(c["slug"], {})))
         return (f"<a class=card href='{c['slug']}.html' data-k='{e(words.lower())}'>{img}"
                 f"<div><h3>{e(short(c))}</h3>{best}</div></a>")
 
