@@ -1288,9 +1288,12 @@ def render(cat, rows, updated, hist=None):
     site = site_url()
     url = f"{site}{cat['slug']}.html"
     name = short(cat)
-    seo_title = (f"{name}の最安はどこ？{per_text}の値段で比較【毎日更新】｜TANKA" if cat.get("manga")
-                 else f"{name}の最安は？安い順・コスパ比較（{per_text}）【毎日更新】｜TANKA")
-    desc = (f"{name}を安い順に比較。楽天市場の価格と内容量から{per_text}の値段に換算して毎日自動で更新。"
+    # 「楽天」「最安値」を入れて、価格.comやAmazonと正面からぶつからない「楽天で買う人」の検索を取りにいく
+    bu = best_row(rows)["unit_price"] if rows else None
+    from_ = (f"{per_text}{bu:.0f}円〜" if bu >= 100 else f"{per_text}{bu:.1f}円〜") if bu else per_text
+    seo_title = (f"【楽天】{name}の最安値｜{from_} 新品・中古を比較｜TANKA" if cat.get("manga")
+                 else f"【楽天】{name}の最安値｜{from_} 安い順ランキング｜TANKA")
+    desc = (f"楽天で{name}を買うならどこが最安？{name}を安い順に比較。楽天市場の価格と内容量から{per_text}の値段に換算して毎日自動で更新。"
             + (f"今日の最安{'（送料無料）' if best_row(rows)['free_ship'] else ''}は{best_row(rows)['unit_price']:.1f}円/{unit}。" if rows else "") + "同じ商品は最安の出品だけを掲載。")
     # 検索エンジン向け構造化データ（パンくず＋ランキングの並び）
     ld = json.dumps([
@@ -1828,7 +1831,7 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 <div class=top><a class=logo href="./">TAN<i>KA</i></a><span class=pr>PR：楽天アフィリエイトを利用しています</span></div>
 <section class=hero>
 <h1><span>楽天のまとめ買い、</span><span><em>本当に得？</em></span><br><span>ポイント込みの</span><span>「1回あたり」で</span><span>比べよう</span></h1>
-<p>大容量や○個セットは、総額だけでは割安か分かりません。TANKAは楽天市場の商品を「価格 ÷ 内容量」で計算し、1回・1枚・100g・1冊あたりの安い順に並べています。</p>
+<p>大容量や○個セットは、総額だけでは割安か分かりません。おむつ・ミルク・ペットフードのように毎月買うものほど、選び方で年間の差が大きくなります。TANKAは楽天市場の商品を「価格 ÷ 内容量」で計算し、1回・1枚・100g・1冊あたりの安い順に並べています。</p>
 <ul class=feat><li><b>あなたのポイント込み</b>SPUの倍率を選ぶと、全ページが実質価格に</li>
 <li><b>送料込みの最安が先頭</b>送料別の安さにだまされない</li>
 <li><b>毎朝更新・値下がりも</b>価格の推移と今日の値下がりを表示</li></ul>
