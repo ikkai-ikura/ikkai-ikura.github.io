@@ -6,6 +6,7 @@
 """
 import html
 from calc_page import render_calc
+from features import FEATURES, feature_cards, render_feature
 import json
 import os
 import re
@@ -230,6 +231,21 @@ CATEGORIES = [
         "ng": ["1L", "1000ml", "2L", "メーカー", "ガスシリンダー", "ソーダストリーム"],
     },
     {
+        "slug": "tea-500ml",
+        "title": "お茶 ペットボトル（500ml前後） 1本あたり単価ランキング",
+        "keyword": "お茶 500ml 24本",
+        "keywords": ["緑茶 500ml 24本", "お〜いお茶 525ml 24本", "伊右衛門 525ml 24本", "綾鷹 525ml 24本", "生茶 525ml 24本",
+                     "麦茶 600ml 24本", "爽健美茶 600ml 24本", "お茶 ペットボトル 500ml 48本"],
+        "unit": "本", "base": "本",
+        "words": ["本入り", "本入", "本"],
+        "min_reviews": 10, "range": (12, 300),
+        "must": ["茶"],
+        "ng": ["2L", "2l", "1L", "1l", "ティーバッグ", "ティーパック", "茶葉", "粉末", "パウダー", "280ml", "350ml", "缶", "ラベル",
+               "紅茶", "ミルクティー", "抹茶ラテ"],
+        "tips": ["500ml・525ml・600mlと量がメーカーで違う。1本の値段が近ければ量の多いほうが得",
+                 "ラベルレス（ケース販売専用）は同じ中身で少し安いことが多い"],
+    },
+    {
         "slug": "hand-soap-refill",
         "title": "ハンドソープ 詰め替え 100mlあたり単価ランキング",
         "keyword": "ハンドソープ 詰め替え",
@@ -281,6 +297,36 @@ CATEGORIES = [
         "words": ["枚入り", "枚入", "枚"],
         "min_reviews": 10, "range": (30, 10000),
         "ng": ["ケース", "フタ", "ふた", "おしりふき", "トイレ", "フローリング", "ワイパー"],
+    },
+    {
+        "slug": "oxygen-bleach",
+        "title": "オキシクリーン（酸素系漂白剤） 100gあたり単価ランキング",
+        "keyword": "オキシクリーン",
+        "keywords": ["オキシクリーン 5.26kg", "オキシクリーン 1500g", "オキシクリーン 詰め替え", "酸素系漂白剤 粉末 大容量",
+                     "過炭酸ナトリウム 3kg", "オキシクリーン 2000g"],
+        "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
+        "words": {"kg": 1000, "g": 1},
+        "min_reviews": 10, "range": (300, 20000),
+        "must": ["オキシ", "酸素系", "過炭酸"],
+        "ng": ["液体", "ジェル", "スプレー", "タブレット", "ml", "スクープ", "計量スプーン", "洗濯槽", "シート", "ボトルのみ", "空ボトル"],
+        "tips": ["お湯（40〜60℃）で溶かすと効きやすい。つけ置きは換気扇・五徳・浴室の小物に",
+                 "日本版（界面活性剤なし）とアメリカ版（あり・泡立つ）がある。衣類の黄ばみにはアメリカ版も人気",
+                 "中身はほぼ過炭酸ナトリウム。ブランドにこだわらなければ「過炭酸ナトリウム」の大袋がいちばん安い"],
+    },
+    {
+        "slug": "kairo",
+        "title": "貼るカイロ 1枚あたり単価ランキング",
+        "keyword": "貼るカイロ",
+        "keywords": ["貼るカイロ 30個", "貼るカイロ 箱買い", "ホッカイロ 貼る", "はるオンパックス", "貼るカイロ ミニ",
+                     "貼るカイロ 240個"],
+        "unit": "枚", "base": "枚", "per_text": "1枚あたり",
+        "words": ["個入り", "個入", "個", "枚入り", "枚入", "枚", "P入", "P"],
+        "min_reviews": 10, "range": (10, 2000),
+        "must": ["貼る", "はる", "貼るタイプ"],
+        "ng": ["貼らない", "はらない", "靴", "くつ", "足元", "つま先", "充電", "電気", "USB", "ケース", "ベルト", "腹巻", "ハンドウォーマー"],
+        "tips": ["レギュラー・ミニ・靴用で大きさと持続時間が違う。比べるときは同じサイズ同士で",
+                 "低温やけど防止のため、直接肌に貼らず寝るときは使わない",
+                 "未開封なら数年もつので、シーズン前の箱買いが安い"],
     },
     {
         "slug": "cotton-swab",
@@ -1560,16 +1606,16 @@ POPULAR = ["toilet-paper-double", "diaper-pants-m", "rice", "laundry-gelball", "
 
 GROUPS = [
     ("laundry", "洗濯・キッチン", ["dishwasher-tablet", "dish-soap-refill", "laundry-gelball", "liquid-laundry-refill", "softener-refill",
-                               "kitchen-paper", "food-wrap"]),
+                               "oxygen-bleach", "kitchen-paper", "food-wrap"]),
     ("paper", "紙・生活用品", ["toilet-paper-double", "toilet-paper-single", "tissue", "garbage-bag-45l", "mask",
-                          "disinfect-wipes", "cotton-swab", "aa-battery"]),
+                          "disinfect-wipes", "cotton-swab", "aa-battery", "kairo"]),
     ("baby", "ベビー・衛生用品", ["diaper-pants-m", "diaper-pants-l", "diaper-pants-big", "diaper-tape-nb", "diaper-tape-s",
                                  "diaper-pants-xbig", "diaper-tape-m", "baby-formula", "liquid-milk", "baby-wipes",
                                  "sanitary-napkin", "sanitary-napkin-night"]),
     ("care", "バス・ケア", ["hand-soap-refill", "body-soap-refill", "shampoo-refill", "toothpaste",
                          "sonicare-brush-head", "oralb-brush-head"]),
     ("pet", "ペット", ["dog-food-dry", "cat-food-dry", "pet-sheet", "pet-sheet-wide", "cat-litter"]),
-    ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "protein-soy", "water-2l", "sparkling-water-500ml", "soy-sauce", "canola-oil"]),
+    ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "protein-soy", "water-2l", "sparkling-water-500ml", "tea-500ml", "soy-sauce", "canola-oil"]),
     ("eye", "コンタクトレンズ", ["contact-1day", "contact-2week"]),
     ("phone", "スマホ・通信", ["mobile-battery"]),
     ("manga", "漫画 全巻セット", [f"manga-{m[0]}" for m in MANGA]),
@@ -1728,8 +1774,9 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 <div class=stats><span><b>{len(CATEGORIES)}</b> ジャンル</span><span><b>{n_items:,}</b> 商品を比較</span><span>毎朝6時に自動更新（{updated[5:10].replace('-', '/')} {updated[11:]}）</span></div>
 </section>
 <div class=bar><input id=q type=search placeholder="さがす（例：洗剤、猫、トイレットペーパー、キュキュット、呪術廻戦）" aria-label="ジャンルをさがす" autocomplete=off>
-<nav class=chips aria-label="カテゴリ">{"<a href='#drops'>値下がり</a>" if picked else ""}{"<a href='#today'>今が買い時</a>" if deal_html else ""}<a href="calc.html">単価計算ツール</a>{chips}</nav></div>
+<nav class=chips aria-label="カテゴリ">{"<a href='#drops'>値下がり</a>" if picked else ""}{"<a href='#today'>今が買い時</a>" if deal_html else ""}<a href='#tokushu'>特集</a><a href="calc.html">単価計算ツール</a>{chips}</nav></div>
 {drop_html}
+{feature_cards(int(updated[5:7]))}
 {f"<section class=today id=today><h2>今が買い時のジャンル<small>最安の単価がこれまでの記録（最大30日）の中で安いもの</small></h2><div class=deals>{deal_html}</div></section>" if deal_html else ""}
 {sections}
 <p class=none id=none hidden>見つかりませんでした。別の言葉でさがしてみてください。</p>
@@ -1750,7 +1797,7 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
     cards.forEach(function(c){{var ok=!w||norm(c.dataset.k+' '+c.textContent).indexOf(w)>=0; c.hidden=!ok; if(ok)hit++;}});
     [].forEach.call(document.querySelectorAll('.more'),function(d){{ if(w) d.open=true; }});
     grps.forEach(function(g){{g.hidden=!g.querySelector('.card:not([hidden])');}});
-    today.hidden=!!w;
+    [today,document.getElementById('tokushu')].forEach(function(x){{if(x)x.hidden=!!w}});
     document.getElementById('none').hidden=hit>0;
   }});
   // SPU: カテゴリページと同じ保存先。楽天のポイントは税抜価格に付くので 倍率/110 を差し引く
@@ -1843,7 +1890,10 @@ def main():
                                     "rate": round(sorted(r["rate"] for r in rows[:10])[min(len(rows), 10) // 2], 1),
                                     "price": sorted(r["price"] for r in rows[:10])[min(len(rows), 10) // 2],
                                     "avg": typical_avg(rows), "pt": top.get("point", 1),
-                                    "clean": clean_name(top["name"], 40)}
+                                    "clean": clean_name(top["name"], 40),
+                                    "top3": [{"n": clean_name(r["name"], 50), "u": r["url"], "i": r["img"], "p": r["price"],
+                                              "up": round(r["unit_price"], 2), "pt": r.get("point", 1), "fs": r["free_ship"]}
+                                             for r in sorted(rows, key=lambda r: r["unit_price"])[:3]]}
         print(f"{cat['slug']}: 取得{len(items)}件 → 掲載{len(rows)}件 ({'本番' if live else 'サンプル'})")
     (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False), encoding="utf-8")
     (OUT / "history.json").write_text(json.dumps(history, ensure_ascii=False), encoding="utf-8")
@@ -1855,10 +1905,13 @@ def main():
     activate_pending_links()
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
     (OUT / "calc.html").write_text(render_calc(site_url(), GROUPS, CATEGORIES_BY_SLUG, short, per_text_of), encoding="utf-8")
+    for f in FEATURES:
+        (OUT / f"{f['slug']}.html").write_text(render_feature(f, summary, CATEGORIES_BY_SLUG, site_url(), updated, short, per_text_of),
+                                               encoding="utf-8")
     # 検索エンジン向けのサイトマップ
     site = site_url()
     day = updated[:10]
-    urls = [site, f"{site}about.html", f"{site}sim.html", f"{site}calc.html"] + [f"{site}{c['slug']}.html" for c in CATEGORIES
+    urls = [site, f"{site}about.html", f"{site}sim.html", f"{site}calc.html"] + [f"{site}{f['slug']}.html" for f in FEATURES] + [f"{site}{c['slug']}.html" for c in CATEGORIES
                                                               if summary.get(c["slug"], {}).get("count", 0) >= MIN_INDEX]
     xml = "".join(f"<url><loc>{u}</loc><lastmod>{day}</lastmod></url>" for u in urls)
     (OUT / "sitemap.xml").write_text(
