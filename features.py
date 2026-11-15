@@ -11,6 +11,15 @@ FEATURES = [
         "desc": "オキシクリーン・除菌シート・キッチンペーパー・ゴミ袋など、大掃除で使う消耗品を楽天市場の1回あたり単価で比較。毎朝更新の最安上位3件をまとめました。",
         "lead": "大掃除はオキシクリーンや除菌シート、ゴミ袋をたくさん使います。量が多いぶん、1回あたりの単価で選ぶと差がはっきり出ます。毎朝6時に、楽天市場の最安上位3件へ入れ替わります。",
         "months": [11, 12],
+        "guide": [
+            ("使う量の目安", "オキシクリーンのつけ置きは、40〜60℃のお湯4Lに付属スプーン1杯が目安です（商品の表示を確認してください）。換気扇・五徳・浴室の小物をまとめて漬けると、家1軒の大掃除で500g〜1kgほど使います。ゴミ袋は不用品の処分で普段の2〜3倍、キッチンペーパーや除菌シートも普段の倍くらい減ります。"),
+            ("始める順番", "上から下へ（照明・換気扇→棚→床）、奥から手前へ進めると、落ちたホコリをもう一度拭かずにすみます。油汚れは気温が高いほうがゆるむので、寒くなりきる前の11月〜12月上旬に台所から始めるのがおすすめです。"),
+            ("注意すること", "酸素系漂白剤（オキシクリーン）は、塩素系漂白剤と同時に使わないでください。アルミ・銅・木製品・漆器・ウールや絹は変色や傷みの原因になるので、つけ置きに向きません。作業中はゴム手袋をつけ、換気をしてください。"),
+        ],
+        "faq": [
+            ("オキシクリーンと過炭酸ナトリウムは何が違う？", "主成分はどちらも過炭酸ナトリウムです。日本で売られている版は界面活性剤なし、アメリカ版（コストコなど）は界面活性剤入りで泡立ちます。ブランドにこだわらなければ、過炭酸ナトリウムの大袋がいちばん安く買えます。"),
+            ("大掃除の洗剤はどれくらい買っておけばいい？", "オキシクリーンなら1.5kg〜2kg、ゴミ袋は45Lを50枚、除菌シートは詰め替え2〜3個が一般的な家庭の目安です。使い切れなくても、どれも普段の掃除や洗濯で使えるので無駄になりにくい消耗品です。"),
+        ],
         "items": [
             ("oxygen-bleach", "換気扇・五徳のつけ置き、浴室の小物に。お湯で溶かすと効きやすい"),
             ("disinfect-wipes", "ドアノブ・スイッチ・冷蔵庫の取っ手の拭き掃除に"),
@@ -27,6 +36,15 @@ FEATURES = [
         "desc": "貼るカイロ・不織布マスク・ティッシュ・水など、冬に買い置きしたい消耗品を楽天市場の1枚・1本あたり単価で比較。毎朝更新。",
         "lead": "寒さと風邪のシーズンは、カイロ・マスク・ティッシュの減りが早くなります。どれも未開封なら長くもつので、安いときの箱買いが向いています。",
         "months": [11, 12, 1, 2],
+        "guide": [
+            ("買い置きの目安", "マスクは1人1日1枚として、4人家族なら1か月で約120枚。カイロは通勤・通学で1日1〜2枚使うと、冬のあいだ（約3か月）で1人100〜180枚ほどです。どちらも未開封なら長く保管できるので、安いときの箱買いが向いています。"),
+            ("水と電池の備え", "飲み水は1人1日3Lが目安で、最低3日分、できれば1週間分の備蓄がすすめられています。4人家族の3日分なら2Lペットボトルで18本です。停電に備えるライトやラジオは単3電池を使うものが多いので、40本パックを1つ置いておくと安心です。"),
+            ("カイロの注意", "貼るカイロは衣類の上から貼り、肌に直接貼らないでください。体温より少し高い温度（44℃前後）でも、同じ場所に数時間当て続けると低温やけどになります。寝るときは使わず、糖尿病などで感覚が鈍くなっている人や、子ども・高齢者は特に注意してください。"),
+        ],
+        "faq": [
+            ("カイロに使用期限はある？", "あります。外袋に使用期限が書かれていて、多くは製造から数年です。期限を過ぎると温かさが弱くなることがあるので、箱買いしたら古いものから使ってください。"),
+            ("ミニとレギュラーはどちらが得？", "1枚あたりの値段はミニのほうが安いことが多いですが、温かい時間と面積はレギュラーのほうが上です。腰や背中にはレギュラー、ポケットや首元にはミニ、と使い分けるのが無駄がありません。"),
+        ],
         "items": [
             ("kairo", "未開封なら数年もつ。シーズン前の箱買いがいちばん安い"),
             ("mask", "風邪・インフルエンザの季節に。1枚あたりで見ると差が大きい"),
@@ -43,6 +61,15 @@ FEATURES = [
         "desc": "楽天スーパーセール・お買い物マラソンで買いだめしたい日用品を1回あたり単価で比較。ポイント倍率込みの実質価格にも対応。",
         "lead": "楽天スーパーセール（3・6・9・12月）やお買い物マラソンは、ショップの買い回りでポイント倍率が上がります。上の倍率を選ぶと実質価格で表示されます。腐らない・かさばっても使い切る日用品が買いだめ向きです。",
         "months": [3, 6, 9, 12],
+        "guide": [
+            ("ポイントが増えるしくみ", "楽天スーパーセールやお買い物マラソンでは、期間中に買ったショップの数に応じてポイント倍率が上がります（1ショップ1,000円以上の買い物が条件のことが多い）。ふだんのSPU倍率に上乗せされるので、日用品をショップごとに分けて買うと実質価格が大きく下がります。ポイントには上限があるので、高額の買い物は条件を確認してください。"),
+            ("買いだめに向くもの", "腐らない・必ず使い切る・かさばっても置ける、の3つがそろうものが買いだめ向きです。トイレットペーパー・洗剤・ペットシーツは向いていて、お米は精米日から1か月くらいで食べ切れる量まで、おむつはサイズアウトするので1〜2か月分までにしておくと失敗がありません。"),
+            ("この特集の使い方", "ページ上の「楽天ポイント倍率（SPU）」に自分の倍率を入れると、買い回りの倍率を除いた実質単価に切り替わります。セール中はショップのポイントアップも重なるので、ランキングの順位が入れ替わることがあります。"),
+        ],
+        "faq": [
+            ("楽天スーパーセールはいつ？", "例年3月・6月・9月・12月の上旬〜中旬に開催されています。お買い物マラソンはそれ以外の月にほぼ毎月あります。日程は楽天市場のお知らせで確認してください。"),
+            ("買い回りは何ショップすればいい？", "上限の10ショップまで回ると倍率が最大になります。日用品は1つ1,000円を超えやすいので、洗剤・トイレットペーパー・ペット用品などをショップを分けて買うと、無理なく数をそろえられます。"),
+        ],
         "items": [
             ("toilet-paper-double", "かさばるけれど必ず使い切る。長さ（m）あたりで比べる"),
             ("laundry-gelball", "大容量パックは1個あたりで見ると安い"),
@@ -60,6 +87,15 @@ FEATURES = [
         "desc": "新生児用おむつ・おしりふき・粉ミルク・液体ミルクを楽天市場の1枚・100gあたり単価で比較。出産準備にどれくらい必要かの目安つき。",
         "lead": "新生児のころは、おむつを1日10〜12枚、おしりふきは1日20〜30枚くらい使います。すぐサイズが変わるので、おむつは買いすぎないのがコツです。",
         "months": [],
+        "guide": [
+            ("おむつの枚数の目安", "新生児のころは1日10〜12枚、1か月で300枚以上使います。Sサイズのころは1日8〜10枚、Mサイズで7〜8枚くらいに減っていきます。新生児用は体重の増え方によって1か月ほどでサイズアウトする子も多いので、出産前は1〜2パックにして、合うメーカーが分かってから箱買いするのがおすすめです。"),
+            ("ミルクの量の目安", "ミルクだけで育てる場合、800gの缶は月齢によって約1〜2週間でなくなります。母乳と混合なら、その半分くらいのペースです。詰め替え用（袋）は缶より100gあたりが安いことが多く、空き缶を使い回せます。"),
+            ("調乳と保存の注意", "粉ミルクは、一度沸かして70℃以上に保ったお湯で溶かし、人肌に冷ましてから飲ませます。作ったミルクは2時間以内に飲み切り、残りは捨ててください。液体ミルクは常温で保存でき、開封したらすぐに使い切ります。体重の増え方やミルクの量で気になることがあれば、健診や小児科で相談してください。"),
+        ],
+        "faq": [
+            ("出産前に用意するおむつは？", "新生児用のテープタイプを1〜2パック（60〜140枚ほど）が目安です。メーカーによって肌に合う・合わないがあるので、最初から箱買いしないほうが安心です。"),
+            ("粉ミルクと液体ミルクはどちらが安い？", "100mlあたりで比べると粉ミルクのほうがかなり安いです。液体ミルクは調乳がいらず、外出や夜中、災害時の備えに便利なので、ふだんは粉ミルク、いざという時用に液体ミルクを少し置いておく使い分けが多いです。"),
+        ],
         "items": [
             ("diaper-tape-nb", "新生児用は1か月ほどでサイズアウトする子も多い。1〜2パックから"),
             ("diaper-tape-s", "体重5kg前後から。新生児用の次に使う"),
@@ -109,14 +145,22 @@ def render_feature(f, summary, by_slug, site, updated, short, per_text_of):
         toc += f"<a href='#{slug}'>{e(short(c))}</a>"
         blocks += (f"<section id='{slug}'><h2>{e(short(c))}<small>{e(per)}の安い順</small></h2><p class=why>{e(why)}</p>"
                    f"<ol class=list>{rows}</ol><p class=all><a href='{slug}.html'>{e(short(c))}のランキングをすべて見る（{s.get('count', 0)}件）→</a></p></section>")
+    guide = "".join(f"<h3>{e(h)}</h3><p>{e(t)}</p>" for h, t in f.get("guide", []))
+    faq = "".join(f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in f.get("faq", []))
+    extra = (f"<section class=guide><h2>知っておきたいこと</h2>{guide}</section>" if guide else "") + \
+            (f"<section class=faq><h2>よくある質問</h2>{faq}</section>" if faq else "")
     others = "".join(f"<a href='{o['slug']}.html'>{e(o['title'])}</a>" for o in FEATURES if o is not f)
-    ld = json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+    lds = [{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": "TANKA", "item": site},
-        {"@type": "ListItem", "position": 2, "name": f["title"], "item": url}]}, ensure_ascii=False)
+        {"@type": "ListItem", "position": 2, "name": f["title"], "item": url}]}]
+    if f.get("faq"):
+        lds.append({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in f["faq"]]})
+    ld = json.dumps(lds, ensure_ascii=False)
     robots = "" if n_items >= 6 else "<meta name=robots content=noindex>"
     return (PAGE.replace("@@TITLE@@", e(f["title"] + "｜TANKA")).replace("@@DESC@@", e(f["desc"])).replace("@@URL@@", e(url))
             .replace("@@ROBOTS@@", robots).replace("@@LD@@", ld).replace("@@H1@@", e(f["title"])).replace("@@LEAD@@", e(f["lead"]))
-            .replace("@@TOC@@", toc).replace("@@BLOCKS@@", blocks or "<p>集計中です。</p>").replace("@@OTHERS@@", others)
+            .replace("@@TOC@@", toc).replace("@@BLOCKS@@", blocks or "<p>集計中です。</p>").replace("@@OTHERS@@", others).replace("@@EXTRA@@", extra)
             .replace("@@UPDATED@@", e(updated[5:10].replace("-", "/") + " " + updated[11:])))
 
 
@@ -145,6 +189,8 @@ section{scroll-margin-top:12px}h2{font-size:1.1rem;margin:1.8em 0 .2em}h2 small{
 .rk{flex:none;width:1.6em;height:1.6em;line-height:1.6em;text-align:center;border-radius:50%;background:var(--acc);color:#fff;font-size:.75rem;font-weight:700}
 .all{margin:6px 0 0;font-size:.88rem}.all a{color:var(--ok);font-weight:600}
 .others{display:grid;gap:6px;margin-top:8px}.others a{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;text-decoration:none;font-size:.9rem}
+.guide h3{font-size:.95rem;margin:1.2em 0 .2em}.guide p{margin:0;font-size:.92rem}
+.faq details{border-bottom:1px solid var(--line);padding:8px 0}.faq summary{cursor:pointer;font-weight:600}.faq p{margin:.4em 0 0;font-size:.92rem}
 footer{margin-top:28px;color:var(--mut);font-size:.8rem}</style></head><body><main>
 <p class=mut><a href="./">TANKA</a> › 特集</p>
 <p class=pr>PR：楽天アフィリエイトを利用しています</p>
@@ -153,6 +199,7 @@ footer{margin-top:28px;color:var(--mut);font-size:.8rem}</style></head><body><ma
 <div class=spu><label for=spu>楽天ポイント倍率（SPU）</label><select id=spu><option value=0>未設定</option></select><span id=spumsg class=mut></span></div>
 <nav class=toc aria-label="目次">@@TOC@@</nav>
 @@BLOCKS@@
+@@EXTRA@@
 <h2>ほかの特集</h2><div class=others>@@OTHERS@@</div>
 <footer><p>価格は @@UPDATED@@ 時点で楽天市場から取得したものです。毎朝6時に更新しています。購入前に商品ページで確認してください。</p>
 <p><a href="./">トップへ戻る</a> ・ <a href="calc.html">単価計算ツール</a> ・ <a href="about.html">このサイトについて</a></p></footer>
