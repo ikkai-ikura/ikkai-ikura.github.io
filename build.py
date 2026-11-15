@@ -1307,7 +1307,10 @@ def render(cat, rows, updated, hist=None):
     rest = [CATEGORIES_BY_SLUG[sl] for sl in POPULAR if sl != cat["slug"] and sl in CATEGORIES_BY_SLUG
             and CATEGORIES_BY_SLUG[sl] not in same][:8]
     chip = lambda c: f'<a href="{c["slug"]}.html">{e(short(c))}</a>'
-    nav = (("<nav class=oth><h2>同じカテゴリのジャンル</h2>" + "".join(map(chip, same)) + "</nav>" if same else "")
+    feats = [f for f in FEATURES if any(sl == cat["slug"] for sl, _ in f["items"])]  # このジャンルが入っている特集
+    nav = (("<nav class=oth><h2>この商品が入っている特集</h2>"
+            + "".join(f'<a href="{f["slug"]}.html">{e(f["title"])}</a>' for f in feats) + "</nav>" if feats else "")
+           + ("<nav class=oth><h2>同じカテゴリのジャンル</h2>" + "".join(map(chip, same)) + "</nav>" if same else "")
            + "<nav class=oth><h2>人気のジャンル</h2>" + "".join(map(chip, rest)) + '<a href="./#paper">すべてのジャンル →</a></nav>'
            + '<p class=pr><a href="./">トップへ戻る</a> ・ <a href="calc.html">単価計算ツール</a> ・ <a href="about.html">このサイトについて</a></p>')
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
