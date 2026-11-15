@@ -1597,6 +1597,16 @@ h2{font-size:1.1rem;margin-top:1.6em}.mut{color:var(--mut);font-size:.85rem}</st
 <li><b>楽天アフィリエイト</b>（楽天グループ株式会社）・<b>A8.net</b>（株式会社ファンコミュニケーションズ）：広告リンクの表示やクリック、購入の計測。紹介料の計算に使われます。</li></ul>
 <h2>お問い合わせ</h2>
 <p>掲載内容の誤り（内容量の読み違いなど）のご指摘や、追加してほしいジャンルは、<a href="https://docs.google.com/forms/d/e/1FAIpQLSfBVVJ6Xf8ITCX5A0yD8tgEKXCrrFu7GIhalRzAjiYh2lXFtg/viewform" rel="noopener" target=_blank>お問い合わせフォーム</a>からお知らせください。</p>
+<h2 id=privacy>プライバシーポリシー</h2>
+<p>お問い合わせフォームでお名前やメールアドレスなどをいただいた場合は、ご質問への回答とサイトの修正のためだけに使い、法令に基づく場合を除いて本人の同意なく第三者に提供しません。アクセス解析と広告の計測で送信される情報は、上の「アクセス解析と外部送信について」のとおりです。Cookie はブラウザの設定で無効にできます。</p>
+<h2>免責事項</h2>
+<p>掲載している価格・内容量・単価は、楽天市場の商品情報から自動で計算したもので、正確さを保証するものではありません。商品の購入や契約は、各ショップ・各サービスの公式ページで内容をご確認のうえ、ご自身の判断で行ってください。当サイトの情報によって生じた損害について、運営者は責任を負いかねます。リンク先の商品やサービスに関するお問い合わせは、各ショップ・各社へお願いします。</p>
+<h2>運営者情報</h2>
+<ul><li>サイト名：TANKA（https://tankahikaku.com/）</li>
+<li>運営：TANKA編集部（個人運営）</li>
+<li>開設：2026年11月</li>
+<li>連絡先：<a href="https://docs.google.com/forms/d/e/1FAIpQLSfBVVJ6Xf8ITCX5A0yD8tgEKXCrrFu7GIhalRzAjiYh2lXFtg/viewform" rel="noopener" target=_blank>お問い合わせフォーム</a></li></ul>
+<p class=mut>制定日：2026年11月15日</p>
 <p class=mut><a href="./">トップへ戻る</a></p>
 </main></body></html>"""
 
@@ -1786,7 +1796,7 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 <li><b>同じ商品は最安だけ掲載</b><span>ショップ違い・袋数違いをまとめ、いちばん安い出品を表示します</span></li>
 <li><b>あなたのポイントで実質価格に</b><span>楽天のポイント倍率（SPU）を選ぶと、ショップのポイントアップも足して実質の単価を出します</span></li>
 </ol></section>
-<footer><a href="about.html">このサイトについて（計算方法・広告について）</a><span>価格は取得時点のものです。購入前に商品ページで確認してください。</span></footer>
+<footer><a href="about.html">このサイトについて（計算方法・広告について）</a><a href="about.html#privacy">プライバシーポリシー・運営者情報</a><span>価格は取得時点のものです。購入前に商品ページで確認してください。</span></footer>
 </main>
 <script>
 (function(){{
