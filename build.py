@@ -26,7 +26,7 @@ RAKUTEN_ORIGIN = os.environ.get("RAKUTEN_ORIGIN", "https://ikkai-ikura.github.io
 ML = {"ml": 1, "mL": 1, "ML": 1, "L": 1000, "l": 1000, "リットル": 1000}
 REFILL = ["詰め替え", "詰替", "つめかえ", "詰めかえ"]
 TP_PARSER = {"size": r"(\d{2,3}(?:\.\d)?)\s*m(?![ml])", "pack": r"ロール|R(?![a-z])", "lo": 100, "hi": 20000}
-NG_ALL = ["ふるさと納税", "返礼品"]
+NG_ALL = ["ふるさと納税", "返礼品", "初回限定", "初回購入限定", "お一人様1回"]  # 一度しか買えない価格は最安として出さない
 
 # 紙おむつのサイズ表記。「MamyPoko」の M や「XL」の L に当たらないよう、直後がサイズ・数字・区切りの時だけ一致
 _SZ = lambda x: rf"(?<![A-Za-z]){x}(?:サイズ|\s*\d|[\s)）】\]/／]|$)"
@@ -55,7 +55,7 @@ def DIAPER(kind, size):
         "title": f"紙おむつ {kind} {label} 1枚あたり単価ランキング",
         "keyword": kw,
         "keywords": [f"{kw} ケース"] + [f"{b} {kind} {label}" for b in ["メリーズ", "パンパース", "ムーニー", "グーン", "マミーポコ"]],
-        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 3, "range": (30, 3000),
+        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚", "シート"], "min_reviews": 3, "range": (30, 3000),
         "must_all": [kind],
         "size_re": DIAPER_SIZE[size],
         "size_ng_re": "|".join(v for k, v in DIAPER_SIZE.items() if k != size)
@@ -75,7 +75,7 @@ CATEGORIES = [
         "keyword": "食洗機 洗剤 タブレット",
         "unit": "回",
         "words": ["個入り", "個入", "個", "回分", "回", "錠", "粒", "P", "包"],
-        "min_reviews": 10,
+        "min_reviews": 5,
         "ng": ["クリーナー", "工事", "本体", "分岐水栓"],
         "brands": {"フィニッシュ": ["finish", "フィニッシュ", "フィニッフシュ"], "キュキュット": ["キュキュット"],
                    "ジョイ": ["ジョイ", "joy"], "ミーレ": ["miele", "ミーレ"], "SAMKYO": ["samkyo"]},
@@ -154,8 +154,8 @@ CATEGORIES = [
         "keyword": "洗濯洗剤 ジェルボール",
         "keywords": ["洗濯洗剤 ジェルボール", "アリエール ジェルボール", "ボールド ジェルボール"],
         "unit": "回",
-        "words": ["個入り", "個入", "個", "粒", "回分"],
-        "min_reviews": 10, "range": (10, 3000),
+        "words": ["個入り", "個入", "個", "コ入", "粒", "回分"],
+        "min_reviews": 5, "range": (10, 3000),
         "ng": ["ケース", "ボトル", "ホルダー"],
     },
     {
@@ -183,8 +183,8 @@ CATEGORIES = [
         "title": "単3電池（乾電池） 1本あたり単価ランキング",
         "keyword": "単3 乾電池",
         "unit": "本", "base": "本",
-        "words": ["本入り", "本入", "本パック", "本"],
-        "min_reviews": 10, "range": (4, 500),
+        "words": ["本入り", "本入", "本パック", "本", "個パック", "個入り", "個入", "P"],
+        "min_reviews": 5, "range": (4, 500),
         "must": ["電池"],
         "ng": ["充電", "ニッケル水素", "エネループ", "単4", "単1", "単2", "ケース", "ライト", "LED", "電池式"],
     },
@@ -197,7 +197,7 @@ CATEGORIES = [
         "words": {"kg": 1000, "g": 1},
         "min_reviews": 10, "range": (300, 10000),
         "must": ["ホエイ", "ホエー", "WPC", "WPI"],
-        "ng": ["シェイカー", "バー", "サンプル", "お試し", "ドリンク", "ml", "クッキー", "ソイ", "大豆", "ジュニア", "選べる"],
+        "ng": ["シェイカー", "バー", "サンプル", "お試し", "ドリンク", "ml", "クッキー", "ソイ", "大豆", "ジュニア", "選べる", "ゲイナー"],
     },
     {
         "slug": "protein-soy",
@@ -247,6 +247,7 @@ CATEGORIES = [
     },
     {
         "slug": "hand-soap-refill",
+        "biz": True,
         "title": "ハンドソープ 詰め替え 100mlあたり単価ランキング",
         "keyword": "ハンドソープ 詰め替え",
         "keywords": ["ハンドソープ 詰め替え 大容量", "キレイキレイ 詰め替え", "ビオレu 泡ハンドソープ 詰め替え", "ミューズ 詰め替え"],
@@ -258,6 +259,7 @@ CATEGORIES = [
     },
     {
         "slug": "dish-soap-refill",
+        "biz": True,
         "title": "食器用洗剤 詰め替え 100mlあたり単価ランキング",
         "keyword": "食器用洗剤 詰め替え",
         "keywords": ["食器用洗剤 詰め替え 大容量", "ジョイ 詰め替え", "キュキュット 詰め替え", "チャーミー 詰め替え"],
@@ -269,6 +271,7 @@ CATEGORIES = [
     },
     {
         "slug": "body-soap-refill",
+        "biz": True,
         "title": "ボディソープ 詰め替え 100mlあたり単価ランキング",
         "keyword": "ボディソープ 詰め替え",
         "keywords": ["ボディソープ 詰め替え 大容量", "ビオレu 詰め替え", "ダヴ ボディウォッシュ 詰め替え", "ナイーブ 詰め替え"],
@@ -280,6 +283,7 @@ CATEGORIES = [
     },
     {
         "slug": "softener-refill",
+        "biz": True,
         "title": "柔軟剤 詰め替え 100mlあたり単価ランキング",
         "keyword": "柔軟剤 詰め替え",
         "keywords": ["柔軟剤 詰め替え 大容量", "レノア 詰め替え", "ソフラン 詰め替え", "ハミング 詰め替え"],
@@ -376,6 +380,7 @@ CATEGORIES = [
     },
     {
         "slug": "shampoo-refill",
+        "biz": True,
         "title": "シャンプー 詰め替え 100mlあたり単価ランキング",
         "keyword": "シャンプー 詰め替え",
         "keywords": ["シャンプー 詰め替え 大容量", "パンテーン 詰め替え", "TSUBAKI シャンプー 詰め替え", "メリット シャンプー 詰め替え"],
@@ -398,6 +403,7 @@ CATEGORIES = [
     },
     {
         "slug": "liquid-laundry-refill",
+        "biz": True,
         "title": "液体洗濯洗剤 詰め替え 100gあたり単価ランキング",
         "keyword": "洗濯洗剤 液体 詰め替え",
         "keywords": ["洗濯洗剤 液体 詰め替え 大容量", "アタック 詰め替え", "アリエール 詰め替え", "トップ スーパーナノックス 詰め替え"],
@@ -467,7 +473,7 @@ CATEGORIES = [
         "keywords": ["粉ミルク 大缶 2缶", "ほほえみ 粉ミルク", "はいはい 粉ミルク", "すこやかM1 大缶", "はぐくみ 粉ミルク", "アイクレオ バランスミルク",
                      "ほほえみ らくらくキューブ"],
         "unit": "100g", "base": "g", "per": 100, "per_text": "100gあたり",
-        "words": {"kg": 1000, "g": 1}, "min_reviews": 5, "range": (300, 20000),
+        "words": {"kg": 1000, "g": 1, "G": 1}, "min_reviews": 5, "range": (300, 20000),
         "strip": r"\(?\d+\s*[ヵヶか]?月?\s*[~～〜\-]\s*\d+\s*(?:[ヵヶか]月|歳)\)?|\d+\s*[ヵヶか]月[^\s]*|\d+\s*歳[^\s]*",
         "brands": {"ほほえみ": ["ほほえみ"], "はいはい": ["はいはい"], "すこやか": ["すこやか"], "はぐくみ": ["はぐくみ"],
                    "アイクレオ": ["アイクレオ"], "E赤ちゃん": ["e赤ちゃん"], "ぴゅあ": ["ぴゅあ"]},
@@ -537,6 +543,7 @@ CATEGORIES = [
     },
     {
         "slug": "soy-sauce",
+        "biz": True,
         "title": "醤油（しょうゆ） 100mlあたり単価ランキング",
         "keyword": "醤油 1L",
         "keywords": ["醤油 1L", "しょうゆ 1.8L", "キッコーマン しょうゆ", "ヤマサ 醤油", "業務用 醤油"],
@@ -547,6 +554,7 @@ CATEGORIES = [
     },
     {
         "slug": "canola-oil",
+        "biz": True,
         "title": "キャノーラ油 100gあたり単価ランキング",
         "keyword": "キャノーラ油",
         "keywords": ["キャノーラ油 1000g", "キャノーラ油 業務用", "日清 キャノーラ油", "AJINOMOTO キャノーラ油"],
@@ -765,6 +773,24 @@ def box_sets(s):
     return re.sub(r"(?<![\d.])(\d{1,2})\s*箱(?!\s*(?:セット|入))", r"\1箱セット", s)
 
 
+RK24 = re.compile(r"(\d{1,3})\s*([袋缶本個箱包])入\s*x\s*(\d{1,2})\s*セット\s*[(（]\s*1\s*\2\s*(\d+(?:\.\d+)?)\s*([^\s)）]{1,3})\s*[)）]")
+BIZ_RE = r"一斗缶|法人限定|法人様|(?<![\d.])(?:1\d|[2-9]\d)(?:\.\d+)?\s*(?:L|kg|ℓ|リットル)(?![a-zA-Z])"  # 1つで10L・10kg以上（液体・油のジャンルだけで判定）
+VARIANT_ONE = re.compile(r"(?<![\d.])1\s*(?:袋|個|箱|本|セット|ケース|パック|缶)(?!\s*入|\d)")
+
+
+def variant_min(name, words, lo, hi):
+    """選択式（1袋/2袋…）の商品。表示価格はふつう最小構成の値段なので、名前にある最小の量で割る。
+    価格が大きい構成のものでも、単価は実際より高く出る側（安く見せない側）にずれる"""
+    if isinstance(words, list):
+        words = {w: 1 for w in words}
+    s = name.translate(ZEN).replace(",", "")
+    w = "|".join(map(re.escape, sorted(words, key=len, reverse=True)))
+    vals = [float(m.group(1)) * words[m.group(2)]
+            for m in re.finditer(rf"(?<![\d.])(\d{{1,5}}(?:\.\d{{1,2}})?)\s*({w})(?!\s*セット)", s)]
+    vals = [v for v in vals if lo <= v <= hi]
+    return min(vals) if vals else None
+
+
 def is_variant_list(s):
     """「×6袋 4袋 2袋」のように同じ単位の個数が並ぶのは選択式。表示価格がどの数量のものか分からない"""
     if re.search(r"\d\s*[・/／]\s*\d+\s*(?:個|袋|本|箱|缶|ケース|パック)", s):  # 「4・6個セット」
@@ -774,6 +800,9 @@ def is_variant_list(s):
     for m in re.finditer(r"(?<![x*\d])(\d{1,2})\s*(袋|個|本|箱|ケース|パック|缶)\s+(\d{1,2})\s*\2(?!\s*入)", s):
         if m.group(1) != m.group(3):
             return True
+    sets = re.findall(r"(?<!\d)(\d{1,3})\s*(袋|個|本|箱)\s*セット", s)  # 「5個セット12個セット 18個セット」
+    if any(len({n for n, uu in sets if uu == u}) >= 2 for u in {u for _, u in sets}):
+        return True
     return False
 
 
@@ -816,7 +845,8 @@ def parse_count(name, words, lo=5, hi=3000):
     words は語のリスト、または {語: 倍率}（例 {"kg": 1000, "g": 1}）"""
     if isinstance(words, list):
         words = {w: 1 for w in words}
-    s = name.translate(ZEN).replace(",", "")
+    s = RK24.sub(lambda m: f" {m[4]}{m[5]}x{int(m[1]) * int(m[3])} " if m[5] in words else m[0],
+                 name.translate(ZEN).replace(",", ""))
     # 「1袋～3袋 選べる」のようなバリエーション商品は価格と数量が対応しないので除外
     if re.search(r"選べる|選択|単品.*セット|セット.*単品|\d\s*[~～〜]\s*\d", s) or is_variant_list(s):
         return None
@@ -824,6 +854,9 @@ def parse_count(name, words, lo=5, hi=3000):
     # 「3個セット」のセット数を拾わないよう、直後がセットの数字は除く。一番大きい量を内容量とみなす
     ms = [(float(m.group(1)) * words[m.group(2)], m)
           for m in re.finditer(rf"(?<!\d)(\d{{1,5}}(?:\.\d{{1,2}})?)\s*({w})(?!\s*セット)", s)]
+    own_only = [u for u in ["袋", "箱", "個", "本", "パック", "冊", "ケース", "缶"] if any(k.startswith(u) for k in words)]
+    if not ms and own_only:
+        ms = [(float(x), None) for x in re.findall(rf"(\d{{1,4}})\s*(?:{'|'.join(own_only)})\s*セット", s)]
     if not ms:
         return None
     # セット数の候補: 「×3」「/箱×3」「3袋セット」「【3個セット】」「2ケース」
@@ -839,7 +872,7 @@ def parse_count(name, words, lo=5, hi=3000):
             # 1袋の量より大きければ合計数量（12本セット）、小さければセット数（150個入りの3個セット）
             if float(x) > top:
                 ms.append((float(x), None))
-            else:
+            elif float(x) != top:
                 ks_set.append(int(x))
     ks = ks_set + [int(x) for x in re.findall(r"[x*]\s*(\d{1,2})(?!\d|\.\d|\s*(?:g|kg|ml|L|枚|個|本|回))", s)]
     ms = [t for t in ms if t[0] > 1] or ms  # 「1個13g」の1個などは内容量ではない
@@ -854,7 +887,10 @@ def parse_count(name, words, lo=5, hi=3000):
             return None
     else:
         n, m = ms[0]
-        k = re.match(r"\s*(?:\S{0,3}?)[x*]\s*(\d{1,2})(?!\d|\.\d|\s*(?:g|kg|ml|L))", s[m.end():m.end() + 15])
+        if m is None:  # 「40本セット」だけ: それが合計の数
+            return n if lo <= n <= hi else None
+        k = re.match(r"\s*(?:\S{0,3}?)[x*]\s*(\d{1,2}|\d{3}(?=\s*(?:袋|包|個|本|缶|パック|\)|）|$|\s)))(?!\d|\.\d|\s*(?:g|kg|ml|L))",
+                     s[m.end():m.end() + 15])
         k = int(k.group(1)) if k else next(iter(ks_set), None)
         if k:
             n *= k
@@ -970,6 +1006,9 @@ def rank(items, cat):
             if cat.get("boxes"):
                 pname = box_sets(pname)
             n = parse_count(pname, cat["words"], *cat.get("range", (5, 3000)))
+            if not n and VARIANT_ONE.search(pname.translate(ZEN)):
+                n = variant_min(pname, cat["words"], *cat.get("range", (5, 3000)))
+                note = "選べる商品・いちばん少ない量で計算" if n else ""
         if not n or it.get("reviewCount", 0) < cat["min_reviews"]:
             continue
         if cat.get("compat"):  # 替えブラシ: 純正と互換で値段の桁が違うので印を付ける
@@ -990,7 +1029,10 @@ def rank(items, cat):
             "note": note,
             "point": int(it.get("pointRate") or 1),
             "code": it.get("itemCode") or it.get("itemUrl", ""),
+            "biz": bool(cat.get("biz") and re.search(BIZ_RE, it["itemName"].translate(ZEN))),
         })
+        if rows[-1]["biz"]:
+            rows[-1]["note"] = "・".join(x for x in [note, "業務用サイズ"] if x)
     rows.sort(key=lambda r: r["unit_price"])
     # 相場の35%未満（純正と互換が混ざるジャンルは15%未満）は数量の読み違いの可能性が高いので載せない
     if len(rows) >= 5:
@@ -1051,7 +1093,8 @@ def median_unit(rows):
 
 def best_row(rows):
     """送料を含めて比べやすい「最安」: 送料無料の中の最安。送料無料がなければ表示価格の最安"""
-    return next((r for r in rows if r["free_ship"]), rows[0]) if rows else None
+    home = [r for r in rows if not r.get("biz")] or rows  # 一斗缶・18Lコック付などの業務用サイズは「最安」に出さない
+    return next((r for r in home if r["free_ship"]), home[0]) if rows else None
 
 
 def pick_rows(rows, cat=None):
@@ -1909,7 +1952,8 @@ def main():
                                     "clean": clean_name(top["name"], 40),
                                     "top3": [{"n": clean_name(r["name"], 50), "u": r["url"], "i": r["img"], "p": r["price"],
                                               "up": round(r["unit_price"], 2), "pt": r.get("point", 1), "fs": r["free_ship"]}
-                                             for r in sorted(rows, key=lambda r: r["unit_price"])[:3]]}
+                                             for r in sorted([r for r in rows if not r.get("biz")] or rows,
+                                                             key=lambda r: r["unit_price"])[:3]]}
         print(f"{cat['slug']}: 取得{len(items)}件 → 掲載{len(rows)}件 ({'本番' if live else 'サンプル'})")
     (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False), encoding="utf-8")
     (OUT / "history.json").write_text(json.dumps(history, ensure_ascii=False), encoding="utf-8")
