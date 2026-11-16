@@ -58,6 +58,17 @@ if __name__ == "__main__":
         (lambda n: build.parse_volumes(build.strip_limits(n))[0], "【中古】HUNTER×HUNTER 37巻全巻セット150冊迄同梱ok 2k-0953", None),
     ]
     bad += [(n, f(n), e) for f, n, e in LIMIT_CASES if f(n) != e]
+    OTHER_CASES = [  # 漫画: 別作品の名前が入った出品はそのページに載せない
+        ("manga-kimetsu", "【中古】七つの大罪 1〜41巻 完結・おまけ 付き 鈴木央 講談社 レンタル落ち 鬼滅の刃 全巻", 0),
+        ("manga-kimetsu", "【中古】鬼滅の刃 1〜23巻 漫画 全巻セット 完結 ジャンプコミックス 吾峠呼世晴 集英社", 1),
+        ("manga-nanatsu", "【中古】七つの大罪 1〜41巻 漫画 全巻セット 完結 週マガKC 鈴木央 講談社", 1),
+        ("manga-hunter", "HUNTER×HUNTER ハンターハンター ＜1〜39巻＞ 冨樫義博 全巻", 1),
+    ]
+    def _n_rows(slug, name):
+        it = {"itemName": name, "itemPrice": 5000, "reviewCount": 0}
+        return len(build.rank([it], build.CATEGORIES_BY_SLUG[slug]))
+    bad += [(n, _n_rows(s, n), e) for s, n, e in OTHER_CASES if _n_rows(s, n) != e]
+    LIMIT_CASES = LIMIT_CASES + [(None, n, e) for s, n, e in OTHER_CASES]
     VOL_CASES = VOL_CASES + LIMIT_CASES
     CASES = CASES + PRODUCT_CASES + VOL_CASES
     # KW_CHECK: 楽天の検索語は1文字の単語を含むとエラーになる

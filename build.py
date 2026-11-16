@@ -626,6 +626,12 @@ for _slug, _title, _must, _minv in MANGA:
                "黙示録", "SPARE BIKE", "銀の匙", "転ちゅら", "番外編", "アンソロジー", "リバーシ", "セイの格率"],
     })
 
+# 全巻セットに別作品の名前が入った出品（例: 鬼滅の刃のページに「七つの大罪 1〜41巻」）は除く。作品名の1つめの必須語で判定
+for _c in CATEGORIES:
+    if _c.get("manga"):
+        _c["other_titles"] = [m[2][0] for m in MANGA if f"manga-{m[0]}" != _c["slug"]
+                              and len(m[2][0]) >= 3 and not any(m[2][0] in w or w in m[2][0] for w in _c["must"])]
+
 CATEGORIES_BY_SLUG = {c["slug"]: c for c in CATEGORIES}
 
 # 楽天以外の提携案件（A8）。ページ下部の紹介枠に出す。link はA8の広告コードそのまま（クリック計測の画像を含む）
@@ -1007,6 +1013,8 @@ def rank(items, cat):
         if cat.get("must") and not any(w in it["itemName"] for w in cat["must"]):
             continue
         if any(w not in it["itemName"] for w in cat.get("must_all", [])):
+            continue
+        if any(w in it["itemName"] for w in cat.get("other_titles", [])):
             continue
         if cat.get("size_re"):  # 紙おむつ: 狙いのサイズがあり、ほかのサイズが混ざっていない
             zn = it["itemName"].translate(ZEN)
