@@ -102,7 +102,9 @@ CATEGORIES = [
         "unit": "枚", "base": "枚",
         "words": ["枚入り", "枚入", "枚"],
         "min_reviews": 10, "range": (20, 3000),
-        "ng": ["トレー", "トレイ", "ケース", "ワイド", "ハーフ"],
+        # 売れ筋の多くは「レギュラー800枚／ワイド400枚」のサイズ選択式。ワイドも並ぶ出品はレギュラーの枚数だけを読む
+        "size_pick": r"(?<!スーパー)(?<!ダブル)(?<!ウルトラ)ワイド", "size_word": "レギュラー",
+        "ng": ["トレー", "トレイ", "収納ケース", "トイレケース", "ホルダー", "ハーフ", "洗える", "布"],
     },
     {
         "slug": "pet-sheet-wide",
@@ -795,6 +797,16 @@ def strip_limits(name):
 VARIANT_ONE = re.compile(r"(?<![\d.])1\s*(?:袋|個|箱|本|セット|ケース|パック|缶)(?!\s*入|\d)")
 
 
+def size_pick_min(name, word, lo, hi):
+    """サイズ選択式（レギュラー800枚 / ワイド400枚 …）から、狙いのサイズ（word）の直後にある枚数の最小値。
+    「レギュラー800枚 1200枚」は800。「レギュラー ワイド 800枚」のようにどのサイズの枚数か分からないものは None"""
+    s = name.translate(ZEN).replace(",", "")
+    vals = [int(v) for m in re.finditer(rf"{word}(?:サイズ)?\s*[:：(（]?\s*((?:\d{{2,4}}\s*枚\s*[/／・、]?\s*)+)", s)
+            for v in re.findall(r"(\d{2,4})\s*枚", m.group(1))]  # 「レギュラー 1200枚 800枚」は両方読む
+    vals = [v for v in vals if lo <= v <= hi]
+    return min(vals) if vals else None
+
+
 def variant_min(name, words, lo, hi):
     """選択式（1袋/2袋…）の商品。表示価格はふつう最小構成の値段なので、名前にある最小の量で割る。
     価格が大きい構成のものでも、単価は実際より高く出る側（安く見せない側）にずれる"""
@@ -1034,7 +1046,13 @@ def rank(items, cat):
             pname = re.sub(cat["strip"], " ", pname) if cat.get("strip") else pname
             if cat.get("boxes"):
                 pname = box_sets(pname)
-            n = parse_count(pname, cat["words"], *cat.get("range", (5, 3000)))
+            if cat.get("size_pick") and re.search(cat["size_pick"], pname.translate(ZEN)):
+                n = size_pick_min(pname, cat["size_word"], *cat.get("range", (5, 3000)))
+                if not n:
+                    continue
+                note = f"選べる商品・{cat['size_word']}のいちばん少ない量で計算"
+            else:
+                n = parse_count(pname, cat["words"], *cat.get("range", (5, 3000)))
             if not n and VARIANT_ONE.search(pname.translate(ZEN)):
                 n = variant_min(pname, cat["words"], *cat.get("range", (5, 3000)))
                 note = "選べる商品・いちばん少ない量で計算" if n else ""
