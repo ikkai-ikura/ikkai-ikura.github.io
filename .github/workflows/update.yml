@@ -7,6 +7,10 @@ on:
     branches: [main]
 permissions:
   contents: write
+# 続けてpushしても同時に走らせない（並行すると楽天APIの1秒1回制限に当たり、最後のpushも競合して失敗する）
+concurrency:
+  group: daily-update
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
