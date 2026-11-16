@@ -1770,11 +1770,14 @@ def render_index(summary, updated, drops=None, history=None):
 
     deals = sorted((c for c in CATEGORIES if c["slug"] in buy and not c.get("manga") and summary.get(c["slug"])),
                    key=lambda c: (buy[c["slug"]], -summary[c["slug"]].get("fee", 0)))[:6]
-    deal_html = "".join(f"""<a class=deal href='{c['slug']}.html'>
+    # 「今が買い時」: カードはジャンルのページへ、下のボタンはそのジャンルの最安商品（楽天）へ直接
+    deal_html = "".join(f"""<div class=deal><a class=dlk href='{c['slug']}.html'>
 <span class=rank>{i}</span><img src='{e(summary[c['slug']].get('img', ''))}' alt='' loading=lazy>
 <span class=dn>{e(short(c))}</span>
 <span class=dp><b class=up data-u='{summary[c['slug']]['unit_price']:.4f}' data-pt='{summary[c['slug']].get('pt', 1)}'>{summary[c['slug']]['unit_price']:.1f}円</b>/{e(c['unit'])}</span>
 <span class=dd><strong>{BUY_LABEL(buy[c['slug']])}</strong></span></a>"""
+                        + (f"<a class=dgo href='{e(summary[c['slug']]['url'])}' rel='sponsored noopener' target=_blank>楽天で見る</a>"
+                           if summary[c['slug']].get('url') else "") + "</div>"
                         for i, c in enumerate(deals, 1))
     n_items = sum(s.get("count", 0) for s in summary.values())
     # 今日値下がりした商品: 値下がり率と1件あたりの報酬の両方で選ぶ（同じジャンルは2件まで）
@@ -1856,7 +1859,8 @@ h2{{font-size:1.1rem;margin:0 0 10px}}
 .today{{margin-top:22px}} .today h2 small{{font-weight:400;color:var(--mut);font-size:.8rem;margin-left:6px}}
 .deals{{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
 .deal{{position:relative;display:grid;gap:3px;justify-items:center;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 8px;color:inherit;text-decoration:none}}
-.deal:hover{{border-color:var(--acc)}} .deal img{{width:72px;height:72px;object-fit:contain;background:#fff;border-radius:10px}}
+.deal:hover{{border-color:var(--acc)}} .dlk{{display:grid;gap:3px;justify-items:center;color:inherit;text-decoration:none}}
+.dgo{{display:inline-block;margin-top:4px;background:var(--acc);color:#fff;font-weight:700;border-radius:8px;padding:5px 12px;text-decoration:none;font-size:.8rem}} .deal img{{width:72px;height:72px;object-fit:contain;background:#fff;border-radius:10px}}
 .rank{{position:absolute;top:8px;left:8px;width:1.6em;height:1.6em;line-height:1.6em;border-radius:50%;background:var(--acc);color:#fff;font-size:.75rem;font-weight:700}}
 .dn{{font-weight:700;font-size:.88rem;line-height:1.3}} .dp b{{color:var(--acc);font-size:1.2rem}} .dp{{font-size:.8rem;color:var(--mut)}}
 .dd{{font-size:.72rem;color:var(--mut)}} .dd strong{{color:var(--ok)}}
@@ -2004,7 +2008,7 @@ def main():
             top = best_row(rows)
             # 上位10件の「価格×報酬率」の中央値＝このジャンルで1件売れたときの報酬の目安
             fees = sorted(r["price"] * r["rate"] / 100 for r in rows[:10])
-            summary[cat["slug"]] = {"unit_price": top["unit_price"], "name": top["name"][:40], "img": top["img"],
+            summary[cat["slug"]] = {"unit_price": top["unit_price"], "name": top["name"][:40], "img": top["img"], "url": top["url"],
                                     "count": len(rows), "fee": round(fees[len(fees) // 2]),
                                     "rate": round(sorted(r["rate"] for r in rows[:10])[min(len(rows), 10) // 2], 1),
                                     "price": sorted(r["price"] for r in rows[:10])[min(len(rows), 10) // 2],
