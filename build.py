@@ -1080,12 +1080,15 @@ def rank(items, cat):
     groups = []
     for r in rows:  # rows は単価の安い順なので、各グループの先頭が最安
         sig = product_line(r["name"], cat) or signature(r["name"])
+        maker = brand_of(r["name"], KYOKI_BRANDS.get(cat["slug"], {}))
         for g in groups:
-            if sig == g["sig"] or (not isinstance(sig, str) and not isinstance(g["sig"], str) and similar(sig, g["sig"])):
+            # 同じメーカーで数量も値段もまったく同じ出品は、商品名の書き方が違っても同じ商品（ショップ違い）
+            same_listing = maker and maker == g["maker"] and r["count"] == g["row"]["count"] and r["price"] == g["row"]["price"]
+            if same_listing or sig == g["sig"] or (not isinstance(sig, str) and not isinstance(g["sig"], str) and similar(sig, g["sig"])):
                 g["others"] += 1
                 break
         else:
-            groups.append({"sig": sig, "row": r, "others": 0})
+            groups.append({"sig": sig, "row": r, "others": 0, "maker": maker})
     out = []
     for g in groups[:30]:
         g["row"]["others"] = g["others"]

@@ -69,6 +69,14 @@ if __name__ == "__main__":
         return len(build.rank([it], build.CATEGORIES_BY_SLUG[slug]))
     bad += [(n, _n_rows(s, n), e) for s, n, e in OTHER_CASES if _n_rows(s, n) != e]
     LIMIT_CASES = LIMIT_CASES + [(None, n, e) for s, n, e in OTHER_CASES]
+    # 同じメーカー・同じ枚数・同じ値段の出品は1行に（テープS: メリーズ296枚が書き方違いで2行出ていた）
+    _its = [{"itemName": "花王 メリーズさらさらエアスルー テープ Sサイズ (4~8kg)296枚 (74枚×4) 送料無料", "itemPrice": 7150, "reviewCount": 50, "itemCode": "a"},
+            {"itemName": "メリーズ テープ Sサイズ 74シート×4個入り", "itemPrice": 7150, "reviewCount": 50, "itemCode": "b"},
+            {"itemName": "ムーニー テープ Sサイズ 74枚×4 (4~8kg)", "itemPrice": 7150, "reviewCount": 50, "itemCode": "c"}]
+    _n = len(build.rank(_its, build.CATEGORIES_BY_SLUG["diaper-tape-s"]))
+    if _n != 2:
+        bad.append(("同一出品のまとめ(テープS)", _n, 2))
+    LIMIT_CASES = LIMIT_CASES + [(None, "same-listing", 2)]
     VOL_CASES = VOL_CASES + LIMIT_CASES
     CASES = CASES + PRODUCT_CASES + VOL_CASES
     # KW_CHECK: 楽天の検索語は1文字の単語を含むとエラーになる
