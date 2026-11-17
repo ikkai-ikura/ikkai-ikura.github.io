@@ -56,7 +56,7 @@ def DIAPER(kind, size):
         "title": f"紙おむつ {kind} {label} 1枚あたり単価ランキング",
         "keyword": kw,
         "keywords": [f"{kw} ケース"] + [f"{b} {kind} {label}" for b in ["メリーズ", "パンパース", "ムーニー", "グーン", "マミーポコ"]],
-        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚", "シート"], "min_reviews": 3, "range": (30, 3000),
+        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚", "シート"], "min_reviews": 1, "range": (30, 3000),  # 大手メーカー品でもレビュー3件未満の出品が7割
         "must_all": [kind],
         "size_re": DIAPER_SIZE[size],
         "size_ng_re": "|".join(v for k, v in DIAPER_SIZE.items() if k != size)
