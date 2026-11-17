@@ -115,7 +115,9 @@ CATEGORIES = [
         "words": ["枚入り", "枚入", "枚"],
         "min_reviews": 10, "range": (20, 3000),
         "must": ["ワイド"],
-        "ng": ["スーパーワイド", "トレー", "トレイ", "ケース", "レギュラー", "ハーフ", "選べる"],
+        # レギュラー版と同じく、売れ筋の「レギュラー800枚／ワイド400枚」選択式はワイドの枚数だけを読む
+        "size_pick": "レギュラー", "size_word": "(?<!スーパー)(?<!ダブル)(?<!ウルトラ)ワイド", "size_label": "ワイド",
+        "ng": ["スーパーワイド", "トレー", "トレイ", "収納ケース", "トイレケース", "ホルダー", "ハーフ", "洗える", "布"],
     },
     {
         "slug": "mask",
@@ -802,6 +804,8 @@ def size_pick_min(name, word, lo, hi):
     「レギュラー800枚 1200枚」は800。「レギュラー ワイド 800枚」のようにどのサイズの枚数か分からないものは None"""
     s = name.translate(ZEN).replace(",", "")
     vals = [int(v) for m in re.finditer(rf"{word}(?:サイズ)?\s*[:：(（]?\s*((?:\d{{2,4}}\s*枚\s*[/／・、]?\s*)+)", s)
+            # 「レギュラー ワイド 800枚」のように直前にも別のサイズ名が並ぶものは、どのサイズの枚数か分からないので読まない
+            if not re.search(r"(?:レギュラー|ワイド)(?:サイズ)?$", s[:m.start()].rstrip(" /／・、"))
             for v in re.findall(r"(\d{2,4})\s*枚", m.group(1))]  # 「レギュラー 1200枚 800枚」は両方読む
     vals = [v for v in vals if lo <= v <= hi]
     return min(vals) if vals else None
@@ -1050,7 +1054,7 @@ def rank(items, cat):
                 n = size_pick_min(pname, cat["size_word"], *cat.get("range", (5, 3000)))
                 if not n:
                     continue
-                note = f"選べる商品・{cat['size_word']}のいちばん少ない量で計算"
+                note = f"選べる商品・{cat.get('size_label', cat['size_word'])}のいちばん少ない量で計算"
             else:
                 n = parse_count(pname, cat["words"], *cat.get("range", (5, 3000)))
             if not n and VARIANT_ONE.search(pname.translate(ZEN)):
@@ -1395,7 +1399,7 @@ def render(cat, rows, updated, hist=None):
     nav = (("<nav class=oth><h2>この商品が入っている特集</h2>"
             + "".join(f'<a href="{f["slug"]}.html">{e(f["title"])}</a>' for f in feats) + "</nav>" if feats else "")
            + ("<nav class=oth><h2>同じカテゴリのジャンル</h2>" + "".join(map(chip, same)) + "</nav>" if same else "")
-           + "<nav class=oth><h2>人気のジャンル</h2>" + "".join(map(chip, rest)) + '<a href="./#paper">すべてのジャンル →</a></nav>'
+           + "<nav class=oth><h2>人気のジャンル</h2>" + "".join(map(chip, rest)) + '<a href="./#baby">すべてのジャンル →</a></nav>'
            + '<p class=pr><a href="./">トップへ戻る</a> ・ <a href="calc.html">単価計算ツール</a> ・ <a href="about.html">このサイトについて</a></p>')
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
@@ -1768,6 +1772,8 @@ GROUPS = [
     ("phone", "スマホ・通信", ["mobile-battery"]),
     ("manga", "漫画 全巻セット", [f"manga-{m[0]}" for m in MANGA]),
 ]
+# 子育て・ペット家庭向けの方針（報酬も高い）で、トップではベビー・ペットを先頭に
+GROUPS = sorted(GROUPS, key=lambda g: {"baby": 0, "pet": 1}.get(g[0], 2))
 
 
 def render_index(summary, updated, drops=None, history=None):

@@ -89,6 +89,10 @@ if __name__ == "__main__":
     ]
     bad += [(n, build.size_pick_min(n, "レギュラー", 20, 3000), e) for n, e in PICK_CASES
             if build.size_pick_min(n, "レギュラー", 20, 3000) != e]
+    WIDE = build.CATEGORIES_BY_SLUG["pet-sheet-wide"]["size_word"]
+    WIDE_CASES = [(n, e) for (n, _), e in zip(PICK_CASES, [400, 400, 200, 200, None, None, 400, 600])]
+    bad += [(n, build.size_pick_min(n, WIDE, 20, 3000), e) for n, e in WIDE_CASES
+            if build.size_pick_min(n, WIDE, 20, 3000) != e]
     LIMIT_CASES = LIMIT_CASES + [(None, n, e) for n, e in PICK_CASES]
     VOL_CASES = VOL_CASES + LIMIT_CASES
     CASES = CASES + PRODUCT_CASES + VOL_CASES
