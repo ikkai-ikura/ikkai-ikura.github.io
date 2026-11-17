@@ -910,7 +910,9 @@ def parse_count(name, words, lo=5, hi=3000):
                 ms.append((float(x), None))
             elif float(x) != top:
                 ks_set.append(int(x))
-    ks = ks_set + [int(x) for x in re.findall(r"[x*]\s*(\d{1,2})(?!\d|\.\d|\s*(?:g|kg|ml|L|枚|個|本|回))", s)]
+    # 「×3個」の個はジャンルの単位でなければセット数（おむつ「198枚(66枚×3個)」）
+    unit_ex = "g|kg|ml|L|枚|本|回" + ("|個" if any(k.startswith("個") for k in words) else "")
+    ks = ks_set + [int(x) for x in re.findall(rf"[x*]\s*(\d{{1,2}})(?!\d|\.\d|\s*(?:{unit_ex}))", s)]
     ms = [t for t in ms if t[0] > 1] or ms  # 「1個13g」の1個などは内容量ではない
     vals = sorted({v for v, _ in ms})
     if len(vals) >= 2:
