@@ -65,6 +65,8 @@ if __name__ == "__main__":
         ("manga-kimetsu", "【中古】鬼滅の刃 1〜23巻 漫画 全巻セット 完結 ジャンプコミックス 吾峠呼世晴 集英社", 1),
         ("manga-nanatsu", "【中古】七つの大罪 1〜41巻 漫画 全巻セット 完結 週マガKC 鈴木央 講談社", 1),
         ("manga-hunter", "HUNTER×HUNTER ハンターハンター ＜1〜39巻＞ 冨樫義博 全巻", 1),
+        ("manga-slamdunk", "【中古】 送料無料 バガボンド 1-37巻 井上雄彦(スラムダンク著者) バカボンド 中古コミック 全巻セット", 0),
+        ("mask", "マスク 子供 マスク 不織布 子供用 小学生 50枚 x 6箱 300枚", 0),
     ]
     def _n_rows(slug, name):
         it = {"itemName": name, "itemPrice": 5000, "reviewCount": 0}
@@ -79,6 +81,14 @@ if __name__ == "__main__":
     if _n != 2:
         bad.append(("同一出品のまとめ(テープS)", _n, 2))
     LIMIT_CASES = LIMIT_CASES + [(None, "same-listing", 2)]
+    # 漫画: 系列店が同じ文面・同じ値段で出している全巻セットは1行に（スラムダンク・BLEACHで1位と2位が同じだった）
+    _its = [{"itemName": "【漫画全巻セット】【中古】BLEACH（ブリーチ） ＜1〜74巻完結＞ 久保帯人", "itemPrice": 14600, "reviewCount": 0, "shopName": "A"},
+            {"itemName": "【漫画】【中古】BLEACH（ブリーチ） ＜1〜74巻完結＞ 久保帯人 【全巻セット】", "itemPrice": 14600, "reviewCount": 0, "shopName": "B"},
+            {"itemName": "【中古】BLEACH ブリーチ (1-74巻 全巻) 全巻セット", "itemPrice": 14600, "reviewCount": 0, "shopName": "C"}]
+    _n = len(build.rank(_its, build.CATEGORIES_BY_SLUG["manga-bleach"]))
+    if _n != 2:
+        bad.append(("系列店の同じ出品のまとめ(漫画)", _n, 2))
+    LIMIT_CASES = LIMIT_CASES + [(None, "same-manga-listing", 2)]
     PICK_CASES = [  # ペットシーツのサイズ選択式: レギュラーの枚数だけ（最小）
         ("Air Ultra Lightシート ペットシーツ　レギュラー　800枚　(200枚×4袋)　ワイド　400枚　(100枚×4袋)", 800),
         ("ペットシーツ 薄型 レギュラー800枚 レギュラー1200枚 ワイド400枚 ワイド600枚 ダブルワイド 200枚", 800),

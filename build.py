@@ -126,7 +126,7 @@ CATEGORIES = [
         "unit": "枚", "base": "枚",
         "words": ["枚入り", "枚入", "枚"],
         "min_reviews": 10, "range": (20, 3000),
-        "ng": ["ケース", "ホルダー", "フィルター"],
+        "ng": ["ケース", "ホルダー", "フィルター", "小学生", "給食", "入園"],  # 子供専用サイズは別の商品（「大人・キッズ選べる」出品は残す）
     },
     {
         "slug": "sonicare-brush-head",
@@ -630,7 +630,8 @@ for _slug, _title, _must, _minv in MANGA:
                "小説", "ノベライズ", "ぬいぐるみ", "Tシャツ", "収納", "ブックカバー", "シール", "缶バッジ",
                "すまっしゅ", "外伝", "スピンオフ", "モブサイコ", "オメガトライブ", "Before the fall", "ゼロの日常",
                "警察学校", "犯沢", "パーティー", "EPISODE", "エピソード", "ポケット", "ポケモン", "モンスターハンター",
-               "黙示録", "SPARE BIKE", "銀の匙", "転ちゅら", "番外編", "アンソロジー", "リバーシ", "セイの格率"],
+               "黙示録", "SPARE BIKE", "銀の匙", "転ちゅら", "番外編", "アンソロジー", "リバーシ", "セイの格率",
+               "バガボンド", "リアル 1-"],  # 同じ作者の別作品（スラムダンクのページにバガボンドが出ていた）
     })
 
 # 全巻セットに別作品の名前が入った出品（例: 鬼滅の刃のページに「七つの大罪 1〜41巻」）は除く。作品名の1つめの必須語で判定
@@ -1096,10 +1097,12 @@ def rank(items, cat):
         rows = [r for r in rows if r["unit_price"] >= med * cat.get("outlier", 0.35)]
     if not cat.get("group", True):  # 全巻セットのようにショップ・状態違いを比べたいジャンル
         seen, uniq = set(), []
-        for r in rows:  # 同じショップが同じ値段・冊数で二重に出品しているものは1行に
+        for r in rows:  # 同じショップが同じ値段・冊数で二重に出品しているもの、系列店の同じ文面・同じ値段の出品は1行に
             key = (r["shop"], r["price"], r["count"])
-            if key not in seen:
+            key2 = (re.sub(r"【[^】]*】|\s", "", r["name"]), r["price"], r["count"])
+            if key not in seen and key2 not in seen:
                 seen.add(key)
+                seen.add(key2)
                 r["others"] = 0
                 uniq.append(r)
         return add_scores(uniq[:30])
