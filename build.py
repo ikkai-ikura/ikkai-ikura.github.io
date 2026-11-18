@@ -546,6 +546,7 @@ CATEGORIES = [
                      "NEWクレラップ 30cm 50m", "サランラップ 30cm 50m 10本", "ラップ 30cm まとめ買い", "ダイアラップ 30cm", "リケンラップ 30cm"],
         "unit": "10m", "base": "m", "per": 10, "per_text": "10mあたり",
         "parser": {"size": r"(\d{2,3})\s*m(?![ml])", "pack": r"本|個|箱", "lo": 20, "hi": 20000, "single": True},
+        "biz": True, "biz_re": r"業務用|(?<!\d)(?:[3-9]\d{2}|\d{4})\s*[mM](?![a-zA-Z])",  # 業務用・1本300m以上は「最安」に出さない
         "min_reviews": 3, "must": ["30cm", "30センチ"],
         "ng": ["ホルダー", "ケース", "カッター", "ボックス", "シリコン", "ストレッチフィルム", "梱包", "22cm", "15cm"],
     },
@@ -1086,7 +1087,7 @@ def rank(items, cat):
             "note": note,
             "point": int(it.get("pointRate") or 1),
             "code": it.get("itemCode") or it.get("itemUrl", ""),
-            "biz": bool(cat.get("biz") and re.search(BIZ_RE, it["itemName"].translate(ZEN))),
+            "biz": bool(cat.get("biz") and re.search(cat.get("biz_re", BIZ_RE), it["itemName"].translate(ZEN))),
         })
         if rows[-1]["biz"]:
             rows[-1]["note"] = "・".join(x for x in [note, "業務用サイズ"] if x)
