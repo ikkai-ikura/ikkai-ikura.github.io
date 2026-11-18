@@ -91,7 +91,7 @@ if __name__ == "__main__":
     LIMIT_CASES = LIMIT_CASES + [(None, "same-manga-listing", 2)]
     # ラップ: 業務用（30本ケース・750mロール）は印を付けて「最安」に出さない。家庭用100mは対象外
     for _name, _e in [("まとめ買い 業務用 キッチニスタラップ 30cm×100m 外刃タイプ 30本入", True),
-                      ("【送料無料】業務用 ポリマラップ R300 幅30cm×長750M 【2本】 ラップ 小箱", True), ("リケンラップ VS300 ラップ 30cm×500m 1本 塩ビラップ", True), ("リケンラップ たっぷり 30cm*100m(3本パック)", False),
+                      ("ポリマラップ R300 幅30cm×750m 2本", True), ("リケンラップ VS300 ラップ 30cm×500m 1本 塩ビラップ", True), ("リケンラップ たっぷり 30cm*100m(3本パック)", False),
                       ("宇部フィルム ポリラップ 30cm×50m", False)]:
         _r = build.rank([{"itemName": _name, "itemPrice": 3000, "reviewCount": 10}], build.CATEGORIES_BY_SLUG["food-wrap"])
         if not _r or _r[0]["biz"] != _e:
