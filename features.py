@@ -59,8 +59,11 @@ FEATURES = [
         "short": "スーパーセール・ブラックフライデー",
         "title": "楽天スーパーセール・ブラックフライデーで買いだめする日用品 最安ガイド",
         "desc": "楽天スーパーセール・楽天ブラックフライデー・お買い物マラソンで買いだめしたい日用品を1回あたり単価で比較。ポイント倍率込みの実質価格にも対応。",
-        "lead": "楽天スーパーセール（3・6・9・12月）や楽天ブラックフライデー（11月下旬）、お買い物マラソンは、ショップの買い回りでポイント倍率が上がります。上の倍率を選ぶと実質価格で表示されます。腐らない・かさばっても使い切る日用品が買いだめ向きです。",
+        "lead": "楽天スーパーセール（3・6・9・12月）や楽天ブラックフライデー（2026年は11/19(木)20:00〜11/25(水)1:59）、お買い物マラソンは、ショップの買い回りでポイント倍率が上がります。上の倍率を選ぶと実質価格で表示されます。腐らない・かさばっても使い切る日用品が買いだめ向きです。",
         "months": [3, 6, 9, 11, 12],
+        # 開催期間（JST）。期間前は「まもなく開始」、期間中は「開催中」の帯をトップと特集ページに出し、終わったら消える
+        "event": {"name": "楽天ブラックフライデー", "s": "2026-11-19T20:00:00+09:00", "e": "2026-11-25T01:59:59+09:00",
+                  "pre": "11/19(木)20:00スタート", "on": "11/25(水)1:59まで"},
         "guide": [
             ("ポイントが増えるしくみ", "楽天スーパーセールやお買い物マラソンでは、期間中に買ったショップの数に応じてポイント倍率が上がります（1ショップ1,000円以上の買い物が条件のことが多い）。ふだんのSPU倍率に上乗せされるので、日用品をショップごとに分けて買うと実質価格が大きく下がります。ポイントには上限があるので、高額の買い物は条件を確認してください。"),
             ("買いだめに向くもの", "腐らない・必ず使い切る・かさばっても置ける、の3つがそろうものが買いだめ向きです。トイレットペーパー・洗剤・ペットシーツは向いていて、お米は精米日から1か月くらいで食べ切れる量まで、おむつはサイズアウトするので1〜2か月分までにしておくと失敗がありません。"),
@@ -68,7 +71,7 @@ FEATURES = [
         ],
         "faq": [
             ("楽天スーパーセールはいつ？", "例年3月・6月・9月・12月の上旬〜中旬に開催されています。お買い物マラソンはそれ以外の月にほぼ毎月あります。日程は楽天市場のお知らせで確認してください。"),
-            ("楽天ブラックフライデーはいつ？", "例年11月下旬に開催されています。スーパーセールと同じく、ショップの買い回りでポイント倍率が上がるので、12月のスーパーセールを待たずに日用品を買いだめする人も多い時期です。日程は楽天市場のお知らせで確認してください。"),
+            ("楽天ブラックフライデーはいつ？", "2026年は11月19日(木)20:00〜11月25日(水)1:59です（要エントリー）。11/20と11/25は「5と0のつく日」が重なります。例年11月下旬に開催され、スーパーセールと同じく、ショップの買い回りでポイント倍率が上がるので、12月のスーパーセールを待たずに日用品を買いだめする人も多い時期です。日程は楽天市場のお知らせで確認してください。"),
             ("買い回りは何ショップすればいい？", "上限の10ショップまで回ると倍率が最大になります。日用品は1つ1,000円を超えやすいので、洗剤・トイレットペーパー・ペット用品などをショップを分けて買うと、無理なく数をそろえられます。"),
         ],
         "items": [
@@ -134,21 +137,40 @@ FEATURES = [
 ]
 
 
+def event_band(f, cls):
+    """開催期間の帯。表示はブラウザの現在時刻で切り替える（ビルドは1日1回なので）"""
+    ev = f.get("event")
+    if not ev:
+        return ""
+    from datetime import datetime
+    if datetime.fromisoformat(ev["e"]) < datetime.now().astimezone():
+        return ""
+    e = html.escape
+    return (f"<span class='{cls}' data-evs='{ev['s']}' data-eve='{ev['e']}' data-pre='{e(ev['name'] + ' ' + ev['pre'])}' "
+            f"data-on='{e('開催中：' + ev['name'] + ' ' + ev['on'])}'>{e(ev['name'] + ' ' + ev['pre'])}</span>")
+
+
+EVENT_JS = ("<script>[].forEach.call(document.querySelectorAll('[data-evs]'),function(x){var n=Date.now();"
+            "if(n>Date.parse(x.dataset.eve)){x.remove();return}if(n>=Date.parse(x.dataset.evs)){x.textContent=x.dataset.on;x.className+=' on'}});</script>")
+
+
 def active(month):
     """今月の特集を先に、それ以外を後ろに"""
-    return sorted(FEATURES, key=lambda f: month not in f["months"])
+    return sorted(FEATURES, key=lambda f: (not event_band(f, ""), month not in f["months"]))
 
 
 def feature_cards(month):
     e = html.escape
     cards = "".join(
         f"<a class=fc href='{f['slug']}.html'>{'<span class=now>今月</span>' if month in f['months'] else ''}"
-        f"<b>{e(f['short'])}</b><span>{e(f['title'])}</span></a>" for f in active(month))
+        f"<b>{e(f['short'])}</b><span>{e(f['title'])}</span>{event_band(f, 'evb')}</a>" for f in active(month))
     return ("<style>.tokushu{margin-top:22px;scroll-margin-top:120px}.fcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}"
             ".fc{position:relative;display:grid;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;color:inherit;text-decoration:none}"
             ".fc:hover{border-color:var(--acc)}.fc b{font-size:1.05rem}.fc span{font-size:.78rem;color:var(--mut);line-height:1.4}"
-            ".fc .now{position:absolute;top:8px;right:8px;background:var(--acc);color:#fff;border-radius:6px;padding:0 6px;font-size:.68rem;font-weight:700}</style>"
-            f"<section class=tokushu id=tokushu><h2>特集</h2><div class=fcs>{cards}</div></section>")
+            ".fc .now{position:absolute;top:8px;right:8px;background:var(--acc);color:#fff;border-radius:6px;padding:0 6px;font-size:.68rem;font-weight:700}"
+            ".fc .evb{margin-top:4px;border:1px solid var(--acc);color:var(--acc);border-radius:6px;padding:1px 6px;font-size:.72rem;font-weight:700;line-height:1.5}"
+            ".fc .evb.on{background:var(--acc);color:#fff}</style>"
+            f"<section class=tokushu id=tokushu><h2>特集</h2><div class=fcs>{cards}</div></section>" + (EVENT_JS if "data-evs" in cards else ""))
 
 
 def render_feature(f, summary, by_slug, site, updated, short, per_text_of):
@@ -187,6 +209,7 @@ def render_feature(f, summary, by_slug, site, updated, short, per_text_of):
     robots = "" if n_items >= 6 else "<meta name=robots content=noindex>"
     return (PAGE.replace("@@TITLE@@", e(f["title"] + "｜TANKA")).replace("@@DESC@@", e(f["desc"])).replace("@@URL@@", e(url))
             .replace("@@ROBOTS@@", robots).replace("@@LD@@", ld).replace("@@H1@@", e(f["title"])).replace("@@LEAD@@", e(f["lead"]))
+            .replace("@@EVENT@@", (f"<p>{event_band(f, 'evp')}</p>" + EVENT_JS) if event_band(f, 'evp') else "")
             .replace("@@TOC@@", toc).replace("@@BLOCKS@@", blocks or "<p>集計中です。</p>").replace("@@OTHERS@@", others).replace("@@EXTRA@@", extra)
             .replace("@@UPDATED@@", e(updated[5:10].replace("-", "/") + " " + updated[11:])))
 
@@ -218,11 +241,12 @@ section{scroll-margin-top:12px}h2{font-size:1.1rem;margin:1.8em 0 .2em}h2 small{
 .others{display:grid;gap:6px;margin-top:8px}.others a{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;text-decoration:none;font-size:.9rem}
 .guide h3{font-size:.95rem;margin:1.2em 0 .2em}.guide p{margin:0;font-size:.92rem}
 .faq details{border-bottom:1px solid var(--line);padding:8px 0}.faq summary{cursor:pointer;font-weight:600}.faq p{margin:.4em 0 0;font-size:.92rem}
+.evp{display:inline-block;border:1px solid var(--acc);color:var(--acc);border-radius:8px;padding:2px 10px;font-weight:700;font-size:.92rem}.evp.on{background:var(--acc);color:#fff}
 footer{margin-top:28px;color:var(--mut);font-size:.8rem}</style></head><body><main>
 <p class=mut><a href="./">TANKA</a> › 特集</p>
 <p class=pr>PR：楽天アフィリエイトを利用しています</p>
 <h1>@@H1@@</h1>
-<p>@@LEAD@@</p>
+@@EVENT@@<p>@@LEAD@@</p>
 <div class=spu><label for=spu>楽天ポイント倍率（SPU）</label><select id=spu><option value=0>未設定</option></select><span id=spumsg class=mut></span></div>
 <nav class=toc aria-label="目次">@@TOC@@</nav>
 @@BLOCKS@@
