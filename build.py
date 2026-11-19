@@ -625,7 +625,7 @@ for _slug, _title, _must, _minv in MANGA:
     CATEGORIES.append({
         "slug": f"manga-{_slug}", "title": f"{_title} 全巻セット 1冊あたり単価ランキング",
         "keyword": MANGA_KW.get(_slug, re.sub(r'[【】!！。―☆、]', ' ', _title).split()[0]) + " 全巻セット", "unit": "冊", "base": "冊", "per_text": "1冊あたり",
-        "manga": True, "min_vol": _minv, "min_price": 500, "group": False, "pages": 2, "min_reviews": 0, "outlier": 0.2, "tips": MANGA_TIPS,
+        "manga": True, "min_vol": _minv, "min_price": 500, "group": False, "pages": 2, "min_reviews": 0, "outlier": 0.2, "max_unit": 3000, "tips": MANGA_TIPS,
         "must": _must, "must_all": ["全巻"],
         "ng": ["グッズ", "Blu-ray", "DVD", "ポスター", "アクリル", "カード", "フィギュア", "ファンブック", "画集",
                "小説", "ノベライズ", "ぬいぐるみ", "Tシャツ", "収納", "ブックカバー", "シール", "缶バッジ",
@@ -1096,6 +1096,9 @@ def rank(items, cat):
     if len(rows) >= 5:
         med = rows[len(rows) // 2]["unit_price"]
         rows = [r for r in rows if r["unit_price"] >= med * cat.get("outlier", 0.35)]
+    # 1単位あたりが上限を超える出品は載せない（例: ちいかわ8巻セット 64,580円=1冊8,000円超。新品でも1冊3,000円は超えない）
+    if cat.get("max_unit"):
+        rows = [r for r in rows if r["unit_price"] <= cat["max_unit"]]
     if not cat.get("group", True):  # 全巻セットのようにショップ・状態違いを比べたいジャンル
         seen, uniq = set(), []
         for r in rows:  # 同じショップが同じ値段・冊数で二重に出品しているもの、系列店の同じ文面・同じ値段の出品は1行に

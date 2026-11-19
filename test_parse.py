@@ -114,6 +114,15 @@ if __name__ == "__main__":
     bad += [(n, build.size_pick_min(n, WIDE, 20, 3000), e) for n, e in WIDE_CASES
             if build.size_pick_min(n, WIDE, 20, 3000) != e]
     LIMIT_CASES = LIMIT_CASES + [(None, n, e) for n, e in PICK_CASES]
+    # 漫画: 1冊3,000円超の全巻セット（透明カバー付きの高額出品）は載せない
+    _ck = build.CATEGORIES_BY_SLUG["manga-chiikawa"]
+    _r = build.rank([{"itemName": n, "itemPrice": p, "reviewCount": 0} for n, p in [
+        ("[新品]ちいかわ なんか小さくてかわいいやつ (1-9巻 最新刊) 全巻セット", 12595),
+        ("【中古】ちいかわ なんか小さくてかわいいやつ 1〜8巻 までの全巻セット ワイドKC ナガノ 講談社", 14300),
+        ("【予約商品】ちいかわ なんか小さくてかわいいやつ コミック 全巻セット（1-8巻セット・以下続巻)ナガノ 「透明カバー付」", 64580)]], _ck)
+    if len(_r) != 2 or any(r["price"] == 64580 for r in _r):
+        bad.append(("漫画の高額外れ値", [r["price"] for r in _r], 2))
+    LIMIT_CASES = LIMIT_CASES + [(None, "漫画の高額外れ値", 2)]
     VOL_CASES = VOL_CASES + LIMIT_CASES
     CASES = CASES + PRODUCT_CASES + VOL_CASES
     # KW_CHECK: 楽天の検索語は1文字の単語を含むとエラーになる
