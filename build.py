@@ -28,6 +28,7 @@ ML = {"ml": 1, "mL": 1, "ML": 1, "L": 1000, "l": 1000, "リットル": 1000}
 REFILL = ["詰め替え", "詰替", "つめかえ", "詰めかえ"]
 TP_PARSER = {"size": r"(\d{2,3}(?:\.\d)?)\s*m(?![ml])", "pack": r"ロール|R(?![a-z])", "lo": 100, "hi": 20000}
 NG_ALL = ["ふるさと納税", "返礼品", "初回限定", "初回購入限定", "お一人様1回", "お試し価格"]  # 一度しか買えない価格は最安として出さない
+NG_FURUSATO = [w for w in NG_ALL if w not in ("ふるさと納税", "返礼品")]
 
 # 紙おむつのサイズ表記。「MamyPoko」の M や「XL」の L に当たらないよう、直後がサイズ・数字・区切りの時だけ一致
 _SZ = lambda x: rf"(?<![A-Za-z]){x}(?:サイズ|\s*\d|[\s)）】\]/／]|$)"
@@ -66,7 +67,7 @@ def DIAPER(kind, size):
                "ケーキ", "マスキング", "選べる", "おむつカバー", "布おむつ"],
         "tips": DIAPER_TIPS[kind],
     }
-MIN_INDEX = 5  # 掲載がこれ未満のページは中身が薄いので検索エンジンに載せない（サイトマップからも外す）  # 寄付額なので実際の値段と比べられない
+MIN_INDEX = 5  # 掲載がこれ未満のページは中身が薄いので検索エンジンに載せない（サイトマップからも外す）
 
 # ページごとの設定。unit=表示単位、words=数量の後ろに付く語
 CATEGORIES = [
@@ -468,8 +469,9 @@ CATEGORIES = [
         "slug": "sanitary-napkin-night",
         "title": "生理用ナプキン 夜用 1枚あたり単価ランキング",
         "keyword": "生理用ナプキン 夜用",
-        "keywords": ["生理用ナプキン 夜用 まとめ買い", "ソフィ 夜用", "ロリエ 夜用", "エリス 夜用", "センターイン 夜用", "はだおもい 夜用"],
-        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 10, "range": (8, 1000),
+        "keywords": ["生理用ナプキン 夜用 まとめ買い", "ソフィ 夜用", "ロリエ 夜用", "エリス 夜用", "センターイン 夜用", "はだおもい 夜用",
+                     "ソフィ 超熟睡ガード", "エリス 朝まで超安心", "ロリエ 超吸収ガード 夜用"],
+        "unit": "枚", "base": "枚", "words": ["枚入り", "枚入", "枚"], "min_reviews": 3, "range": (8, 1000),
         "must": ["夜用"],
         "ng": ["昼用", "ショーツ", "布ナプキン", "吸水ショーツ", "おりもの", "ライナー", "ポーチ", "ケース", "尿もれ", "選べる"],
     },
@@ -492,11 +494,12 @@ CATEGORIES = [
         "slug": "liquid-milk",
         "title": "液体ミルク 100mlあたり単価ランキング",
         "keyword": "液体ミルク",
-        "keywords": ["液体ミルク まとめ買い", "ほほえみ らくらくミルク", "すこやかM1 液体ミルク", "アイクレオ 液体ミルク", "はぐくみ 液体ミルク"],
+        "keywords": ["液体ミルク まとめ買い", "ほほえみ らくらくミルク", "すこやかM1 液体ミルク", "アイクレオ 液体ミルク", "はぐくみ 液体ミルク",
+                     "らくらくミルク 240ml 24本", "液体ミルク 紙パック 24本"],
         "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
         "parser": {"size": r"(\d{2,3})\s*(?:ml|mL|ML|ｍｌ)", "pack": r"本|個|缶|パック", "lo": 500, "hi": 20000}, "min_reviews": 0,
         "strip": r"\(?\d+\s*[ヵヶか]?月?\s*[~～〜\-]\s*\d+\s*(?:[ヵヶか]月|歳)\)?|\d+\s*[ヵヶか]月[^\s]*|\d+\s*歳[^\s]*",
-        "ng": ["粉", "アタッチメント", "乳首", "ニップル", "哺乳", "ミルクケース", "選べる", "ステップ"],
+        "ng": ["粉", "アタッチメント", "乳首", "ニップル", "哺乳", "ミルクケース", "選べる", "ステップ", "コーヒー", "カフェ", "紅茶"],
     },
     {
         "slug": "contact-1day",
@@ -635,6 +638,31 @@ for _slug, _title, _must, _minv in MANGA:
                "バガボンド", "リアル 1-"],  # 同じ作者の別作品（スラムダンクのページにバガボンドが出ていた）
     })
 
+# 楽天ふるさと納税: 返礼品の「寄付額」を内容量で割って比べる（自治体ショップの itemCode は f+6桁 で始まる）
+FURUSATO_RE = re.compile(r"f\d{6}-")
+
+
+def FURUSATO(base, keywords, **kw):
+    c = dict(CATEGORIES_BY_SLUG_PRE[base])
+    c.update({"slug": f"furusato-{base}", "title": "ふるさと納税 " + c["title"], "keyword": keywords[0], "keywords": keywords[1:],
+              "furusato": True, "min_reviews": 3, "biz": False})
+    c.pop("brands", None)
+    c.pop("lines", None)
+    c.update(kw)
+    return c
+
+
+CATEGORIES_BY_SLUG_PRE = {c["slug"]: c for c in CATEGORIES}
+CATEGORIES += [
+    FURUSATO("toilet-paper-double", ["ふるさと納税 トイレットペーパー ダブル", "ふるさと納税 トイレットペーパー ダブル 長持ち",
+                                     "ふるさと納税 トイレットペーパー ダブル 96ロール", "ふるさと納税 スコッティ ダブル", "ふるさと納税 エリエール トイレットペーパー"]),
+    FURUSATO("tissue", ["ふるさと納税 ティッシュペーパー", "ふるさと納税 ティッシュ 60箱", "ふるさと納税 エリエール ティッシュ",
+                        "ふるさと納税 スコッティ ティッシュ", "ふるさと納税 ソフトパック ティッシュ"]),
+    FURUSATO("rice", ["ふるさと納税 お米 10kg", "ふるさと納税 お米 20kg", "ふるさと納税 無洗米 10kg", "ふるさと納税 お米 5kg", "ふるさと納税 訳あり お米"],
+             must=["精米", "白米", "無洗米", "新米", "玄米"],
+             ng=CATEGORIES_BY_SLUG_PRE["rice"]["ng"] + ["定期便", "しらす", "せんべい", "煎餅", "米菓", "いちご", "おかき", "あられ"]),
+]
+
 # 全巻セットに別作品の名前が入った出品（例: 鬼滅の刃のページに「七つの大罪 1〜41巻」）は除く。作品名の1つめの必須語で判定
 for _c in CATEGORIES:
     if _c.get("manga"):
@@ -683,7 +711,14 @@ PROMOS = {
 }
 
 # 各ページ下部の「選び方のポイント」
+_FURU_TIP = "表示している金額は寄付額。自己負担は控除の上限内なら年2,000円で、それ以外は翌年の税金から差し引かれる"
 TIPS = {
+    "furusato-toilet-paper-double": [_FURU_TIP, "トイレットペーパーは寄付額の割に量が多く、置き場所さえあれば定番の返礼品。96ロールなどは段ボールがかなり大きいので収納場所を確認する",
+                                     "「〇倍巻き」は1ロールが長いぶん交換が減る。ここでは長さ（m）で比べている"],
+    "furusato-tissue": [_FURU_TIP, "60箱などの大口は1箱あたりが安いが、届く箱は大きい。ソフトパック（箱なし）はかさばりにくい",
+                        "「組」は2枚1組の数。100組あたりの寄付額で比べている"],
+    "furusato-rice": [_FURU_TIP, "「訳あり」は粒の大きさや色がそろっていない米で、味はふつうの米と変わらないことが多い",
+                      "定期便は複数回に分けて届くので、このページでは1回だけ届く返礼品で比べている。精米後は早めに食べきれる量を選ぶ"],
     "dishwasher-tablet": ["ほとんどのタブレットは1回1個。大容量の袋ほど1回あたりが安くなりやすい", "オールインワンやジェル入りは、すすぎ剤や油汚れ対策の成分が入るぶん単価が高め", "海外製の食洗機（ミーレなど）は、メーカー指定の洗剤を確認してから選ぶ"],
     "garbage-bag-45l": ["自治体指定のゴミ袋がある地域では使えないので、先に確認する", "厚さ（0.015mm、0.03mmなど）が薄いほど安いが、生ゴミや角のあるゴミには厚手が安心", "半透明・透明・黒は自治体ルールで決まっていることが多い"],
     "pet-sheet": ["レギュラーは小型犬・猫向けの標準サイズ。犬の体格に合わないと漏れやすい", "薄型は安くて収納しやすいが、交換回数が増えると1日あたりのコストは上がる", "1回で替えるか、数回使うかで最適な厚みが変わる"],
@@ -852,7 +887,8 @@ def parse_product(name, size, pack, lo, hi, single=False):
     例 トイレットペーパー '30m 12ロール×4パック' -> 1440、ティッシュ '160組 5箱×12パック' -> 9600
     size, pack は正規表現（数字を1つ目のグループで取る）。読めなければ None"""
     s = name.translate(ZEN).replace(",", "")
-    if re.search(r"選べる|選択|単品.*セット|セット.*単品|\d\s*[~～〜]\s*\d|\d\s*[・/]\s*\d+\s*(?:個|箱|ロール)", s) or is_variant_list(s):
+    s = re.sub(r"\d+\s*ロール\s*相当", " ", s)  # 「48ロール 75m 144ロール相当」の相当分は長さ×本数と重なる
+    if re.search(r"選べる|選択|単品.*セット|セット.*単品|\d\s*[~～〜]\s*\d|[\d)）]\s*[・/]\s*\d+\s*(?:個|箱|ロール)", s) or is_variant_list(s):
         return None  # 「50・90個」のような選択式
     sizes = {float(x) for x in re.findall(size, s)}
     if len(sizes) != 1:  # 「シングル60m ダブル30m」のように複数あると価格との対応が分からない
@@ -1031,7 +1067,10 @@ def add_scores(rows):
 def rank(items, cat):
     rows = []
     for it in items:
-        if any(w in it["itemName"] for w in cat.get("ng", []) + NG_ALL):
+        furu = bool(FURUSATO_RE.match(it.get("itemCode", "")))
+        if furu != bool(cat.get("furusato")):  # ふるさと納税の返礼品は寄付額なので、ふつうの価格と混ぜない
+            continue
+        if any(w in it["itemName"] for w in cat.get("ng", []) + (NG_FURUSATO if furu else NG_ALL)):
             continue
         if cat.get("must") and not any(w in it["itemName"] for w in cat["must"]):
             continue
@@ -1138,6 +1177,8 @@ def short(c):
 
 def clean_name(name, n=60):
     """表示用の商品名: 【送料無料】＼ポイント5倍／★最安★ などの宣伝を取り除く"""
+    # 「/当店全商品P5倍!BLACKFRIDAY中！要エントリー/」のように / で囲んだ店の宣伝（宣伝の語を含むときだけ。「4本/1セット」は残す）
+    name = re.sub(r"(?:^|[/／])[^/／]{0,50}?(?:P\d+倍|ポイント\d+倍|エントリー|クーポン|OFF|BLACK\s*FRIDAY|ブラックフライデー|SALE|セール|全品|全商品)[^/／]{0,50}?[/／]", " ", name, flags=re.I)
     s = re.sub(r"【[^】]*】|［[^］]*］|\[[^\]]*\]|＼[^／]*／|★[^★]*★|☆[^☆]*☆|《[^》]*》|◆|◇|■|□", " ", name)
     s = re.sub(r"\s+", " ", s).strip(" 　|｜/")
     return (s[:n] + "…") if len(s) > n else (s or name[:n])
@@ -1251,6 +1292,18 @@ def faq_items(cat, rows, updated):
             qa.append(("新品と中古、どちらが安い？",
                        f"1冊あたりでは中古の最安が{used[0]['unit_price']:.0f}円、新品の最安が{new[0]['unit_price']:.0f}円です。"
                        "中古は状態の説明を確認してから選んでください。"))
+        return qa
+    if cat.get("furusato"):
+        per = cat.get("per", 1)
+        qa[0] = (f"{name}でいちばんコスパがいい返礼品は？",
+                 f"{updated[:10].replace('-', '/')}時点では「{clean_name(best['name'], 50)}」が寄付額{best['unit_price']:.1f}円/{unit}でいちばん量が多くもらえます"
+                 f"（寄付{best['price']:,}円で{best['count']:,.0f}{base}）。")
+        qa.insert(1, (f"寄付1万円で{name.replace('ふるさと納税 ', '')}はどれくらいもらえる？",
+                      f"このページでいちばんコスパのいい返礼品なら、寄付1万円あたり約{10000 / best['unit_price'] * per:,.0f}{base}です。"
+                      f"掲載している返礼品の中央値では約{10000 / median_unit(rows) * per:,.0f}{base}です。"))
+        qa.append(("ふるさと納税はいつまでに寄付すればいい？",
+                   "その年の控除の対象になるのは、12月31日までに決済が終わった寄付です。年末は返礼品の発送が遅れやすく、楽天市場でもカードの決済完了まで時間がかかることがあるので、早めの寄付が安心です。"
+                   "控除の上限額は年収や家族構成で変わるので、楽天ふるさと納税のシミュレーターなどで確認してください。"))
         return qa
     # 共起語: 「◯◯ 最安値」で一緒に調べられる「メーカー」「まとめ買い」「安い時期」「ポイント」に、その日のデータで答える
     low = brand_lows(cat, rows)
@@ -1389,8 +1442,10 @@ def render(cat, rows, updated, hist=None):
     bu = best_row(rows)["unit_price"] if rows else None
     from_ = (f"{per_text}{bu:.0f}円〜" if bu >= 100 else f"{per_text}{bu:.1f}円〜") if bu else per_text
     seo_title = (f"【楽天】{name}の最安値｜{from_} 新品・中古を比較｜TANKA" if cat.get("manga")
+                 else f"【楽天ふるさと納税】{name.replace('ふるさと納税 ', '')}のコスパ比較｜寄付額{from_} 量が多い順｜TANKA" if cat.get("furusato")
                  else f"【楽天】{name}の最安値｜{from_} 安い順ランキング｜TANKA")
-    desc = (f"楽天で{name}を買うならどこが最安？{name}を安い順に比較。楽天市場の価格と内容量から{per_text}の値段に換算して毎日自動で更新。"
+    desc = (f"楽天ふるさと納税の{name.replace('ふるさと納税 ', '')}の返礼品を、寄付額{per_text}で比較。寄付1万円でどれだけもらえるかが分かります。毎日自動で更新。"
+            if cat.get("furusato") else f"楽天で{name}を買うならどこが最安？{name}を安い順に比較。楽天市場の価格と内容量から{per_text}の値段に換算して毎日自動で更新。"
             + (f"今日の最安{'（送料無料）' if best_row(rows)['free_ship'] else ''}は{best_row(rows)['unit_price']:.1f}円/{unit}。" if rows else "") + "同じ商品は最安の出品だけを掲載。")
     # 検索エンジン向け構造化データ（パンくず＋ランキングの並び）
     ld = json.dumps([
@@ -1782,6 +1837,7 @@ GROUPS = [
     ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "protein-soy", "water-2l", "sparkling-water-500ml", "tea-500ml", "soy-sauce", "canola-oil"]),
     ("eye", "コンタクトレンズ", ["contact-1day", "contact-2week"]),
     ("phone", "スマホ・通信", ["mobile-battery"]),
+    ("furusato", "ふるさと納税", ["furusato-toilet-paper-double", "furusato-tissue", "furusato-rice"]),
     ("manga", "漫画 全巻セット", [f"manga-{m[0]}" for m in MANGA]),
 ]
 # 子育て・ペット家庭向けの方針（報酬も高い）で、トップではベビー・ペットを先頭に
