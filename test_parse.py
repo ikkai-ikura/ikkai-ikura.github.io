@@ -123,6 +123,16 @@ if __name__ == "__main__":
     if len(_r) != 2 or any(r["price"] == 64580 for r in _r):
         bad.append(("漫画の高額外れ値", [r["price"] for r in _r], 2))
     LIMIT_CASES = LIMIT_CASES + [(None, "漫画の高額外れ値", 2)]
+    # 表示名: 店の宣伝を外しても商品名は残す
+    NAME_CASES = [
+        ("【ポイント10倍！11/19-12/31迄】P&G アリエールジェルボール4D微香 83個×4個セット", "P&G アリエールジェルボール4D微香 83個×4個セット"),
+        ("【ポイント5倍 要エントリー】アタック消臭ストロングジェル 4kg×4本／ケース 花王プロシリーズ", "アタック消臭ストロングジェル 4kg×4本／ケース 花王プロシリーズ"),
+        ("[エントリーで最大ポイント10倍/スタンプラリー]【公式】水 2リットル 9本 天然水", "水 2リットル 9本 天然水"),
+        ("ソニッケアー 替えブラシ/当店全商品P5倍!BLACKFRIDAY中！要エントリー/ HX6064 4本入", "ソニッケアー 替えブラシ HX6064 4本入"),
+        ("【推しの子】 1〜16巻 漫画 全巻セット 完結", "推しの子 1〜16巻 漫画 全巻セット 完結"),
+    ]
+    bad += [(n, build.clean_name(n, 200), e) for n, e in NAME_CASES if build.clean_name(n, 200) != e]
+    LIMIT_CASES = LIMIT_CASES + [(None, n, e) for n, e in NAME_CASES]
     VOL_CASES = VOL_CASES + LIMIT_CASES
     CASES = CASES + PRODUCT_CASES + VOL_CASES
     # KW_CHECK: 楽天の検索語は1文字の単語を含むとエラーになる
