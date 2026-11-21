@@ -1307,6 +1307,12 @@ def faq_items(cat, rows, updated):
     if cat.get("manga"):
         used = [r for r in rows if "中古" in r.get("note", "")]
         new = [r for r in rows if "新品" in r.get("note", "")]
+        for lb, rs in (("中古", used), ("新品", new)):
+            if len(rs) >= 3:
+                ps = sorted(r["price"] for r in rs)
+                qa.append((f"{name.replace(' 全巻セット', '')}の{lb}の全巻セットの相場は？",
+                           f"このページの{lb}の全巻セット{len(rs)}件では、セット価格の中央値が{ps[len(ps) // 2]:,}円、最安が{ps[0]:,}円です"
+                           f"（巻数が違うセットも含みます）。1冊あたりでは最安{min(r['unit_price'] for r in rs):,.0f}円です。"))
         if used and new:
             qa.append(("新品と中古、どちらが安い？",
                        f"1冊あたりでは中古の最安が{used[0]['unit_price']:.0f}円、新品の最安が{new[0]['unit_price']:.0f}円です。"
@@ -1357,6 +1363,23 @@ def per_text_of(cat):
     return cat.get("per_text", f"1{cat['unit']}あたり")
 
 
+def tldr_html(cat, rows, updated):
+    """ページ冒頭の1文の結論（検索結果やAIの回答に引用されやすいよう、日付・商品・単価・相場を1文に）"""
+    if not rows:
+        return ""
+    e = html.escape
+    b, unit, base, name = best_row(rows), cat["unit"], cat.get("base", cat["unit"] + "分"), short(cat)
+    day = f"{int(updated[5:7])}月{int(updated[8:10])}日"
+    if cat.get("furusato"):
+        head = f"{day}時点、楽天ふるさと納税の{name.replace('ふるさと納税 ', '')}でいちばん量が多くもらえる返礼品は"
+        tail = f"寄付{b['price']:,}円で{b['count']:,.0f}{base}（寄付額{b['unit_price']:,.1f}円/{unit}）"
+    else:
+        head = f"{day}時点、楽天で{name}がいちばん安いのは"
+        tail = f"{b['unit_price']:,.1f}円/{unit}（{b['price']:,}円・{b['count']:,.0f}{base}{'・送料無料' if b['free_ship'] else ''}）"
+    return (f"<p class=tldr><b>結論：</b>{e(head)}「{e(clean_name(b['name'], 40))}」で、{e(tail)}です。"
+            f"掲載{len(rows)}商品の相場（中央値）は{median_unit(rows):,.1f}円/{e(unit)}です。</p>")
+
+
 def data_insights(cat, rows, hist):
     """そのジャンルのその日のデータから書く短い解説（ページごとに中身が変わる）"""
     if len(rows) < 3:
@@ -1373,6 +1396,10 @@ def data_insights(cat, rows, hist):
         word = "安く" if large < small else "高く"
         out.append(f"内容量の多い半分の商品は、少ない半分より{per_text_of(cat)}の値段が平均{abs(1 - large / small) * 100:.0f}%{word}なっています。"
                    + ("まとめ買いのほうが割安な傾向です。" if large < small else "大容量だから安いとは限りません。"))
+    if len(ups) >= 8:  # 「◯◯ 相場」「◯◯ 平均価格」で調べる人向けの価格帯
+        q1, q3 = ups[len(ups) // 4], ups[len(ups) * 3 // 4]
+        out.append(f"{per_text_of(cat)}の価格帯は、安いほう4分の1が{q1:,.1f}円以下、真ん中が{median_unit(rows):,.1f}円、高いほう4分の1が{q3:,.1f}円以上です。"
+                   f"{q1:,.0f}円以下なら安い、{q3:,.0f}円を超えたら割高と考えると選びやすくなります。")
     free = sum(r["free_ship"] for r in rows)
     out.append(f"送料無料は{len(rows)}商品中{free}商品です。" + ("送料別の商品は、送料を足すと単価が上がる点に注意してください。" if free < len(rows) else ""))
     pts = [p[1] for p in hist[-30:]] if hist else []
@@ -1542,11 +1569,13 @@ small{{display:block;color:var(--mut);font-size:.72rem}}
 .pi{{display:grid;gap:2px;padding:8px 0;border-top:1px dashed var(--line)}} .pi span{{color:var(--mut);font-size:.85rem}} .pi a{{color:var(--acc);font-weight:600}}
 .oth{{margin-top:20px}} .oth a{{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:inherit;text-decoration:none;font-size:.85rem;background:var(--card)}}
 .none{{color:var(--mut)}}
+.tldr{{background:var(--card);border-left:4px solid var(--acc);border-radius:8px;padding:8px 12px;margin:8px 0}}
 a:focus-visible,button:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset:2px}}
 </style></head><body><main>
 <p class=pr>PR：このページは楽天アフィリエイトを利用しています</p>
 <p class=bc><a href="./">TANKA</a> › {e(cat['title'])}</p>
 <h1>{e(cat['title'])}</h1>
+{tldr_html(cat, rows, updated)}
 <p class=lead>楽天市場の商品を「価格 ÷ 内容量」で{per_text}に換算して比べています。同じ商品は最安の出品だけを掲載。毎日自動更新（最終更新 {updated}）。送料別の商品は送料を含みません。</p>
 {hero}
 <section><h2>全商品ランキング（{len(rows)}商品）</h2>{controls}<ol class=list id=list>{items}</ol>
