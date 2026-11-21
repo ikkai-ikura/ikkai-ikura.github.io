@@ -123,6 +123,15 @@ if __name__ == "__main__":
     if len(_r) != 2 or any(r["price"] == 64580 for r in _r):
         bad.append(("漫画の高額外れ値", [r["price"] for r in _r], 2))
     LIMIT_CASES = LIMIT_CASES + [(None, "漫画の高額外れ値", 2)]
+    # ふるさと納税: 回数が決まった定期便は載せない（1回分で割ると単価が回数倍になる）。選べる出品は残す
+    _fw = build.CATEGORIES_BY_SLUG["furusato-water-2l"]
+    _r = build.rank([{"itemName": n, "itemPrice": p, "reviewCount": 5, "itemCode": "f123456-x:1"} for n, p in [
+        ("【ふるさと納税】 《定期便》 四万十の純天然水 (2L×6本)×2ケース 3回コース 水 天然水", 24000),
+        ("【ふるさと納税】＜定期便＞ 水の王国 ミネラルウォーター 2L×6本 2ヶ月毎に1回 ＜全3回＞ 定期便", 27000),
+        ("【ふるさと納税】水 ミネラルウォーター 2L 定期便《出荷時期をお選びください》 熊本イオン純天然水 1箱 10本 2箱 20本", 4700)]], _fw)
+    if [r["price"] for r in _r] != [4700]:
+        bad.append(("ふるさと納税の定期便", [r["price"] for r in _r], [4700]))
+    LIMIT_CASES = LIMIT_CASES + [(None, "ふるさと納税の定期便", 1)]
     # 表示名: 店の宣伝を外しても商品名は残す
     NAME_CASES = [
         ("【ポイント10倍！11/19-12/31迄】P&G アリエールジェルボール4D微香 83個×4個セット", "P&G アリエールジェルボール4D微香 83個×4個セット"),

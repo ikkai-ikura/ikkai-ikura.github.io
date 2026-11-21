@@ -649,7 +649,13 @@ def FURUSATO(base, keywords, **kw):
     c.pop("brands", None)
     c.pop("lines", None)
     c.update(kw)
+    # 回数が決まった定期便（「3回コース」「全3回」など）は1回分の量で割ると単価が回数倍に見えるので載せない（選べる出品は残す）
+    c["ng"] = list(c.get("ng") or []) + FURU_SUB_NG
     return c
+
+
+FURU_SUB_NG = ["回コース", "全3回", "全4回", "全6回", "全12回", "定期便3回", "定期便6回", "定期便12回",
+               "3回連続", "6回連続", "ヶ月連続", "か月連続", "カ月連続"]
 
 
 CATEGORIES_BY_SLUG_PRE = {c["slug"]: c for c in CATEGORIES}
