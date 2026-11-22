@@ -2347,7 +2347,7 @@ def main():
             if r.get("item_url"):
                 gid = next((g for g, _, sls in GROUPS if cat["slug"] in sls), "")
                 room_cands.append({"code": r["code"], "name": r["name"], "img": r["img"], "item_url": r["item_url"],
-                                   "genre": short(cat).replace("ふるさと納税 ", "").replace(" 全巻セット", " 全巻"),
+                                   "genre": short(cat).replace(" 全巻セット", " 全巻"),
                                    "group": gid, "furusato": bool(cat.get("furusato")),
                                    "kind": "manga" if cat.get("manga") else ("cospa" if r is cospa_row(rows, cat) else "best"),
                                    "unit_price": r["unit_price"], "unit": cat["unit"], "base": cat.get("base", cat["unit"] + "分"),
@@ -2364,8 +2364,7 @@ def main():
     # 楽天ROOMのネタ帳（本人用・検索エンジンには載せない）: 漫画は2つまでにして、報酬の目安が大きい順に週替わりで10件
     manga = [c for c in room_cands if c["kind"] == "manga"]
     rest = sorted([c for c in room_cands if c["kind"] != "manga"], key=lambda c: -c["fee"])
-    cands = rest + sorted(manga, key=lambda c: -c["fee"])[:6]
-    picks = pick_week(cands, 8) + pick_week(sorted(manga, key=lambda c: -c["fee"]), 2)
+    picks = pick_week(rest, 8) + pick_week(sorted(manga, key=lambda c: -c["fee"]), 2)
     (OUT / "room-picks.html").write_text(render_room(picks, updated), encoding="utf-8")
     activate_pending_links()
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")

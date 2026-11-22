@@ -26,7 +26,7 @@ def comment(c):
     """ROOMの紹介文（本人の言葉に直してもらう前提の下書き）"""
     tags = "#楽天ROOM #コスパ " + TAGS.get(c["group"], "#まとめ買い")
     if c["furusato"]:
-        head = f"【ふるさと納税 {c['genre']}】寄付{c['price']:,}円で{c['count']:,.0f}{c['base']}。寄付額あたりの量で比べるとこれが多くもらえます。"
+        head = f"【{c['genre']}】寄付{c['price']:,}円で{c['count']:,.0f}{c['base']}。寄付額あたりの量で比べるとこれが多くもらえます。"
     elif c["kind"] == "cospa":
         head = (f"【{c['genre']}のコスパ最強】{c['unit_price']:,.1f}円/{c['unit']}。★{c['rating']:.1f}（レビュー{c['reviews']:,}件）で評価も高い定番。"
                 f"{c['count']:,.0f}{c['base']}入り。")
