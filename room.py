@@ -67,8 +67,9 @@ def render_room(picks, updated):
         cards += (f"<li class=c data-id='{e(c['code'])}'><img src='{e(c['img'])}' alt='' loading=lazy>"
                   f"<div><b>{i}. {e(c['genre'])}</b><p class=n>{e(c['name'][:70])}</p>"
                   f"<textarea readonly rows=4>{e(txt)}</textarea>"
-                  f"<p class=b><button type=button class=cp>紹介文をコピー</button>"
-                  f"<a href='{e(c['item_url'])}' target=_blank rel=noopener>楽天の商品ページを開く</a>"
+                  f"<p class=b><button type=button class=go data-u='https://room.rakuten.co.jp/mix?itemcode={e(c['code'])}&amp;scid=we_room_upc60'>コピーしてROOMの投稿画面を開く</button>"
+                  f"<button type=button class=cp>紹介文だけコピー</button>"
+                  f"<a href='{e(c['item_url'])}' target=_blank rel=noopener>商品ページ</a>"
                   f"<label><input type=checkbox class=dn> 投稿した</label></p></div></li>")
     return f"""<!doctype html><html lang=ja><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>ROOMネタ帳（非公開）｜TANKA</title><meta name=robots content="noindex,nofollow">
@@ -80,11 +81,12 @@ ol{{list-style:none;padding:0;display:grid;gap:12px}}.c{{display:flex;gap:10px;b
 .c img{{width:72px;height:72px;object-fit:contain;background:#fff;border-radius:8px;flex:none}}.c div{{min-width:0;flex:1}}
 .n{{margin:2px 0;font-size:.82rem;color:var(--mut)}}textarea{{width:100%;font:inherit;font-size:.85rem;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg);color:var(--fg)}}
 .b{{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:6px 0 0;font-size:.9rem}}
-.cp{{font:inherit;font-weight:700;padding:6px 12px;border:0;border-radius:8px;background:var(--acc);color:#fff;cursor:pointer}}
+.go{{font:inherit;font-weight:700;padding:8px 14px;border:0;border-radius:8px;background:var(--acc);color:#fff;cursor:pointer}}
+.cp{{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}}
 .c.done{{opacity:.5}}a{{color:var(--acc);font-weight:600}}</style></head><body><main>
 <h1>楽天ROOM ネタ帳</h1>
 <p class=mut>あなた専用のページです（検索エンジンには載せていません）。毎週月曜に10商品が入れ替わり、値段は毎日更新されます（最終更新 {e(updated)}）。</p>
-<p class=mut>使い方：①「紹介文をコピー」②「楽天の商品ページを開く」③ 商品ページの「ROOMに投稿」を押して貼り付けて投稿（最後のひとことも自動で入っています。実際に使っている商品なら、自分の感想に変えるとさらに良いです）。商品ページのリンクはアフィリエイトではないので、押しても問題ありません。</p>
+<p class=mut>使い方：①「コピーしてROOMの投稿画面を開く」を押す ② 開いた投稿画面のコメント欄に貼り付け（Ctrl＋V／スマホは長押し→ペースト）③「投稿」④ この画面に戻って「投稿した」にチェック。投稿画面が開かないときは「紹介文だけコピー」→「商品ページ」→</p><p class=mut> 商品ページの「ROOMに投稿」を押して貼り付けて投稿（最後のひとことも自動で入っています。実際に使っている商品なら、自分の感想に変えるとさらに良いです）。商品ページのリンクはアフィリエイトではないので、押しても問題ありません。</p>
 <ol>{cards}</ol></main>
 <script>
 (function(){{
@@ -93,9 +95,10 @@ ol{{list-style:none;padding:0;display:grid;gap:12px}}.c{{display:flex;gap:10px;b
     var id=li.dataset.id, cb=li.querySelector('.dn'), ta=li.querySelector('textarea');
     if(done[id]){{cb.checked=true;li.classList.add('done')}}
     cb.addEventListener('change',function(){{done[id]=cb.checked;li.classList.toggle('done',cb.checked);try{{localStorage.setItem(KEY,JSON.stringify(done))}}catch(e){{}}}});
-    li.querySelector('.cp').addEventListener('click',function(){{var b=this;
-      (navigator.clipboard?navigator.clipboard.writeText(ta.value):Promise.reject()).catch(function(){{ta.select();document.execCommand('copy')}}).then(function(){{b.textContent='コピーしました';setTimeout(function(){{b.textContent='紹介文をコピー'}},1500)}});
-    }});
+    function copy(){{return (navigator.clipboard?navigator.clipboard.writeText(ta.value):Promise.reject()).catch(function(){{ta.select();document.execCommand('copy')}})}}
+    li.querySelector('.cp').addEventListener('click',function(){{var b=this;copy().then(function(){{b.textContent='コピーしました';setTimeout(function(){{b.textContent='紹介文だけコピー'}},1500)}})}});
+    var go=li.querySelector('.go');
+    go.addEventListener('click',function(){{var w=window.open(go.dataset.u,'_blank','noopener');copy().then(function(){{go.textContent='コピー済み・投稿画面で貼り付け';}});}});
   }});
 }})();
 </script></body></html>"""
