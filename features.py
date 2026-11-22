@@ -91,6 +91,8 @@ FEATURES = [
         "desc": "楽天ふるさと納税のトイレットペーパー・ティッシュ・お米・水・洗濯洗剤・キッチンペーパーの返礼品を、寄付額あたりの量で比較。寄付1万円でどれだけもらえるかを毎日更新。",
         "lead": "ふるさと納税の日用品は、寄付額あたりの量で比べると返礼品ごとの差が大きく出ます。ここでは楽天ふるさと納税の返礼品を「寄付額÷量」で並べています。今年の控除に入るのは12月31日までの寄付です。",
         "months": [10, 11, 12],
+        "event": {"name": "ふるさと納税", "s": "2026-12-01T00:00:00+09:00", "e": "2026-12-31T23:59:59+09:00",
+                  "pre": "今年の控除は12/31の寄付まで", "on": "12/31まで（年末は発送が遅れやすいので早めに）"},
         "guide": [
             ("日用品を選ぶ人が多い理由", "トイレットペーパーやティッシュ、お米は毎日必ず使うので、ふるさと納税でもらえば家計の支出がそのまま減ります。寄付額あたりの量が多く、届いたあとに余らせる心配も少ない返礼品です。"),
             ("このページの見方", "金額はすべて寄付額です。単価は「寄付額÷量」なので、小さいほど同じ寄付でたくさんもらえます。容量を選べる返礼品は、いちばん少ない量と寄付額で計算しています。"),
@@ -412,7 +414,8 @@ section{scroll-margin-top:12px}h2{font-size:1.1rem;margin:1.8em 0 .2em}h2 small{
 .faq details{border-bottom:1px solid var(--line);padding:8px 0}.faq summary{cursor:pointer;font-weight:600}.faq p{margin:.4em 0 0;font-size:.92rem}
 .evp{display:inline-block;border:1px solid var(--acc);color:var(--acc);border-radius:8px;padding:2px 10px;font-weight:700;font-size:.92rem}.evp.on{background:var(--acc);color:#fff}
 .cmp{width:100%;border-collapse:collapse;margin:12px 0;font-size:.88rem}.cmp caption{text-align:left;color:var(--mut);font-size:.8rem;margin-bottom:4px}
-.cmp small{display:block;font-size:.7rem;color:var(--mut);font-weight:400}.cmp th,.cmp td{border-bottom:1px solid var(--line);padding:6px 4px;text-align:right}.cmp th:first-child{text-align:left}.cmp td b{color:var(--acc)}
+.tldr{background:var(--card);border-left:4px solid var(--acc);border-radius:8px;padding:8px 12px;margin:8px 0}
+.cmp tfoot th,.cmp tfoot td{border-top:2px solid var(--fg)}.cmp small{display:block;font-size:.7rem;color:var(--mut);font-weight:400}.cmp th,.cmp td{border-bottom:1px solid var(--line);padding:6px 4px;text-align:right}.cmp th:first-child{text-align:left}.cmp td b{color:var(--acc)}
 footer{margin-top:28px;color:var(--mut);font-size:.8rem}</style></head><body><main>
 <p class=mut><a href="./">TANKA</a> › @@CRUMB@@</p>
 <p class=pr>PR：楽天アフィリエイトを利用しています</p>

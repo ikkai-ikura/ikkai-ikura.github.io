@@ -7,6 +7,7 @@
 import html
 from calc_page import render_calc
 from features import FEATURES, HUBS, HUB_OF, feature_cards, render_feature
+from monthly import PAGES as MONTHLY, render_monthly
 from cooccur import BRANDS as KYOKI_BRANDS, brand_of
 import json
 import os
@@ -2199,7 +2200,7 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 <div class=bar><input id=q type=search placeholder="さがす（例：洗剤、猫、トイレットペーパー、キュキュット、呪術廻戦）" aria-label="ジャンルをさがす" autocomplete=off>
 <nav class=chips aria-label="カテゴリ">{"<a href='#drops'>値下がり</a>" if picked else ""}{"<a href='#today'>今が買い時</a>" if deal_html else ""}<a href='#tokushu'>特集</a><a href="calc.html">単価計算ツール</a>{chips}</nav></div>
 {drop_html}
-{feature_cards(int(updated[5:7]))}
+{feature_cards(int(updated[5:7])).replace("<div class=fcs>", "<div class=fcs>" + "".join(f"<a class=fc href='{p['slug']}.html'><span class=now>新</span><b>{e(p['short'])}</b><span>{e(p['title'])}</span></a>" for p in MONTHLY), 1)}
 {f"<section class=today id=today><h2>今が買い時のジャンル<small>最安の単価がこれまでの記録（最大30日）の中で安いもの</small></h2><div class=deals>{deal_html}</div></section>" if deal_html else ""}
 {sections}
 <p class=none id=none hidden>見つかりませんでした。別の言葉でさがしてみてください。</p>
@@ -2314,6 +2315,8 @@ def main():
                                     "price": sorted(r["price"] for r in rows[:10])[min(len(rows), 10) // 2],
                                     "avg": typical_avg(rows), "pt": top.get("point", 1),
                                     "clean": clean_name(top["name"], 40), "med": round(median_unit(rows), 2),
+                                    "solo": (lambda r: {"n": clean_name(r["name"], 40), "u": r["url"], "up": round(r["unit_price"], 2),
+                                                        "p": r["price"], "c": r["count"], "fs": r["free_ship"]} if r else None)(solo_row(rows, cat)),
                                     "cospa": (lambda r: {"n": clean_name(r["name"], 40), "u": r["url"], "up": round(r["unit_price"], 2),
                                                          "rt": r["rating"], "rv": r["reviews"]} if r else None)(cospa_row(rows, cat)),
                                     "top10": [{"n": clean_name(r["name"], 50), "u": r["url"], "i": r["img"], "p": r["price"],
@@ -2338,6 +2341,8 @@ def main():
     for f in FEATURES + HUBS:
         (OUT / f"{f['slug']}.html").write_text(render_feature(f, summary, CATEGORIES_BY_SLUG, site_url(), updated, short, per_text_of),
                                                encoding="utf-8")
+    for p in MONTHLY:
+        (OUT / f"{p['slug']}.html").write_text(render_monthly(p, summary, CATEGORIES_BY_SLUG, site_url(), updated, short), encoding="utf-8")
     # 旧URL → まとめページへ転送（検索エンジンにも移転として伝わるよう canonical も付ける）
     for old, new in {"tokushu-diaper": "diaper"}.items():
         (OUT / f"{old}.html").write_text(
@@ -2348,7 +2353,7 @@ def main():
     # 検索エンジン向けのサイトマップ
     site = site_url()
     day = updated[:10]
-    urls = [site, f"{site}about.html", f"{site}sim.html", f"{site}calc.html"] + [f"{site}{f['slug']}.html" for f in FEATURES + HUBS] + [f"{site}{c['slug']}.html" for c in CATEGORIES
+    urls = [site, f"{site}about.html", f"{site}sim.html", f"{site}calc.html"] + [f"{site}{f['slug']}.html" for f in FEATURES + HUBS + MONTHLY] + [f"{site}{c['slug']}.html" for c in CATEGORIES
                                                               if indexable(c, summary.get(c["slug"], {}).get("count", 0))]
     xml = "".join(f"<url><loc>{u}</loc><lastmod>{day}</lastmod></url>" for u in urls)
     (OUT / "sitemap.xml").write_text(
