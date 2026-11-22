@@ -8,6 +8,7 @@ import html
 from calc_page import render_calc
 from features import FEATURES, HUBS, HUB_OF, feature_cards, render_feature
 from monthly import PAGES as MONTHLY, render_monthly
+from room import pick_week, render_room
 from cooccur import BRANDS as KYOKI_BRANDS, brand_of
 import json
 import os
@@ -1099,6 +1100,14 @@ def add_scores(rows):
     return rows
 
 
+def plain_item_url(u):
+    """アフィリエイトリンク（hb.afl.rakuten.co.jp/...?pc=商品ページ）から本来の商品ページのURLを取り出す"""
+    if "item.rakuten.co.jp" in u and "afl." not in u:
+        return u
+    pc = urllib.parse.parse_qs(urllib.parse.urlparse(u).query).get("pc", [""])[0]
+    return pc if pc.startswith("https://item.rakuten.co.jp/") else ""
+
+
 def rank(items, cat):
     rows = []
     for it in items:
@@ -1156,6 +1165,9 @@ def rank(items, cat):
             "free_ship": it.get("postageFlag") == 0,
             "reviews": it.get("reviewCount", 0), "rating": it.get("reviewAverage", 0),
             "url": it.get("affiliateUrl") or it.get("itemUrl"),
+            # 本人用（ROOMネタ帳）: アフィリエイトでない普通の商品ページ。APIの itemUrl もアフィリエイトIDを渡すと
+            # アフィリエイトリンク（hb.afl）になるので、その pc= に入っている本来の商品ページを取り出す（自己クリックにならないように）
+            "item_url": plain_item_url(it.get("itemUrl") or ""),
             "img": (it.get("mediumImageUrls") or [""])[0],
             "rate": float(it.get("affiliateRate") or 0),
             "note": note,
@@ -2247,6 +2259,7 @@ def main():
     OUT.mkdir(exist_ok=True)
     updated = datetime.now(JST).strftime("%Y-%m-%d %H:%M")
     failed = 0
+    room_cands = []  # 楽天ROOMのネタ帳の候補
     # トップページ用の「各ジャンルの最安」。取得に失敗したジャンルは前回の値を使う
     try:
         summary = json.loads((OUT / "summary.json").read_text(encoding="utf-8"))
@@ -2329,6 +2342,17 @@ def main():
                                               "up": round(r["unit_price"], 2), "pt": r.get("point", 1), "fs": r["free_ship"]}
                                              for r in sorted([r for r in rows if not r.get("biz")] or rows,
                                                              key=lambda r: r["unit_price"])[:3]]}
+        if rows and len(rows) >= MIN_INDEX:  # 楽天ROOMのネタ帳の候補: コスパ最強（なければ最安）
+            r = cospa_row(rows, cat) or best_row(rows)
+            if r.get("item_url"):
+                gid = next((g for g, _, sls in GROUPS if cat["slug"] in sls), "")
+                room_cands.append({"code": r["code"], "name": r["name"], "img": r["img"], "item_url": r["item_url"],
+                                   "genre": short(cat).replace("ふるさと納税 ", "").replace(" 全巻セット", " 全巻"),
+                                   "group": gid, "furusato": bool(cat.get("furusato")),
+                                   "kind": "manga" if cat.get("manga") else ("cospa" if r is cospa_row(rows, cat) else "best"),
+                                   "unit_price": r["unit_price"], "unit": cat["unit"], "base": cat.get("base", cat["unit"] + "分"),
+                                   "count": r["count"], "price": r["price"], "rating": r["rating"], "reviews": r["reviews"],
+                                   "fee": r["price"] * r["rate"] / 100})
         print(f"{cat['slug']}: 取得{len(items)}件 → 掲載{len(rows)}件 ({'本番' if live else 'サンプル'})")
     (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False), encoding="utf-8")
     (OUT / "history.json").write_text(json.dumps(history, ensure_ascii=False), encoding="utf-8")
@@ -2337,6 +2361,12 @@ def main():
     (OUT / "items_history.json").write_text(json.dumps(item_hist, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (OUT / "index.html").write_text(render_index(summary, updated, drops, history), encoding="utf-8")
     (OUT / "about.html").write_text(render_about(), encoding="utf-8")
+    # 楽天ROOMのネタ帳（本人用・検索エンジンには載せない）: 漫画は2つまでにして、報酬の目安が大きい順に週替わりで10件
+    manga = [c for c in room_cands if c["kind"] == "manga"]
+    rest = sorted([c for c in room_cands if c["kind"] != "manga"], key=lambda c: -c["fee"])
+    cands = rest + sorted(manga, key=lambda c: -c["fee"])[:6]
+    picks = pick_week(cands, 8) + pick_week(sorted(manga, key=lambda c: -c["fee"]), 2)
+    (OUT / "room-picks.html").write_text(render_room(picks, updated), encoding="utf-8")
     activate_pending_links()
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
     (OUT / "calc.html").write_text(render_calc(site_url(), GROUPS, CATEGORIES_BY_SLUG, short, per_text_of), encoding="utf-8")
