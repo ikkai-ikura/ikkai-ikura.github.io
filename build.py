@@ -79,7 +79,9 @@ def indexable(cat, count):
     """検索エンジンに載せるページか。まとめページに入ったジャンル・表示のない漫画・掲載5件未満は載せない"""
     if count < MIN_INDEX or cat["slug"] in HUB_OF:
         return False
-    return not cat.get("manga") or cat["slug"].removeprefix("manga-") in MANGA_INDEXED
+    # 2026-11-22: 検索で表示ゼロだった ONE PIECE 全巻セットから実際に売れた（12,075円）ので、漫画の絞り込みはやめて全作品を検索対象に戻す。
+    # MANGA_INDEXED は「検索で表示がある作品」の記録として残す
+    return True
 
 # ページごとの設定。unit=表示単位、words=数量の後ろに付く語
 CATEGORIES = [
