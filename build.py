@@ -1307,12 +1307,12 @@ def pick_rows(rows, cat=None):
     first = best_row(rows)
     cp = cospa_row(rows, cat)
     label = ("送料込みでいちばん安い" if first["free_ship"] else "いちばん安い（送料別）") + ("・コスパ最強" if first is cp else ("・高評価" if good(first) else ""))
-    picks, used = [(label, first)], {id(first)}
     so = solo_row(rows, cat)
     if so and first["count"] > SOLO[cat["slug"]][0]:
         label += "（まとめ買い・ファミリー向け）"
     elif so is first:
-        label += "・少なめの量"
+        label += "・一人暮らしにも"
+    picks, used = [(label, first)], {id(first)}
     tests = [(f"コスパ最強（★{cp['rating']:.1f}・レビュー{cp['reviews']:,}件の中で最安）", lambda r: r is cp)] if cp else []
     if so:
         tests.append(("一人暮らし向け・少なめの量で最安", lambda r: r is so))
@@ -1482,8 +1482,10 @@ def tldr_html(cat, rows, updated, hist=None):
 def solo_text(cat, rows):
     """結論文に足す「一人暮らし向け」の1文（最安がすでに少なめの量なら出さない）"""
     so, b, e = solo_row(rows, cat), best_row(rows), html.escape
-    if not so or so is b:
+    if not so:
         return ""
+    if so is b:
+        return "いちばん安い商品が少なめの量なので、一人暮らしにも向いています。"
     base = cat.get("base", cat["unit"] + "分")
     return (f"<br><b>一人暮らし向け：</b>{e(SOLO[cat['slug']][1])}で最安は「{e(clean_name(so['name'], 36))}」"
             f"（{so['price']:,}円・{so['count']:,.0f}{e(base)}）で{so['unit_price']:,.1f}円/{e(cat['unit'])}{'' if so['free_ship'] else '（送料別）'}です。")
