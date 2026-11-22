@@ -736,6 +736,9 @@ PROMOS = {
             {"name": "ワンウェイウォーター", "desc": "サーバーのレンタル料が無料のウォーターサーバー",
              "link": '<a href="https://px.a8.net/svt/ejp?a8mat=4BGBN4+8G8IWI+1MQG+5Z6WY" rel="sponsored nofollow noopener" target="_blank">ワンウェイウォーターの公式サイトを見る</a>'
                      '<img border="0" width="1" height="1" src="https://www16.a8.net/0.gif?a8mat=4BGBN4+8G8IWI+1MQG+5Z6WY" alt="">'},
+            {"name": "U-Premium（ユープレミアム）", "desc": "天然水を届けてもらうタイプのウォーターサーバー",
+             "link": '<a href="https://px.a8.net/svt/ejp?a8mat=4BGBN4+8D9CVM+5QSG+5YJRM" rel="sponsored nofollow noopener" target="_blank">U-Premiumの公式サイトを見る</a>'
+                     '<img border="0" width="1" height="1" src="https://www15.a8.net/0.gif?a8mat=4BGBN4+8D9CVM+5QSG+5YJRM" alt="">'},
         ],
     },
 }
