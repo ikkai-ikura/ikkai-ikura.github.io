@@ -739,6 +739,9 @@ PROMOS = {
             {"name": "U-Premium（ユープレミアム）", "desc": "天然水を届けてもらうタイプのウォーターサーバー",
              "link": '<a href="https://px.a8.net/svt/ejp?a8mat=4BGBN4+8D9CVM+5QSG+5YJRM" rel="sponsored nofollow noopener" target="_blank">U-Premiumの公式サイトを見る</a>'
                      '<img border="0" width="1" height="1" src="https://www15.a8.net/0.gif?a8mat=4BGBN4+8D9CVM+5QSG+5YJRM" alt="">'},
+            {"name": "アクアクララ", "desc": "ボトルを宅配してもらうタイプのウォーターサーバー",
+             "link": '<a href="https://px.a8.net/svt/ejp?a8mat=4BGBN4+85IQ0I+YK6+5YRHE" rel="sponsored nofollow noopener" target="_blank">アクアクララの公式サイトを見る</a>'
+                     '<img border="0" width="1" height="1" src="https://www17.a8.net/0.gif?a8mat=4BGBN4+85IQ0I+YK6+5YRHE" alt="">'},
         ],
     },
 }
