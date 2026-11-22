@@ -6,7 +6,7 @@
 """
 import html
 from calc_page import render_calc
-from features import FEATURES, feature_cards, render_feature
+from features import FEATURES, HUBS, HUB_OF, feature_cards, render_feature
 from cooccur import BRANDS as KYOKI_BRANDS, brand_of
 import json
 import os
@@ -68,6 +68,17 @@ def DIAPER(kind, size):
         "tips": DIAPER_TIPS[kind],
     }
 MIN_INDEX = 5  # 掲載がこれ未満のページは中身が薄いので検索エンジンに載せない（サイトマップからも外す）
+# 漫画で検索に載せる作品（2026-11-21 Search Console で表示があった作品）。ほかの作品はページは残すが検索には出さない
+MANGA_INDEXED = {"kaguya", "dandadan", "sakamoto", "slamdunk", "komisan", "chainsaw", "medalist", "dragonball", "drstone",
+                 "kingdom", "hagaren", "shingeki", "kamuy", "dungeon-meshi", "kenshin", "frieren", "neverland", "spy-family",
+                 "oshinoko", "lion", "hunter", "yowapeda", "kusuriya", "conan", "kimetsu", "onepunch", "jujutsu", "haikyu", "kaiju8"}
+
+
+def indexable(cat, count):
+    """検索エンジンに載せるページか。まとめページに入ったジャンル・表示のない漫画・掲載5件未満は載せない"""
+    if count < MIN_INDEX or cat["slug"] in HUB_OF:
+        return False
+    return not cat.get("manga") or cat["slug"].removeprefix("manga-") in MANGA_INDEXED
 
 # ページごとの設定。unit=表示単位、words=数量の後ろに付く語
 CATEGORIES = [
@@ -1369,7 +1380,22 @@ def per_text_of(cat):
     return cat.get("per_text", f"1{cat['unit']}あたり")
 
 
-def tldr_html(cat, rows, updated):
+def buy_verdict(hist, unit):
+    """過去の最安の推移から「今が買い時か」を1文で。7日分たまるまでは出さない"""
+    vals = [p[1] for p in hist[-30:]]
+    if len(vals) < 7:
+        return ""
+    now, lo, n = vals[-1], min(vals), len(vals)
+    if now <= lo:
+        return f"今日の最安は過去{n}日でいちばん安い水準で、買い時です。"
+    if now <= sorted(vals)[n // 4]:
+        return f"今日の最安は過去{n}日の中でも安い水準です。"
+    if now >= lo * 1.05:
+        return f"今日の最安は過去{n}日の最安（{lo:,.1f}円/{unit}）より{(now / lo - 1) * 100:.0f}%高いので、急ぎでなければ値下がりを待つのも手です。"
+    return f"今日の最安は過去{n}日とほぼ同じ水準です。"
+
+
+def tldr_html(cat, rows, updated, hist=None):
     """ページ冒頭の1文の結論（検索結果やAIの回答に引用されやすいよう、日付・商品・単価・相場を1文に）"""
     if not rows:
         return ""
@@ -1383,7 +1409,7 @@ def tldr_html(cat, rows, updated):
         head = f"{day}時点、楽天で{name}がいちばん安いのは"
         tail = f"{b['unit_price']:,.1f}円/{unit}（{b['price']:,}円・{b['count']:,.0f}{base}{'・送料無料' if b['free_ship'] else ''}）"
     return (f"<p class=tldr><b>結論：</b>{e(head)}「{e(clean_name(b['name'], 40))}」で、{e(tail)}です。"
-            f"掲載{len(rows)}商品の相場（中央値）は{median_unit(rows):,.1f}円/{e(unit)}です。</p>")
+            f"掲載{len(rows)}商品の相場（中央値）は{median_unit(rows):,.1f}円/{e(unit)}です。{e(buy_verdict(hist or [], unit))}</p>")
 
 
 def data_insights(cat, rows, hist):
@@ -1515,7 +1541,9 @@ def render(cat, rows, updated, hist=None):
             and CATEGORIES_BY_SLUG[sl] not in same][:8]
     chip = lambda c: f'<a href="{c["slug"]}.html">{e(short(c))}</a>'
     feats = [f for f in FEATURES if any(sl == cat["slug"] for sl, _ in f["items"])]  # このジャンルが入っている特集
-    nav = (("<nav class=oth><h2>この商品が入っている特集</h2>"
+    if cat["slug"] in HUB_OF:
+        feats = [HUB_OF[cat["slug"]]] + feats
+    nav = (("<nav class=oth><h2>この商品が入っているまとめ・特集</h2>"
             + "".join(f'<a href="{f["slug"]}.html">{e(f["title"])}</a>' for f in feats) + "</nav>" if feats else "")
            + ("<nav class=oth><h2>同じカテゴリのジャンル</h2>" + "".join(map(chip, same)) + "</nav>" if same else "")
            + "<nav class=oth><h2>人気のジャンル</h2>" + "".join(map(chip, rest)) + '<a href="./#baby">すべてのジャンル →</a></nav>'
@@ -1524,7 +1552,7 @@ def render(cat, rows, updated, hist=None):
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>{e(seo_title)}</title>
 <meta name=description content="{e(desc)}">
-<link rel=canonical href="{url}">{"<meta name=robots content=noindex>" if len(rows) < MIN_INDEX else ""}
+<link rel=canonical href="{url}">{"" if indexable(cat, len(rows)) else "<meta name=robots content='noindex,follow'>"}
 <meta property=og:title content="{e(seo_title)}"><meta property=og:description content="{e(desc)}">
 <meta property=og:url content="{url}"><meta property=og:type content=article><meta property=og:site_name content="TANKA">
 <meta property=og:image content="{e(rows[0]['img'] if rows else '')}"><meta name=twitter:card content=summary>
@@ -1575,20 +1603,22 @@ small{{display:block;color:var(--mut);font-size:.72rem}}
 .pi{{display:grid;gap:2px;padding:8px 0;border-top:1px dashed var(--line)}} .pi span{{color:var(--mut);font-size:.85rem}} .pi a{{color:var(--acc);font-weight:600}}
 .oth{{margin-top:20px}} .oth a{{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:inherit;text-decoration:none;font-size:.85rem;background:var(--card)}}
 .none{{color:var(--mut)}}
+.hubl{{margin:6px 0;font-size:.9rem}} .hubl a{{color:var(--ok);font-weight:600}}
 .tldr{{background:var(--card);border-left:4px solid var(--acc);border-radius:8px;padding:8px 12px;margin:8px 0}}
 a:focus-visible,button:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset:2px}}
 </style></head><body><main>
 <p class=pr>PR：このページは楽天アフィリエイトを利用しています</p>
 <p class=bc><a href="./">TANKA</a> › {e(cat['title'])}</p>
 <h1>{e(cat['title'])}</h1>
-{tldr_html(cat, rows, updated)}
-<p class=lead>楽天市場の商品を「価格 ÷ 内容量」で{per_text}に換算して比べています。同じ商品は最安の出品だけを掲載。毎日自動更新（最終更新 {updated}）。送料別の商品は送料を含みません。</p>
+{tldr_html(cat, rows, updated, hist or [])}
+{f'<p class=hubl>ほかの種類・サイズとまとめて比べる → <a href="{HUB_OF[cat["slug"]]["slug"]}.html">{e(HUB_OF[cat["slug"]]["title"])}</a></p>' if cat["slug"] in HUB_OF else ""}
+<p class=lead>{per_text}の価格で比較・最終更新 {updated}（<a href="about.html#method">計算方法</a>）</p>
 {hero}
 <section><h2>全商品ランキング（{len(rows)}商品）</h2>{controls}<ol class=list id=list>{items}</ol>
 <p class=none id=none hidden>条件に合う商品がありません。</p></section>
 {tips_html}
 {faq_html}
-<p class=pr>内容量は商品名から自動で読み取っています。セット数の読み違いがある場合があるので、購入前に商品ページで確認してください。読み違いを見つけたら<a href="https://docs.google.com/forms/d/e/1FAIpQLSfBVVJ6Xf8ITCX5A0yD8tgEKXCrrFu7GIhalRzAjiYh2lXFtg/viewform" rel="noopener" target=_blank>お知らせください</a>。</p>
+<p class=pr>内容量は商品名から自動で読み取っています。読み違いを見つけたら<a href="https://docs.google.com/forms/d/e/1FAIpQLSfBVVJ6Xf8ITCX5A0yD8tgEKXCrrFu7GIhalRzAjiYh2lXFtg/viewform" rel="noopener" target=_blank>お知らせください</a>。</p>
 {nav}
 </main>
 <script>
@@ -1846,7 +1876,7 @@ h2{font-size:1.1rem;margin-top:1.6em}.mut{color:var(--mut);font-size:.85rem}</st
 <p class=mut><a href="./">TANKA</a> › このサイトについて</p>
 <h1>このサイトについて</h1>
 <p>TANKAは、日用品・消耗品を「1回あたり」「1枚あたり」「100gあたり」などの単価で比べるサイトです。大容量やまとめ買いの商品は総額だけでは割安かどうか分かりにくいため、内容量で割った値段で並べています。</p>
-<h2>価格の計算方法</h2>
+<h2 id=method>価格の計算方法</h2>
 <ul><li>楽天市場の商品検索APIから、価格・商品名・レビュー件数を毎日1回自動で取得しています。</li>
 <li>内容量は商品名から自動で読み取り、「価格 ÷ 内容量」で単価を計算しています。</li>
 <li>同じ商品がショップ違い・袋数違いで複数ある場合は、単価が最も安い出品だけを掲載しています。</li>
@@ -1896,7 +1926,7 @@ GROUPS = [
     ("manga", "漫画 全巻セット", [f"manga-{m[0]}" for m in MANGA]),
 ]
 # 子育て・ペット家庭向けの方針（報酬も高い）で、トップではベビー・ペットを先頭に
-GROUPS = sorted(GROUPS, key=lambda g: {"baby": 0, "pet": 1}.get(g[0], 2))
+GROUPS = sorted(GROUPS, key=lambda g: {"baby": 0, "pet": 1, "furusato": 2}.get(g[0], 3))
 
 
 def render_index(summary, updated, drops=None, history=None):
@@ -1925,6 +1955,18 @@ def render_index(summary, updated, drops=None, history=None):
         words = " ".join([short(c), c["keyword"]] + c.get("keywords", []) + list(c.get("brands", {})) + list(KYOKI_BRANDS.get(c["slug"], {})))
         return (f"<a class=card href='{c['slug']}.html' data-k='{e(words.lower())}'>{img}"
                 f"<div><h3>{e(short(c))}</h3>{best}</div></a>")
+
+    def hub_card(h):
+        """種類・サイズ別まとめページへのカード。各種類の最安のうちいちばん安いものを出す"""
+        mem = [(by_slug[sl], summary[sl]) for sl, _ in h["items"] if sl in by_slug and summary.get(sl)]
+        if not mem:
+            return ""
+        c, s = min(mem, key=lambda m: m[1]["unit_price"])
+        img = f"<img src='{e(s['img'])}' alt='' loading=lazy>" if s.get("img") else "<span class=noimg></span>"
+        return (f"<a class='card hub' href='{h['slug']}.html' data-k='{e((h['short'] + ' ' + h['title']).lower())}'>{img}"
+                f"<div><h3>{e(h['short'])}<small> 種類別まとめ</small></h3>"
+                f"<p class=b>最安 <b>{s['unit_price']:.1f}円</b><small>/{e(c['unit'])}</small></p>"
+                f"<p class=s>{len(mem)}種類を1ページで比較</p></div></a>")
 
     deals = sorted((c for c in CATEGORIES if c["slug"] in buy and not c.get("manga") and summary.get(c["slug"])),
                    key=lambda c: (buy[c["slug"]], -summary[c["slug"]].get("fee", 0)))[:6]
@@ -1973,7 +2015,9 @@ def render_index(summary, updated, drops=None, history=None):
                    f"<p class=s>格安SIM・サブブランド{len(SIM_PLANS)}社の公式料金で比較</p></div></a>")
             return f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>" + sim + "".join(map(card, cs)) + "</div></section>"
         if gid != "manga":
-            return f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>" + "".join(map(card, cs)) + "</div></section>"
+            hubs = [h for h in HUBS if any(sl in sls for sl, _ in h["items"])]
+            return (f"<section class=grp id='{gid}'><h2>{e(label)}</h2><div class=grid>" + "".join(map(hub_card, hubs))
+                    + "".join(map(card, cs)) + "</div></section>")
         first, rest = cs[:12], cs[12:]
         more = (f"<details class=more><summary>すべての作品を見る（{len(cs)}作品）</summary>"
                 f"<div class=tiles>{''.join(map(tile, rest))}</div></details>") if rest else ""
@@ -2028,6 +2072,7 @@ h2{{font-size:1.1rem;margin:0 0 10px}}
 .grp{{scroll-margin-top:120px;margin-top:24px}}
 .grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}}
 .card{{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:inherit;text-decoration:none}}
+.card.hub{{border:2px solid var(--acc)}} .card.hub h3 small{{font-size:.72rem;color:var(--acc);font-weight:700}}
 .card:hover,.card:focus-visible{{border-color:var(--acc)}} .card img,.noimg{{width:56px;height:56px;object-fit:contain;flex:none;background:#fff;border-radius:8px}}
 .card div{{min-width:0}} .card h3{{font-size:.95rem;margin:0}} .b{{margin:2px 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px}} .b b{{color:var(--acc);font-size:1.1rem}}
 .off{{font-size:.68rem;color:var(--ok);background:var(--bg);border-radius:4px;padding:0 5px;font-weight:700}}
@@ -2174,7 +2219,11 @@ def main():
                                     "rate": round(sorted(r["rate"] for r in rows[:10])[min(len(rows), 10) // 2], 1),
                                     "price": sorted(r["price"] for r in rows[:10])[min(len(rows), 10) // 2],
                                     "avg": typical_avg(rows), "pt": top.get("point", 1),
-                                    "clean": clean_name(top["name"], 40),
+                                    "clean": clean_name(top["name"], 40), "med": round(median_unit(rows), 2),
+                                    "top10": [{"n": clean_name(r["name"], 50), "u": r["url"], "i": r["img"], "p": r["price"],
+                                               "up": round(r["unit_price"], 2), "pt": r.get("point", 1), "fs": r["free_ship"]}
+                                              for r in sorted([r for r in rows if not r.get("biz")] or rows,
+                                                              key=lambda r: r["unit_price"])[:10]],
                                     "top3": [{"n": clean_name(r["name"], 50), "u": r["url"], "i": r["img"], "p": r["price"],
                                               "up": round(r["unit_price"], 2), "pt": r.get("point", 1), "fs": r["free_ship"]}
                                              for r in sorted([r for r in rows if not r.get("biz")] or rows,
@@ -2190,14 +2239,21 @@ def main():
     activate_pending_links()
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
     (OUT / "calc.html").write_text(render_calc(site_url(), GROUPS, CATEGORIES_BY_SLUG, short, per_text_of), encoding="utf-8")
-    for f in FEATURES:
+    for f in FEATURES + HUBS:
         (OUT / f"{f['slug']}.html").write_text(render_feature(f, summary, CATEGORIES_BY_SLUG, site_url(), updated, short, per_text_of),
                                                encoding="utf-8")
+    # 旧URL → まとめページへ転送（検索エンジンにも移転として伝わるよう canonical も付ける）
+    for old, new in {"tokushu-diaper": "diaper"}.items():
+        (OUT / f"{old}.html").write_text(
+            f"<!doctype html><html lang=ja><head><meta charset=utf-8><title>移動しました｜TANKA</title>"
+            f"<link rel=canonical href='{site_url()}{new}.html'><meta http-equiv=refresh content='0;url={new}.html'>"
+            f"<meta name=robots content=noindex></head><body><p><a href='{new}.html'>新しいページへ移動しました</a></p></body></html>",
+            encoding="utf-8")
     # 検索エンジン向けのサイトマップ
     site = site_url()
     day = updated[:10]
-    urls = [site, f"{site}about.html", f"{site}sim.html", f"{site}calc.html"] + [f"{site}{f['slug']}.html" for f in FEATURES] + [f"{site}{c['slug']}.html" for c in CATEGORIES
-                                                              if summary.get(c["slug"], {}).get("count", 0) >= MIN_INDEX]
+    urls = [site, f"{site}about.html", f"{site}sim.html", f"{site}calc.html"] + [f"{site}{f['slug']}.html" for f in FEATURES + HUBS] + [f"{site}{c['slug']}.html" for c in CATEGORIES
+                                                              if indexable(c, summary.get(c["slug"], {}).get("count", 0))]
     xml = "".join(f"<url><loc>{u}</loc><lastmod>{day}</lastmod></url>" for u in urls)
     (OUT / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>' + chr(10)
