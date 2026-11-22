@@ -1240,6 +1240,47 @@ def best_row(rows):
     return next((r for r in home if r["free_ship"]), home[0]) if rows else None
 
 
+# 一人暮らし向けの「少なめの量」の上限（1人で1〜2か月くらいで使い切る量。単位はそのジャンルの base）と、ページに出す言い方
+# 赤ちゃん・ペット・コンタクトなど、世帯の人数で買う量が変わらないジャンルは入れない
+SOLO = {
+    "toilet-paper-double": (700, "700m以下（ダブル約12〜24ロール）"), "toilet-paper-single": (1200, "1,200m以下（シングル約12〜20ロール）"),
+    "tissue": (1500, "1,500組以下（約5〜8箱）"), "kitchen-paper": (1000, "1,000カット以下"), "food-wrap": (100, "100m以下"),
+    "garbage-bag-45l": (100, "100枚以下"), "mask": (60, "60枚以下"), "disinfect-wipes": (200, "200枚以下"), "cotton-swab": (300, "300本以下"),
+    "kairo": (30, "30枚以下"), "laundry-gelball": (60, "60個以下"), "dishwasher-tablet": (60, "60個以下"),
+    "liquid-laundry-refill": (2500, "2.5kg以下"), "softener-refill": (2000, "2L以下"), "oxygen-bleach": (1500, "1.5kg以下"),
+    "dish-soap-refill": (1000, "1L以下"), "hand-soap-refill": (1000, "1L以下"), "body-soap-refill": (1200, "1.2L以下"),
+    "shampoo-refill": (1000, "1L以下"), "toothpaste": (300, "300g以下（約3本）"),
+    "rice": (5, "5kg以下"), "water-2l": (12, "12本以下"), "sparkling-water-500ml": (24, "24本以下"), "tea-500ml": (24, "24本以下"),
+    "soy-sauce": (1000, "1L以下"), "canola-oil": (1000, "1kg以下"), "coffee-beans": (1000, "1kg以下"),
+    "protein": (1000, "1kg以下"), "protein-soy": (1000, "1kg以下"),
+}
+
+
+# 少なめの量の商品も検索に入るように足す検索語（まとめ買いの検索語だけだと大容量ばかりになる）
+SOLO_KW = {
+    "toilet-paper-double": ["トイレットペーパー ダブル 12ロール", "トイレットペーパー ダブル 2倍巻 12ロール"],
+    "toilet-paper-single": ["トイレットペーパー シングル 12ロール"],
+    "tissue": ["ティッシュペーパー 5箱"], "laundry-gelball": ["ジェルボール 詰め替え 30個", "アリエール ジェルボール 詰め替え"],
+    "liquid-laundry-refill": ["洗濯洗剤 詰め替え 1kg"], "softener-refill": ["柔軟剤 詰め替え 1000ml"],
+    "dish-soap-refill": ["食器用洗剤 詰め替え 1L"], "kitchen-paper": ["キッチンペーパー 4ロール"],
+    "coffee-beans": ["コーヒー豆 500g"], "protein": ["ホエイプロテイン 1kg"], "mask": ["不織布マスク 50枚"],
+}
+for _sl, _kw in SOLO_KW.items():
+    if _sl in CATEGORIES_BY_SLUG:
+        CATEGORIES_BY_SLUG[_sl]["keywords"] = CATEGORIES_BY_SLUG[_sl].get("keywords", []) + _kw
+
+
+def solo_row(rows, cat=None):
+    """一人暮らし向け: SOLO の量以下の商品の中で最安（送料無料を優先）"""
+    if not rows or not cat or cat["slug"] not in SOLO:
+        return None
+    lim = SOLO[cat["slug"]][0]
+    cand = [r for r in rows if not r.get("biz") and r["count"] <= lim]
+    r = next((r for r in cand if r["free_ship"]), cand[0] if cand else None)
+    # 少量は割高になりやすいが、相場の1.5倍を超えるものは勧められないので出さない
+    return r if r and r["unit_price"] <= median_unit(rows) * 1.5 else None
+
+
 def cospa_row(rows, cat=None):
     """コスパ最強: 評価が高く（★4.3以上）レビューも多い（50件以上）商品の中で、いちばん安いもの。
     相場（中央値）の1.3倍を超えるなら「安い」とは言えないので出さない。漫画・業務用サイズは対象外"""
@@ -1267,7 +1308,14 @@ def pick_rows(rows, cat=None):
     cp = cospa_row(rows, cat)
     label = ("送料込みでいちばん安い" if first["free_ship"] else "いちばん安い（送料別）") + ("・コスパ最強" if first is cp else ("・高評価" if good(first) else ""))
     picks, used = [(label, first)], {id(first)}
+    so = solo_row(rows, cat)
+    if so and first["count"] > SOLO[cat["slug"]][0]:
+        label += "（まとめ買い・ファミリー向け）"
+    elif so is first:
+        label += "・少なめの量"
     tests = [(f"コスパ最強（★{cp['rating']:.1f}・レビュー{cp['reviews']:,}件の中で最安）", lambda r: r is cp)] if cp else []
+    if so:
+        tests.append(("一人暮らし向け・少なめの量で最安", lambda r: r is so))
     tests.append(("総合おすすめ（安さ×評価）", lambda r: r is top_score and not cp))
     if cat and cat.get("compat"):  # 替えブラシは純正を探す人も多い
         tests.insert(0, ("純正でいちばん安い", lambda r: r.get("note") == "純正"))
@@ -1428,7 +1476,17 @@ def tldr_html(cat, rows, updated, hist=None):
         head = f"{day}時点、楽天で{name}がいちばん安いのは"
         tail = f"{b['unit_price']:,.1f}円/{unit}（{b['price']:,}円・{b['count']:,.0f}{base}{'・送料無料' if b['free_ship'] else ''}）"
     return (f"<p class=tldr><b>結論：</b>{e(head)}「{e(clean_name(b['name'], 40))}」で、{e(tail)}です。"
-            f"掲載{len(rows)}商品の相場（中央値）は{median_unit(rows):,.1f}円/{e(unit)}です。{e(buy_verdict(hist or [], unit))}{cospa_text(cat, rows)}</p>")
+            f"掲載{len(rows)}商品の相場（中央値）は{median_unit(rows):,.1f}円/{e(unit)}です。{e(buy_verdict(hist or [], unit))}{cospa_text(cat, rows)}{solo_text(cat, rows)}</p>")
+
+
+def solo_text(cat, rows):
+    """結論文に足す「一人暮らし向け」の1文（最安がすでに少なめの量なら出さない）"""
+    so, b, e = solo_row(rows, cat), best_row(rows), html.escape
+    if not so or so is b:
+        return ""
+    base = cat.get("base", cat["unit"] + "分")
+    return (f"<br><b>一人暮らし向け：</b>{e(SOLO[cat['slug']][1])}で最安は「{e(clean_name(so['name'], 36))}」"
+            f"（{so['price']:,}円・{so['count']:,.0f}{e(base)}）で{so['unit_price']:,.1f}円/{e(cat['unit'])}{'' if so['free_ship'] else '（送料別）'}です。")
 
 
 def cospa_text(cat, rows):
@@ -1526,12 +1584,12 @@ def render(cat, rows, updated, hist=None):
         f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in faq) + "</section>") if faq else ""
 
     medal = {1: "m1", 2: "m2", 3: "m3"}
-    cp_row = cospa_row(rows, cat)
-    items = "".join(f"""<li class=row data-u="{r['unit_price']:.4f}" data-s="{r.get('score', 0)}" data-p="{r.get('eff_unit', r['unit_price']):.4f}" data-pt="{r.get('point', 1)}" data-r="{r['rating']:.2f}" data-n="{r['reviews']}" data-f="{1 if r['free_ship'] else 0}">
+    cp_row, so_row = cospa_row(rows, cat), solo_row(rows, cat)
+    items = "".join(f"""<li class=row data-u="{r['unit_price']:.4f}" data-s="{r.get('score', 0)}" data-p="{r.get('eff_unit', r['unit_price']):.4f}" data-pt="{r.get('point', 1)}" data-r="{r['rating']:.2f}" data-n="{r['reviews']}" data-f="{1 if r['free_ship'] else 0}" data-c="{r['count']:.0f}">
 <span class="rk {medal.get(i, '')}">{i}</span>
 <a class=ri href="{e(r['url'])}" rel="sponsored noopener" target=_blank><img src="{e(r['img'])}" alt="" loading=lazy></a>
 <div class=rb><a class=rn href="{e(r['url'])}" rel="sponsored noopener" target=_blank title="{e(r['name'])}">{e(clean_name(r['name']))}</a>
-<div class=bd>{'<span class="b cp">コスパ最強</span>' if r is cp_row else ''}{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class="b sb">送料別（送料を含まない単価）</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b dn">前回より{r["drop"]:,}円値下がり</span>' if r.get('drop') else ''}{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
+<div class=bd>{'<span class="b cp">コスパ最強</span>' if r is cp_row else ''}{'<span class="b so">一人暮らし向けで最安</span>' if r is so_row and r is not best_row(rows) else ''}{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class="b sb">送料別（送料を含まない単価）</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b dn">前回より{r["drop"]:,}円値下がり</span>' if r.get('drop') else ''}{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
 <small>{e(r['shop'])}</small></div>
 <div class=rp><b>{r['unit_price']:.1f}<i>円/{e(unit)}</i></b><small>{r['price']:,}円・{r['count']:,.0f}{e(base)}</small>
 <small class=me hidden></small><a class=go href="{e(r['url'])}" rel="sponsored noopener" target=_blank>楽天で見る</a></div></li>"""
@@ -1539,11 +1597,13 @@ def render(cat, rows, updated, hist=None):
     controls = """<div class=ctl role=group aria-label="並べ替え">
 <button type=button data-s=u aria-pressed=true>安い順</button><button type=button data-s=s aria-pressed=false>総合おすすめ順</button><button type=button data-s=p aria-pressed=false>ポイント込みで安い順</button><button type=button data-s=r aria-pressed=false>評価が高い順</button>
 <button type=button data-s=n aria-pressed=false>レビューが多い順</button>
-<label><input type=checkbox id=fs> 送料無料のみ</label></div>
+<label><input type=checkbox id=fs> 送料無料のみ</label>@@SOLO@@</div>
 <div class=spu><label for=spu>あなたの楽天ポイント倍率（SPU）</label>
 <select id=spu><option value=0>未設定</option>""" + "".join(f"<option value={k}>{k}倍</option>" for k in range(1, 21)) + """</select>
 <span>選ぶと<b>あなたの実質価格</b>で表示（全ページ共通）<a href="https://event.rakuten.co.jp/campaign/point-up/everyday/point/" rel="noopener" target=_blank>倍率を確認</a></span></div>"""
 
+    controls = controls.replace("@@SOLO@@", f"<label><input type=checkbox id=solo> 一人暮らし向け（{e(SOLO[cat['slug']][1])}）のみ</label>"
+                                if cat["slug"] in SOLO else "")
     site = site_url()
     url = f"{site}{cat['slug']}.html"
     name = short(cat)
@@ -1625,7 +1685,7 @@ ol.list{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
 .ri img{{width:64px;height:64px;object-fit:contain;background:#fff;border-radius:8px;display:block}}
 .rb{{min-width:0}} .rn{{color:inherit;text-decoration:none;font-size:.9rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 .rn:hover{{text-decoration:underline}}
-.bd{{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}} .b{{font-size:.7rem;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--mut)}} .b.ok{{color:var(--ok);font-weight:700}} .b.pt{{color:var(--acc);font-weight:700}} .b.dn{{background:var(--acc);color:#fff;font-weight:700}} .b.sb{{color:var(--acc)}} .b.cp{{background:#b8860b;color:#fff;font-weight:700}}
+.bd{{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}} .b{{font-size:.7rem;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--mut)}} .b.ok{{color:var(--ok);font-weight:700}} .b.pt{{color:var(--acc);font-weight:700}} .b.dn{{background:var(--acc);color:#fff;font-weight:700}} .b.sb{{color:var(--acc)}} .b.cp{{background:#b8860b;color:#fff;font-weight:700}} .b.so{{background:#2f6fb3;color:#fff;font-weight:700}}
 small{{display:block;color:var(--mut);font-size:.72rem}}
 .rp{{text-align:right;display:grid;gap:4px;justify-items:end}} .rp b{{font-size:1.2rem;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}} .rp i{{font-style:normal;font-size:.75rem;color:var(--mut);font-weight:400}}
 @media(max-width:560px){{.row{{grid-template-columns:1.8em 52px minmax(0,1fr)}} .ri img{{width:52px;height:52px}} .rp{{grid-column:2/-1;grid-template-columns:auto 1fr auto;align-items:center;text-align:left}} .rp small{{justify-self:start}}}}
@@ -1654,7 +1714,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{{outline:2px solid var(
 </main>
 <script>
 (function(){{
-  var list=document.getElementById('list'), rows=[].slice.call(list.children), key='u', fs=document.getElementById('fs');
+  var list=document.getElementById('list'), rows=[].slice.call(list.children), key='u', fs=document.getElementById('fs'), so=document.getElementById('solo'), SOLO={SOLO.get(cat["slug"], (0,))[0]};
   function apply(){{
     var s=rows.slice().sort(function(a,b){{
       if(key==='u') return a.dataset.u-b.dataset.u;
@@ -1663,13 +1723,14 @@ a:focus-visible,button:focus-visible,input:focus-visible{{outline:2px solid var(
       if(key==='r') return b.dataset.r-a.dataset.r||a.dataset.u-b.dataset.u;
       return b.dataset.n-a.dataset.n;
     }}), shown=0;
-    s.forEach(function(r){{ var ok=!fs.checked||r.dataset.f==='1'; r.hidden=!ok; if(ok){{shown++; r.querySelector('.rk').textContent=shown; r.querySelector('.rk').className='rk'+(key==='u'&&!fs.checked&&shown<=3?' m'+shown:'');}} list.appendChild(r); }});
+    var fil=fs.checked||(so&&so.checked);
+    s.forEach(function(r){{ var ok=(!fs.checked||r.dataset.f==='1')&&(!so||!so.checked||+r.dataset.c<=SOLO); r.hidden=!ok; if(ok){{shown++; r.querySelector('.rk').textContent=shown; r.querySelector('.rk').className='rk'+(key==='u'&&!fil&&shown<=3?' m'+shown:'');}} list.appendChild(r); }});
     document.getElementById('none').hidden=shown>0;
   }}
   [].forEach.call(document.querySelectorAll('.ctl button'),function(b){{
     b.addEventListener('click',function(){{ key=b.dataset.s; [].forEach.call(document.querySelectorAll('.ctl button'),function(x){{x.setAttribute('aria-pressed',x===b)}}); apply(); }});
   }});
-  fs.addEventListener('change',apply);
+  fs.addEventListener('change',apply); if(so) so.addEventListener('change',apply);
   // あなたのSPU: 楽天のポイントは税抜価格に付くので 倍率/110 を差し引く。ショップのポイントアップ分（pt-1）も足す
   var sel=document.getElementById('spu'), pb=document.querySelector('.ctl button[data-s=p]'), UNIT={json.dumps(unit)};
   rows.forEach(function(r){{r.dataset.p0=r.dataset.p}});
