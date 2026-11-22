@@ -132,6 +132,12 @@ if __name__ == "__main__":
     if [r["price"] for r in _r] != [4700]:
         bad.append(("ふるさと納税の定期便", [r["price"] for r in _r], [4700]))
     LIMIT_CASES = LIMIT_CASES + [(None, "ふるさと納税の定期便", 1)]
+    # 枚数の選択式（「30・40・60・90・150枚」）は最大の150枚で割らず、最小の30枚で割る（2026-11-23 マスク1位 798円が5.3円/枚と表示）
+    _mk = build.CATEGORIES_BY_SLUG["mask"]
+    _r = build.rank([{"itemName": "マスク 不織布 アイリスオーヤマ 立体 30・40・60・90・150枚 立体マスク バイカラー", "itemPrice": 798, "reviewCount": 50}], _mk)
+    if [round(r["unit_price"], 2) for r in _r] not in ([], [26.6]):
+        bad.append(("枚数の選択式", [round(r["unit_price"], 2) for r in _r], [26.6]))
+    LIMIT_CASES = LIMIT_CASES + [(None, "枚数の選択式", 1)]
     # 表示名: 店の宣伝を外しても商品名は残す
     NAME_CASES = [
         ("【ポイント10倍！11/19-12/31迄】P&G アリエールジェルボール4D微香 83個×4個セット", "P&G アリエールジェルボール4D微香 83個×4個セット"),

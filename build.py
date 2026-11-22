@@ -908,7 +908,7 @@ def variant_min(name, words, lo, hi):
 
 def is_variant_list(s):
     """「×6袋 4袋 2袋」のように同じ単位の個数が並ぶのは選択式。表示価格がどの数量のものか分からない"""
-    if re.search(r"\d\s*[・/／]\s*\d+\s*(?:個|袋|本|箱|缶|ケース|パック)", s):  # 「4・6個セット」
+    if re.search(r"\d\s*[・/／]\s*\d+\s*(?:個|袋|本|箱|缶|ケース|パック|枚)", s):  # 「4・6個セット」「30・60・150枚」
         return True
     if re.search(r"\d\s*(?:kg|g|ml|mL|L)\s*[・/／]\s*\d+(?:\.\d+)?\s*(?:kg|g|ml|mL|L)(?![x*\d])", s):  # 「1kg／3kg」
         return True
