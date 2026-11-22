@@ -353,12 +353,15 @@ def render_feature(f, summary, by_slug, site, updated, short, per_text_of):
                 continue
             d = 0 if per_text_of(c).startswith("1冊") else 1
             med = f"{s['med']:,.{d}f}円" if s.get("med") else "—"
-            trs += (f"<tr><th><a href='#{slug}'>{e(short(c))}</a></th><td><b>{s['unit_price']:,.{d}f}円</b></td><td>{med}</td>"
+            cp = s.get("cospa")
+            cpt = (f"<a href='{e(cp['u'])}' rel='sponsored noopener' target=_blank>{cp['up']:,.{d}f}円</a><small>★{cp['rt']:.1f}</small>"
+                   if cp else "—")
+            trs += (f"<tr><th><a href='#{slug}'>{e(short(c))}</a></th><td><b>{s['unit_price']:,.{d}f}円</b></td><td>{cpt}</td><td>{med}</td>"
                     f"<td>{s.get('count', 0)}件</td></tr>")
         if trs:
             c0 = by_slug.get(f["items"][0][0])
             toc = (f"<table class=cmp><caption>種類別の最安と相場（{e(per_text_of(c0))}・{e(updated[5:10].replace('-', '/'))}時点）</caption>"
-                   f"<thead><tr><th>種類</th><th>最安</th><th>相場（中央値）</th><th>掲載</th></tr></thead><tbody>{trs}</tbody></table>") + toc
+                   f"<thead><tr><th>種類</th><th>最安</th><th>コスパ最強<small>（★4.3以上で最安）</small></th><th>相場</th><th>掲載</th></tr></thead><tbody>{trs}</tbody></table>") + toc
     guide = "".join(f"<h3>{e(h)}</h3><p>{e(t)}</p>" for h, t in f.get("guide", []))
     faq = "".join(f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in f.get("faq", []))
     extra = (f"<section class=guide><h2>知っておきたいこと</h2>{guide}</section>" if guide else "") + \
@@ -409,7 +412,7 @@ section{scroll-margin-top:12px}h2{font-size:1.1rem;margin:1.8em 0 .2em}h2 small{
 .faq details{border-bottom:1px solid var(--line);padding:8px 0}.faq summary{cursor:pointer;font-weight:600}.faq p{margin:.4em 0 0;font-size:.92rem}
 .evp{display:inline-block;border:1px solid var(--acc);color:var(--acc);border-radius:8px;padding:2px 10px;font-weight:700;font-size:.92rem}.evp.on{background:var(--acc);color:#fff}
 .cmp{width:100%;border-collapse:collapse;margin:12px 0;font-size:.88rem}.cmp caption{text-align:left;color:var(--mut);font-size:.8rem;margin-bottom:4px}
-.cmp th,.cmp td{border-bottom:1px solid var(--line);padding:6px 4px;text-align:right}.cmp th:first-child{text-align:left}.cmp td b{color:var(--acc)}
+.cmp small{display:block;font-size:.7rem;color:var(--mut);font-weight:400}.cmp th,.cmp td{border-bottom:1px solid var(--line);padding:6px 4px;text-align:right}.cmp th:first-child{text-align:left}.cmp td b{color:var(--acc)}
 footer{margin-top:28px;color:var(--mut);font-size:.8rem}</style></head><body><main>
 <p class=mut><a href="./">TANKA</a> › @@CRUMB@@</p>
 <p class=pr>PR：楽天アフィリエイトを利用しています</p>

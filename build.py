@@ -1240,6 +1240,23 @@ def best_row(rows):
     return next((r for r in home if r["free_ship"]), home[0]) if rows else None
 
 
+def cospa_row(rows, cat=None):
+    """コスパ最強: 評価が高く（★4.3以上）レビューも多い（50件以上）商品の中で、いちばん安いもの。
+    相場（中央値）の1.3倍を超えるなら「安い」とは言えないので出さない。漫画・業務用サイズは対象外"""
+    if not rows or (cat and cat.get("manga")):
+        return None
+    home = [r for r in rows if not r.get("biz")]
+    for rt, rv in ((4.3, 50), (4.2, 20)):  # 条件に合う商品がなければ少しゆるめる
+        cand = [r for r in home if r["rating"] >= rt and r["reviews"] >= rv]
+        if cand:
+            break
+    else:
+        return None
+    cand.sort(key=lambda r: r["unit_price"])
+    r = next((r for r in cand if r["free_ship"]), cand[0])  # 「最安」と同じく送料無料を優先（送料別は単価に送料が入らないため）
+    return r if r["unit_price"] <= median_unit(rows) * 1.3 else None
+
+
 def pick_rows(rows, cat=None):
     """冒頭の「結論」に出す3つ。送料別の商品は送料を含まない単価なので、1枠目は送料無料の最安にする"""
     if not rows:
@@ -1247,9 +1264,11 @@ def pick_rows(rows, cat=None):
     good = lambda r: r["rating"] >= 4.3 and r["reviews"] >= 100
     top_score = max(rows, key=lambda r: r.get("score", 0))
     first = best_row(rows)
-    label = ("送料込みでいちばん安い" if first["free_ship"] else "いちばん安い（送料別）") +             ("・総合1位" if first is top_score else ("・高評価" if good(first) else ""))
+    cp = cospa_row(rows, cat)
+    label = ("送料込みでいちばん安い" if first["free_ship"] else "いちばん安い（送料別）") + ("・コスパ最強" if first is cp else ("・高評価" if good(first) else ""))
     picks, used = [(label, first)], {id(first)}
-    tests = [("総合おすすめ（安さ×評価）", lambda r: r is top_score)]
+    tests = [(f"コスパ最強（★{cp['rating']:.1f}・レビュー{cp['reviews']:,}件の中で最安）", lambda r: r is cp)] if cp else []
+    tests.append(("総合おすすめ（安さ×評価）", lambda r: r is top_score and not cp))
     if cat and cat.get("compat"):  # 替えブラシは純正を探す人も多い
         tests.insert(0, ("純正でいちばん安い", lambda r: r.get("note") == "純正"))
     if cat and cat.get("manga"):
@@ -1409,7 +1428,18 @@ def tldr_html(cat, rows, updated, hist=None):
         head = f"{day}時点、楽天で{name}がいちばん安いのは"
         tail = f"{b['unit_price']:,.1f}円/{unit}（{b['price']:,}円・{b['count']:,.0f}{base}{'・送料無料' if b['free_ship'] else ''}）"
     return (f"<p class=tldr><b>結論：</b>{e(head)}「{e(clean_name(b['name'], 40))}」で、{e(tail)}です。"
-            f"掲載{len(rows)}商品の相場（中央値）は{median_unit(rows):,.1f}円/{e(unit)}です。{e(buy_verdict(hist or [], unit))}</p>")
+            f"掲載{len(rows)}商品の相場（中央値）は{median_unit(rows):,.1f}円/{e(unit)}です。{e(buy_verdict(hist or [], unit))}{cospa_text(cat, rows)}</p>")
+
+
+def cospa_text(cat, rows):
+    """結論文に足す「コスパ最強」の1文（最安と同じ商品なら一言だけ）"""
+    cp, b, e = cospa_row(rows, cat), best_row(rows), html.escape
+    if not cp:
+        return ""
+    if cp is b:
+        return f"この商品は★{cp['rating']:.1f}（{cp['reviews']:,}件）と評価も高く、コスパ最強です。"
+    return (f"<br><b>コスパ最強：</b>評価も重視するなら「{e(clean_name(cp['name'], 36))}」"
+            f"（★{cp['rating']:.1f}・{cp['reviews']:,}件）が{cp['unit_price']:,.1f}円/{e(cat['unit'])}{'' if cp['free_ship'] else '（送料別）'}です。")
 
 
 def data_insights(cat, rows, hist):
@@ -1496,11 +1526,12 @@ def render(cat, rows, updated, hist=None):
         f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in faq) + "</section>") if faq else ""
 
     medal = {1: "m1", 2: "m2", 3: "m3"}
+    cp_row = cospa_row(rows, cat)
     items = "".join(f"""<li class=row data-u="{r['unit_price']:.4f}" data-s="{r.get('score', 0)}" data-p="{r.get('eff_unit', r['unit_price']):.4f}" data-pt="{r.get('point', 1)}" data-r="{r['rating']:.2f}" data-n="{r['reviews']}" data-f="{1 if r['free_ship'] else 0}">
 <span class="rk {medal.get(i, '')}">{i}</span>
 <a class=ri href="{e(r['url'])}" rel="sponsored noopener" target=_blank><img src="{e(r['img'])}" alt="" loading=lazy></a>
 <div class=rb><a class=rn href="{e(r['url'])}" rel="sponsored noopener" target=_blank title="{e(r['name'])}">{e(clean_name(r['name']))}</a>
-<div class=bd>{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class="b sb">送料別（送料を含まない単価）</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b dn">前回より{r["drop"]:,}円値下がり</span>' if r.get('drop') else ''}{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
+<div class=bd>{'<span class="b cp">コスパ最強</span>' if r is cp_row else ''}{f'<span class=b>{e(r["note"])}</span>' if r.get('note') else ''}{'<span class="b ok">送料無料</span>' if r['free_ship'] else '<span class="b sb">送料別（送料を含まない単価）</span>'}<span class=b>★{r['rating']:.2f}（{r['reviews']:,}件）</span>{f'<span class="b dn">前回より{r["drop"]:,}円値下がり</span>' if r.get('drop') else ''}{f'<span class="b pt">ポイント{r["point"]}倍・実質{r["eff_unit"]:.1f}円/{e(unit)}</span>' if r.get('point', 1) >= 2 else ''}{f'<span class=b>同じ商品ほか{r["others"]}件の中で最安</span>' if r.get('others') else ''}</div>
 <small>{e(r['shop'])}</small></div>
 <div class=rp><b>{r['unit_price']:.1f}<i>円/{e(unit)}</i></b><small>{r['price']:,}円・{r['count']:,.0f}{e(base)}</small>
 <small class=me hidden></small><a class=go href="{e(r['url'])}" rel="sponsored noopener" target=_blank>楽天で見る</a></div></li>"""
@@ -1594,7 +1625,7 @@ ol.list{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
 .ri img{{width:64px;height:64px;object-fit:contain;background:#fff;border-radius:8px;display:block}}
 .rb{{min-width:0}} .rn{{color:inherit;text-decoration:none;font-size:.9rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 .rn:hover{{text-decoration:underline}}
-.bd{{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}} .b{{font-size:.7rem;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--mut)}} .b.ok{{color:var(--ok);font-weight:700}} .b.pt{{color:var(--acc);font-weight:700}} .b.dn{{background:var(--acc);color:#fff;font-weight:700}} .b.sb{{color:var(--acc)}}
+.bd{{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}} .b{{font-size:.7rem;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--mut)}} .b.ok{{color:var(--ok);font-weight:700}} .b.pt{{color:var(--acc);font-weight:700}} .b.dn{{background:var(--acc);color:#fff;font-weight:700}} .b.sb{{color:var(--acc)}} .b.cp{{background:#b8860b;color:#fff;font-weight:700}}
 small{{display:block;color:var(--mut);font-size:.72rem}}
 .rp{{text-align:right;display:grid;gap:4px;justify-items:end}} .rp b{{font-size:1.2rem;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}} .rp i{{font-style:normal;font-size:.75rem;color:var(--mut);font-weight:400}}
 @media(max-width:560px){{.row{{grid-template-columns:1.8em 52px minmax(0,1fr)}} .ri img{{width:52px;height:52px}} .rp{{grid-column:2/-1;grid-template-columns:auto 1fr auto;align-items:center;text-align:left}} .rp small{{justify-self:start}}}}
@@ -2220,6 +2251,8 @@ def main():
                                     "price": sorted(r["price"] for r in rows[:10])[min(len(rows), 10) // 2],
                                     "avg": typical_avg(rows), "pt": top.get("point", 1),
                                     "clean": clean_name(top["name"], 40), "med": round(median_unit(rows), 2),
+                                    "cospa": (lambda r: {"n": clean_name(r["name"], 40), "u": r["url"], "up": round(r["unit_price"], 2),
+                                                         "rt": r["rating"], "rv": r["reviews"]} if r else None)(cospa_row(rows, cat)),
                                     "top10": [{"n": clean_name(r["name"], 50), "u": r["url"], "i": r["img"], "p": r["price"],
                                                "up": round(r["unit_price"], 2), "pt": r.get("point", 1), "fs": r["free_ship"]}
                                               for r in sorted([r for r in rows if not r.get("biz")] or rows,
