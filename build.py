@@ -2052,7 +2052,7 @@ a:focus-visible,input:focus-visible{{outline:2px solid var(--acc);outline-offset
 <div class=spu><label for=spu>あなたの楽天ポイント倍率（SPU）</label><select id=spu><option value=0>未設定</option>""" + "".join(f"<option value={k}>{k}倍</option>" for k in range(1, 21)) + f"""</select>
 <a href="https://event.rakuten.co.jp/campaign/point-up/everyday/point/" rel="noopener" target=_blank>自分の倍率を確認</a><span id=spumsg></span></div>
 <p class=tools><a href="calc.html">単価計算ツール</a><a href="sim.html">格安SIM料金比較</a></p>
-<div class=stats><span><b>{len(CATEGORIES)}</b> ジャンル</span><span><b>{n_items:,}</b> 商品を比較</span><span>毎朝6時に自動更新（{updated[5:10].replace('-', '/')} {updated[11:]}）</span></div>
+<div class=stats><span><b>{len(CATEGORIES)}</b> ジャンル</span><span><b>{n_items:,}</b> 商品を比較</span><span>毎日自動更新（最終更新 {updated[5:10].replace('-', '/')} {updated[11:]}）</span></div>
 </section>
 <div class=bar><input id=q type=search placeholder="さがす（例：洗剤、猫、トイレットペーパー、キュキュット、呪術廻戦）" aria-label="ジャンルをさがす" autocomplete=off>
 <nav class=chips aria-label="カテゴリ">{"<a href='#drops'>値下がり</a>" if picked else ""}{"<a href='#today'>今が買い時</a>" if deal_html else ""}<a href='#tokushu'>特集</a><a href="calc.html">単価計算ツール</a>{chips}</nav></div>
