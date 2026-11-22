@@ -205,7 +205,7 @@ def render_feature(f, summary, by_slug, site, updated, short, per_text_of):
     for slug, why in f["items"]:
         c, s = by_slug.get(slug), summary.get(slug) or {}
         top = s.get("top3") or []
-        if not c or not top:
+        if not c or not top or s.get("count", 0) < 5:  # 掲載5件未満（検索に載せないページ）は特集に出さない。増えれば自動で戻る
             continue
         n_items += len(top)
         per = per_text_of(c)

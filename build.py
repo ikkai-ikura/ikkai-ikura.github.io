@@ -1953,6 +1953,9 @@ def render_index(summary, updated, drops=None, history=None):
 <span class=rank>↓</span><img src='{e(d['img'])}' alt='' loading=lazy><span class=dn>{e(d['name'])}</span>
 <span class=dp><b>{d['price']:,}円</b></span><span class=dd><strong>{d['drop']:,}円（{d['pct']:.0f}%）値下がり</strong></span>
 <span class=dd>{e(short(by_slug[d['slug']]))}</span></a>""" for d in picked[:6]) + "</div></section>") if picked else ""
+    # 掲載がMIN_INDEX未満（検索に載せないページ）はトップの一覧から外す。漫画以外。5件以上に戻れば自動で一覧に戻る
+    thin = {sl for sl, v in summary.items() if not by_slug.get(sl, {}).get("manga") and v.get("count", 0) < MIN_INDEX}
+    groups = [(gid, label, [sl for sl in sls if sl not in thin]) for gid, label, sls in groups]
     chips = "".join(f"<a href='#{gid}'>{e(label)}<i>{len([s for s in sls if s in by_slug])}</i></a>" for gid, label, sls in groups)
     def tile(c):
         """漫画用の小さいタイル: 作品名と1冊あたりの最安だけ"""
