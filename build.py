@@ -1807,7 +1807,7 @@ small{{display:block;color:var(--mut);font-size:.72rem}}
 .tips,.promo{{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}}
 .tips ul{{margin:0;padding-left:1.2em}} .promo .pr{{margin:0}}
 .pi{{display:grid;gap:2px;padding:8px 0;border-top:1px dashed var(--line)}} .pi span{{color:var(--mut);font-size:.85rem}} .pi a{{color:var(--acc);font-weight:600}}
-.rel{{margin:14px 0 4px}} .rel h2{{font-size:1rem;margin:0 0 6px}} .oth{{margin-top:20px}} .oth a{{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:inherit;text-decoration:none;font-size:.85rem;background:var(--card)}}
+.rel{{margin:14px 0 4px}} .rel h2{{font-size:1rem;margin:0 0 6px}} .rel a{{padding:7px 12px}} .oth{{margin-top:20px}} .oth a{{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:inherit;text-decoration:none;font-size:.85rem;background:var(--card)}}
 .none{{color:var(--mut)}}
 .hubl{{margin:6px 0;font-size:.9rem}} .hubl a{{color:var(--ok);font-weight:600}}
 .tldr{{background:var(--card);border-left:4px solid var(--acc);border-radius:8px;padding:8px 12px;margin:8px 0}}
