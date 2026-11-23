@@ -1222,6 +1222,94 @@ def rank(items, cat):
     return add_scores(out)
 
 
+# 関連ジャンル（横のつながり）: 一緒に買われやすい・比べたくなるジャンルを、1位のカードのすぐ下に3〜4個だけ出す
+RELATED = {
+    "dishwasher-tablet": ["dish-soap-refill", "kitchen-paper", "food-wrap"],
+    "dish-soap-refill": ["dishwasher-tablet", "hand-soap-refill", "kitchen-paper"],
+    "laundry-gelball": ["liquid-laundry-refill", "softener-refill", "oxygen-bleach"],
+    "liquid-laundry-refill": ["softener-refill", "laundry-gelball", "oxygen-bleach", "furusato-liquid-laundry-refill"],
+    "softener-refill": ["liquid-laundry-refill", "laundry-gelball", "oxygen-bleach"],
+    "oxygen-bleach": ["liquid-laundry-refill", "softener-refill", "dishwasher-tablet"],
+    "kitchen-paper": ["food-wrap", "dish-soap-refill", "toilet-paper-double", "furusato-kitchen-paper"],
+    "food-wrap": ["kitchen-paper", "garbage-bag-45l", "dish-soap-refill"],
+    "toilet-paper-double": ["toilet-paper-single", "tissue", "kitchen-paper", "furusato-toilet-paper-double"],
+    "toilet-paper-single": ["toilet-paper-double", "tissue", "kitchen-paper", "furusato-toilet-paper-double"],
+    "tissue": ["toilet-paper-double", "kitchen-paper", "disinfect-wipes", "furusato-tissue"],
+    "garbage-bag-45l": ["food-wrap", "kitchen-paper", "disinfect-wipes"],
+    "mask": ["disinfect-wipes", "tissue", "hand-soap-refill"],
+    "disinfect-wipes": ["mask", "hand-soap-refill", "baby-wipes"],
+    "cotton-swab": ["toothpaste", "tissue", "baby-wipes"],
+    "aa-battery": ["mobile-battery", "kairo", "water-2l"],
+    "kairo": ["mask", "aa-battery", "water-2l"],
+    "diaper-tape-nb": ["diaper-tape-s", "baby-wipes", "baby-formula"],
+    "diaper-tape-s": ["diaper-tape-m", "baby-wipes", "baby-formula"],
+    "diaper-tape-m": ["diaper-pants-m", "baby-wipes", "baby-formula"],
+    "diaper-pants-m": ["diaper-pants-l", "baby-wipes", "liquid-milk"],
+    "diaper-pants-l": ["diaper-pants-big", "baby-wipes", "liquid-milk"],
+    "diaper-pants-big": ["diaper-pants-xbig", "baby-wipes", "disinfect-wipes"],
+    "diaper-pants-xbig": ["diaper-pants-big", "baby-wipes", "disinfect-wipes"],
+    "baby-formula": ["liquid-milk", "diaper-tape-s", "baby-wipes"],
+    "liquid-milk": ["baby-formula", "baby-wipes", "diaper-tape-nb"],
+    "baby-wipes": ["diaper-pants-m", "diaper-tape-s", "disinfect-wipes"],
+    "sanitary-napkin": ["sanitary-napkin-night", "tissue", "body-soap-refill"],
+    "sanitary-napkin-night": ["sanitary-napkin", "tissue", "body-soap-refill"],
+    "hand-soap-refill": ["body-soap-refill", "dish-soap-refill", "disinfect-wipes"],
+    "body-soap-refill": ["shampoo-refill", "hand-soap-refill", "toothpaste"],
+    "shampoo-refill": ["body-soap-refill", "hand-soap-refill", "toothpaste"],
+    "toothpaste": ["sonicare-brush-head", "oralb-brush-head", "cotton-swab"],
+    "sonicare-brush-head": ["toothpaste", "oralb-brush-head"],
+    "oralb-brush-head": ["toothpaste", "sonicare-brush-head"],
+    "dog-food-dry": ["pet-sheet", "pet-sheet-wide", "cat-food-dry"],
+    "cat-food-dry": ["cat-litter", "pet-sheet", "dog-food-dry"],
+    "pet-sheet": ["pet-sheet-wide", "dog-food-dry", "cat-litter"],
+    "pet-sheet-wide": ["pet-sheet", "dog-food-dry", "cat-litter"],
+    "cat-litter": ["cat-food-dry", "pet-sheet", "pet-sheet-wide"],
+    "rice": ["soy-sauce", "canola-oil", "water-2l", "furusato-rice"],
+    "coffee-beans": ["water-2l", "sparkling-water-500ml", "protein"],
+    "protein": ["protein-soy", "water-2l", "coffee-beans"],
+    "protein-soy": ["protein", "water-2l", "soy-sauce"],
+    "water-2l": ["sparkling-water-500ml", "tea-500ml", "rice", "furusato-water-2l"],
+    "sparkling-water-500ml": ["water-2l", "tea-500ml", "coffee-beans"],
+    "tea-500ml": ["water-2l", "sparkling-water-500ml", "coffee-beans"],
+    "soy-sauce": ["canola-oil", "rice", "food-wrap"],
+    "canola-oil": ["soy-sauce", "rice", "kitchen-paper"],
+    "contact-1day": ["contact-2week"],
+    "contact-2week": ["contact-1day"],
+    "mobile-battery": ["aa-battery", "kairo"],
+    "furusato-toilet-paper-double": ["toilet-paper-double", "furusato-tissue", "furusato-rice"],
+    "furusato-tissue": ["tissue", "furusato-toilet-paper-double", "furusato-water-2l"],
+    "furusato-rice": ["rice", "furusato-water-2l", "furusato-toilet-paper-double"],
+    "furusato-water-2l": ["water-2l", "furusato-rice", "furusato-tissue"],
+    "furusato-liquid-laundry-refill": ["liquid-laundry-refill", "furusato-toilet-paper-double", "furusato-rice"],
+    "furusato-kitchen-paper": ["kitchen-paper", "furusato-toilet-paper-double", "furusato-rice"],
+}
+
+
+def related_html(cat):
+    """1位のカードの下に出す「あわせて比べたい」（ふるさと納税版と通常版は文言を変えて相互リンク）"""
+    e = html.escape
+    me = cat["slug"]
+    links = []
+    for sl in RELATED.get(me, []):
+        c = CATEGORIES_BY_SLUG.get(sl)
+        if not c:
+            continue
+        if c.get("furusato") and not cat.get("furusato"):
+            label = f"ふるさと納税で選ぶなら：{short(c).replace('ふるさと納税 ', '')}"
+        elif cat.get("furusato") and not c.get("furusato"):
+            label = f"ふつうに買うなら：{short(c)}"
+        else:
+            label = short(c)
+        links.append(f'<a href="{sl}.html">{e(label)}</a>')
+    if me in SOLO:
+        links.append('<a href="hitorigurashi-nichiyouhin.html">一人暮らしの日用品は月いくら？</a>')
+    if any(me in sls for g, _, sls in GROUPS if g == "baby") and not me.startswith("sanitary"):
+        links.append('<a href="akachan-shoumouhin.html">赤ちゃんの消耗品は月いくら？</a>')
+    if not links:
+        return ""
+    return "<nav class=\"oth rel\"><h2>あわせて比べたい</h2>" + "".join(links) + "</nav>"
+
+
 def short(c):
     """ナビ用の短い名前: 「ゴミ袋 45L 1枚あたり単価ランキング」→「ゴミ袋 45L」"""
     per = c.get("per_text", f"1{c['unit']}あたり")
@@ -1651,6 +1739,10 @@ def render(cat, rows, updated, hist=None):
         ensure_ascii=False).replace("</", "<\\/")
     gid = next((g for g, _, sls in GROUPS if cat["slug"] in sls), None)
     same = [CATEGORIES_BY_SLUG[s] for g, _, sls in GROUPS if g == gid for s in sls if s != cat["slug"] and s in CATEGORIES_BY_SLUG]
+    if cat.get("manga") and len(same) > 10:  # 漫画は約50作品あるので、並び順で前後の10作品だけ
+        order = next(sls for g, _, sls in GROUPS if g == gid)
+        i = order.index(cat["slug"])  # same は自分を除いた並びなので、i 番目からが「自分の次の作品」
+        same = (same[i:] + same[:i])[:10]
     rest = [CATEGORIES_BY_SLUG[sl] for sl in POPULAR if sl != cat["slug"] and sl in CATEGORIES_BY_SLUG
             and CATEGORIES_BY_SLUG[sl] not in same][:8]
     chip = lambda c: f'<a href="{c["slug"]}.html">{e(short(c))}</a>'
@@ -1715,7 +1807,7 @@ small{{display:block;color:var(--mut);font-size:.72rem}}
 .tips,.promo{{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}}
 .tips ul{{margin:0;padding-left:1.2em}} .promo .pr{{margin:0}}
 .pi{{display:grid;gap:2px;padding:8px 0;border-top:1px dashed var(--line)}} .pi span{{color:var(--mut);font-size:.85rem}} .pi a{{color:var(--acc);font-weight:600}}
-.oth{{margin-top:20px}} .oth a{{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:inherit;text-decoration:none;font-size:.85rem;background:var(--card)}}
+.rel{{margin:14px 0 4px}} .rel h2{{font-size:1rem;margin:0 0 6px}} .oth{{margin-top:20px}} .oth a{{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:inherit;text-decoration:none;font-size:.85rem;background:var(--card)}}
 .none{{color:var(--mut)}}
 .hubl{{margin:6px 0;font-size:.9rem}} .hubl a{{color:var(--ok);font-weight:600}}
 .tldr{{background:var(--card);border-left:4px solid var(--acc);border-radius:8px;padding:8px 12px;margin:8px 0}}
@@ -1728,6 +1820,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{{outline:2px solid var(
 {f'<p class=hubl>ほかの種類・サイズとまとめて比べる → <a href="{HUB_OF[cat["slug"]]["slug"]}.html">{e(HUB_OF[cat["slug"]]["title"])}</a></p>' if cat["slug"] in HUB_OF else ""}
 <p class=lead>{per_text}の価格で比較・最終更新 {updated}（<a href="about.html#method">計算方法</a>）</p>
 {hero}
+{related_html(cat)}
 <section><h2>全商品ランキング（{len(rows)}商品）</h2>{controls}<ol class=list id=list>{items}</ol>
 <p class=none id=none hidden>条件に合う商品がありません。</p></section>
 {tips_html}
