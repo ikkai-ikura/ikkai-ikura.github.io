@@ -1192,14 +1192,20 @@ def rank(items, cat):
     if cat.get("max_unit"):
         rows = [r for r in rows if r["unit_price"] <= cat["max_unit"]]
     if not cat.get("group", True):  # 全巻セットのようにショップ・状態違いを比べたいジャンル
-        seen, uniq = set(), []
+        seen, uniq, kept = set(), [], {}
         for r in rows:  # 同じショップが同じ値段・冊数で二重に出品しているもの、系列店の同じ文面・同じ値段の出品は1行に
             key = (r["shop"], r["price"], r["count"])
             key2 = (re.sub(r"【[^】]*】|\s", "", r["name"]), r["price"], r["count"])
+            # 同じ店の同じ作品名・同じ冊数（状態違いで値段だけ違う出品）は最安1件にまとめ「ほか○件」と添える
+            key3 = (r["shop"], re.sub(r"【[^】]*】|\s", "", r["name"]), r["count"])
+            if key3 in kept:
+                kept[key3]["others"] += 1
+                continue
             if key not in seen and key2 not in seen:
                 seen.add(key)
                 seen.add(key2)
                 r["others"] = 0
+                kept[key3] = r
                 uniq.append(r)
         return add_scores(uniq[:30])
     # 同じ商品（ショップ違い・袋数違い）は1行にまとめ、1回あたり最安の出品だけを載せる
@@ -1344,9 +1350,16 @@ def median_unit(rows):
 
 
 def best_row(rows):
-    """送料を含めて比べやすい「最安」: 送料無料の中の最安。送料無料がなければ表示価格の最安"""
+    """送料を含めて比べやすい「最安」: 送料無料の中の最安。
+    送料無料がない、または送料無料の最安が相場（中央値）より高いときは、表示価格の最安（送料別と明記して出す）。
+    例: キャノーラ油で送料無料の最安が379円/100g・1位46円・相場68円 → 379円を「最安」と出すと実態とかけ離れる"""
+    if not rows:
+        return None
     home = [r for r in rows if not r.get("biz")] or rows  # 一斗缶・18Lコック付などの業務用サイズは「最安」に出さない
-    return next((r for r in home if r["free_ship"]), home[0]) if rows else None
+    free = next((r for r in home if r["free_ship"]), None)
+    if free is None or free["unit_price"] > median_unit(home):
+        return home[0]
+    return free
 
 
 # 一人暮らし向けの「少なめの量」の上限（1人で1〜2か月くらいで使い切る量。単位はそのジャンルの base）と、ページに出す言い方

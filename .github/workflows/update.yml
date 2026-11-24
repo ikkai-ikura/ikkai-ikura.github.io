@@ -1,7 +1,7 @@
 name: daily-update
 on:
   schedule:
-    - cron: "0 19 * * *"   # 毎朝4時(JST)に開始。GitHub側の遅れで実際は6〜7時ごろに更新が終わる
+    - cron: "0 17 * * *"   # 毎朝2時(JST)に開始。GitHub側は数時間遅れることがあるので、通勤時間までに終わるよう早めに置く
   workflow_dispatch:
   push:
     branches: [main]
@@ -30,5 +30,6 @@ jobs:
           git config user.email "bot@users.noreply.github.com"
           git add docs
           git diff --cached --quiet || git commit -m "daily update"
-          git push
+          # 作業中に別のpush（設定の修正など）が入っても失敗しないよう、取り込んでから送る（docs は今回の生成を優先）
+          for i in 1 2 3; do git pull --rebase -X theirs && git push && break; sleep 10; done
       - run: python indexnow.py
