@@ -1,7 +1,9 @@
 name: daily-update
 on:
   schedule:
-    - cron: "0 17 * * *"   # 毎朝2時(JST)に開始。GitHub側は数時間遅れることがあるので、通勤時間までに終わるよう早めに置く
+    # 正時(00分)は GitHub の定期実行が混んで数時間〜8時間遅れる（11/25は2時指定→10時開始）。半端な分に2回置き、どちらかが朝までに走るようにする
+    - cron: "23 16 * * *"   # 1:23 JST
+    - cron: "47 19 * * *"   # 4:47 JST（予備。2回走っても結果は同じ）
   workflow_dispatch:
   push:
     branches: [main]
