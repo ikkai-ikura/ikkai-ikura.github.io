@@ -110,6 +110,8 @@ FEATURES = [
             ("furusato-water-2l", "重い水を玄関まで届けてもらえる。備蓄用なら保存期間も確認"),
             ("furusato-liquid-laundry-refill", "使い慣れた銘柄の詰め替えまとめが定番"),
             ("furusato-kitchen-paper", "大口ほどお得。かさばるので置き場所を確認"),
+            ("furusato-softener-refill", "洗濯洗剤と合わせて頼むと、日用品の買い足しがまとめて減る"),
+            ("furusato-pet-sheet", "毎日使うので減りが早い。4袋まとめなどが定番"),
         ],
     },
     {
