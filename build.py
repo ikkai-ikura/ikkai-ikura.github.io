@@ -620,6 +620,70 @@ CATEGORIES = [
         "must": ["モバイルバッテリー"],
         "ng": ["ケース", "ポーチ", "レンタル", "ソーラー", "ポータブル電源", "ファン", "扇風機", "カイロ", "ベスト"],
     },
+    # 運営者が実際に使っている物（memo は本人から聞いた事実だけ。効き目の表現は書かない）
+    {
+        "slug": "stick-latte",
+        "title": "スティックコーヒー（カフェラテ） 1本あたり単価ランキング",
+        "keyword": "スティックコーヒー カフェラテ",
+        "keywords": ["ネスカフェ ふわラテ", "ふわラテ ハーフ&ハーフ", "ブレンディ スティック カフェオレ", "スティックコーヒー 100本",
+                     "ネスカフェ ゴールドブレンド スティック カフェラテ", "マキシム スティック カフェラテ", "スティック カフェオレ 大容量"],
+        "unit": "本", "base": "本", "per_text": "1本あたり",
+        "words": ["本入り", "本入", "本", "P", "包"],
+        "min_reviews": 5, "range": (10, 400),
+        "must": ["スティック", "ふわラテ"],
+        "ng": ["アソート", "選べる", "ギフト", "詰め合わせ", "詰合せ", "種類", "ココア", "紅茶", "ティー", "抹茶", "ほうじ茶", "ブラック",
+               "ポイント消化", "お試し", "有機", "オーガニック", "ベトナム", "ランダム", "ドリップ", "プロテイン", "豆乳", "ミル", "ケース付", "ホルダー"],
+        "tips": ["同じ「カフェラテ」でも砂糖入り・甘さひかえめ・砂糖なしがある。毎日飲むなら好みの甘さの大箱が1本あたり最安になりやすい",
+                 "1本はお湯100〜140mlで1杯。100本入りなら1日2杯で約50日分",
+                 "いろいろな味のアソート・ギフトは1本あたりが高いので、このページでは1種類だけの箱で比べている"],
+        "memo": "運営者は「ネスカフェ エクセラ ふわラテ ハーフ＆ハーフ」をふだん飲んでいます。",
+    },
+    {
+        "slug": "curel-milk",
+        "title": "キュレル 潤浸保湿 乳液 100mlあたり単価ランキング",
+        "keyword": "キュレル 乳液",
+        "keywords": ["キュレル 潤浸保湿 乳液", "キュレル 乳液 120ml", "キュレル 乳液 つめかえ", "キュレル 乳液 2個セット"],
+        "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
+        "words": {"mL": 1, "ml": 1, "ML": 1},
+        "min_reviews": 0, "range": (50, 2000), "group": False,
+        "must": ["乳液"], "must_all": ["キュレル"],
+        "ng": ["ローション", "クリーム", "メイク落とし", "化粧水", "ジェル", "クレンジング", "泡", "UV", "日焼け", "シミ", "美白", "ボディ",
+               "エイジング", "オイル", "ベビー", "セット販売 ローション", "トライアル", "ミニ", "化粧品セット"],
+        "tips": ["本体（ボトル）は120ml、詰め替えは100ml。ボトルが残っていれば詰め替えのほうが100mlあたり安い",
+                 "ドラッグストアの楽天店は「お一人様○個まで」の制限があることがある。まとめ買いはセット販売の出品で",
+                 "医薬部外品（有効成分あり）。肌に合うかは使って確かめる"],
+        "memo": "運営者はキュレルの乳液を使っています（化粧品の合う・合わないは人によります）。",
+    },
+    {
+        "slug": "cosrx-bha",
+        "title": "COSRX BHAブラックヘッドパワーリキッド 100mlあたり単価ランキング",
+        "keyword": "COSRX BHA ブラックヘッド パワーリキッド",
+        "keywords": ["BHA blackhead liquid", "COSRX BHA リキッド", "コスアールエックス BHA", "BHAブラックヘッド リキッド 100ml"],
+        "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
+        "words": {"mL": 1, "ml": 1, "ML": 1},
+        "min_reviews": 0, "range": (50, 1000), "group": False, "default_n": 100,  # 100mlの1サイズだけの商品。容量の書いていない出品は100mlとして計算
+        "must": ["COSRX", "コスアールエックス", "cosrx"], "must_all": ["BHA", "ブラックヘッド", "リキッド"],
+        "ng": ["AHA BHA", "AHA/BHA", "ビタミンC", "Vitamin", "使用期限間近", "トナー", "クリーム", "クレンザー", "パッド", "ピーリングパッド", "セット", "サンプル", "お試し"],
+        "tips": ["韓国ブランドのため、海外発送の出品もある。届くまでの日数と送料を確認する",
+                 "公式店はポイントアップやクーポンが付くことが多い。表示価格が少し高くても、ポイント込みの実質で比べる",
+                 "角質ケア用の成分（BHA）が入っている。使う頻度や肌に合うかは商品の説明を確認する"],
+        "memo": "運営者はこのBHAリキッドを使っています（化粧品の合う・合わないは人によります）。",
+    },
+    {
+        "slug": "kiso-gg",
+        "title": "キソ グリシルグリシン化粧水（GG） 100mlあたり単価ランキング",
+        "keyword": "キソ グリシルグリシン",
+        "keywords": ["KISO 化粧水 グリシン", "KISO CARE GGエッセンス", "KISO CARE GGローション", "キソ GGエッセンス", "KisoCare 化粧水"],
+        "unit": "100ml", "base": "ml", "per": 100, "per_text": "100mlあたり",
+        "words": {"mL": 1, "ml": 1, "ML": 1},
+        "min_reviews": 0, "range": (20, 1000), "group": False,
+        "must": ["グリシルグリシン", "GG"], "must_all": [],
+        "ng": ["セット 5点", "5点セット", "スキンケアセット", "福袋", "ポーチ", "ミスト", "レチノール", "セラミド", "ビタミンC", "ハトムギ"],
+        "tips": ["GGエッセンス（60ml）とGGローション（120ml）がある。容量が違うので100mlあたりで比べている",
+                 "ほかの店にも出品はあるが、容量の書いていないものや公式より高いものがある。買う前に店名と容量を確認する",
+                 "2本・3本セットは公式店の割引で1本あたりが安くなる"],
+        "memo": "運営者はキソのグリシルグリシン化粧水を使っています（化粧品の合う・合わないは人によります）。",
+    },
 ]
 
 # 漫画の全巻セット: 作品ごとに1ページ。ショップ・新品/中古の違いを比べたいので同一商品のまとめはしない
@@ -1261,6 +1325,8 @@ def rank(items, cat):
             if not n and VARIANT_ONE.search(pname.translate(ZEN)):
                 n = variant_min(pname, cat["words"], *cat.get("range", (5, 3000)))
                 note = "選べる商品・いちばん少ない量で計算" if n else ""
+        if not n and cat.get("default_n"):
+            n = cat["default_n"]
         if not n or it.get("reviewCount", 0) < cat["min_reviews"]:
             continue
         if cat.get("compat"):  # 替えブラシ: 純正と互換で値段の桁が違うので印を付ける
@@ -1383,6 +1449,10 @@ RELATED = {
     "water-2l": ["sparkling-water-500ml", "tea-500ml", "rice", "furusato-water-2l"],
     "sparkling-water-500ml": ["water-2l", "tea-500ml", "coffee-beans"],
     "tea-500ml": ["water-2l", "sparkling-water-500ml", "coffee-beans"],
+    "stick-latte": ["coffee-beans", "tea-500ml", "water-2l"],
+    "curel-milk": ["kiso-gg", "cosrx-bha", "cotton-swab"],
+    "cosrx-bha": ["kiso-gg", "curel-milk", "cotton-swab"],
+    "kiso-gg": ["curel-milk", "cosrx-bha", "cotton-swab"],
     "soy-sauce": ["canola-oil", "rice", "food-wrap"],
     "canola-oil": ["soy-sauce", "rice", "kitchen-paper"],
     "contact-1day": ["contact-2week"],
@@ -1788,6 +1858,8 @@ def render(cat, rows, updated, hist=None):
     tips = TIPS.get(cat["slug"]) or cat.get("tips", [])
     tips_html = ("<section class=tips><h2>選び方のポイント</h2><ul>" + "".join(f"<li>{e(t)}</li>" for t in tips)
                  + "</ul></section>") if tips else ""
+    if cat.get("memo"):  # 運営者が実際に使っている物のひとこと（本人から聞いた事実だけ）
+        tips_html = f"<section class=tips><h2>運営者メモ</h2><p>{e(cat['memo'])}</p></section>" + tips_html
     promo = PROMOS.get(cat["slug"])
     if promo:  # link は自分で管理する広告コードなのでエスケープしない
         tips_html += (f"<section class=promo><p class=pr>PR</p><h2>{e(promo['title'])}</h2><p>{e(promo['lead'])}</p>"
@@ -2249,7 +2321,8 @@ GROUPS = [
     ("care", "バス・ケア", ["hand-soap-refill", "body-soap-refill", "shampoo-refill", "toothpaste",
                          "sonicare-brush-head", "oralb-brush-head"]),
     ("pet", "ペット", ["dog-food-dry", "cat-food-dry", "pet-sheet", "pet-sheet-wide", "cat-litter"]),
-    ("food", "食品・飲料", ["rice", "coffee-beans", "protein", "protein-soy", "water-2l", "sparkling-water-500ml", "tea-500ml", "soy-sauce", "canola-oil"]),
+    ("skincare", "スキンケア（運営者が使っている物）", ["curel-milk", "kiso-gg", "cosrx-bha"]),
+    ("food", "食品・飲料", ["rice", "coffee-beans", "stick-latte", "protein", "protein-soy", "water-2l", "sparkling-water-500ml", "tea-500ml", "soy-sauce", "canola-oil"]),
     ("eye", "コンタクトレンズ", ["contact-1day", "contact-2week"]),
     ("phone", "スマホ・通信", ["mobile-battery"]),
     ("furusato", "ふるさと納税", ["furusato-toilet-paper-double", "furusato-tissue", "furusato-rice", "furusato-water-2l",
