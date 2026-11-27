@@ -144,6 +144,9 @@ CATEGORIES = [
         "words": ["枚入り", "枚入", "枚"],
         "min_reviews": 10, "range": (20, 3000),
         "ng": ["ケース", "ホルダー", "フィルター", "小学生", "給食", "入園"],  # 子供専用サイズは別の商品（「大人・キッズ選べる」出品は残す）
+        # 子供の語があり大人サイズの語が無い＝子供専用（11/28: 子供用14.5cm×9.5cmが4.4円/枚で1位に出ていた）
+        "ng_unless": (["子供", "キッズ", "こども", "子ども", "ジュニア"],
+                      ["大人", "大きめ", "大きい", "ふつう", "普通", "レギュラー", "男女兼用", "メンズ", "レディース"]),
     },
     {
         "slug": "sonicare-brush-head",
@@ -1324,6 +1327,9 @@ def rank(items, cat):
         if any(w in it["itemName"] for w in cat.get("ng", []) + (NG_FURUSATO if furu else NG_ALL)):
             continue
         if cat.get("must") and not any(w in it["itemName"] for w in cat["must"]):
+            continue
+        _nu = cat.get("ng_unless")  # (除外の語, 残す語): 除外の語があっても残す語があれば残す
+        if _nu and any(w in it["itemName"] for w in _nu[0]) and not any(w in it["itemName"] for w in _nu[1]):
             continue
         if any(w not in it["itemName"] for w in cat.get("must_all", [])):
             continue

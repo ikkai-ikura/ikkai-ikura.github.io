@@ -67,12 +67,21 @@ if __name__ == "__main__":
         ("manga-hunter", "HUNTER×HUNTER ハンターハンター ＜1〜39巻＞ 冨樫義博 全巻", 1),
         ("manga-slamdunk", "【中古】 送料無料 バガボンド 1-37巻 井上雄彦(スラムダンク著者) バカボンド 中古コミック 全巻セット", 0),
         ("mask", "マスク 子供 マスク 不織布 子供用 小学生 50枚 x 6箱 300枚", 0),
+        ("mask", "【血色不織布マスク】マスク 子供 不織布マスク 50枚 ×20箱 カラーマスク快適 子供用 小さめ プリーツ", 0),
     ]
     def _n_rows(slug, name):
         it = {"itemName": name, "itemPrice": 5000, "reviewCount": 0}
         return len(build.rank([it], build.CATEGORIES_BY_SLUG[slug]))
     bad += [(n, _n_rows(s, n), e) for s, n, e in OTHER_CASES if _n_rows(s, n) != e]
     LIMIT_CASES = LIMIT_CASES + [(None, n, e) for s, n, e in OTHER_CASES]
+    # マスク: 子供専用は除外、「大人・キッズ選べる」は残す（ng_unless）
+    _MASK_KEEP = [("プリーツマスク 50枚 血色マスク 不織布マスク 大きい 大きめ キッズ 子供用 小さめ 小さい サイズ", 1),
+                  ("マスク プリーツ 不織布 50枚 12箱 600枚セット 不織布マスク 子供 大人 立体", 1),
+                  ("【血色不織布マスク】マスク 子供 不織布マスク 50枚 ×20箱 カラーマスク快適 子供用 小さめ プリーツ", 0)]
+    def _n_mask(name):
+        return len(build.rank([{"itemName": name, "itemPrice": 400, "reviewCount": 50, "itemCode": "m"}], build.CATEGORIES_BY_SLUG["mask"]))
+    bad += [(n, _n_mask(n), e) for n, e in _MASK_KEEP if _n_mask(n) != e]
+    LIMIT_CASES = LIMIT_CASES + [(None, n, e) for n, e in _MASK_KEEP]
     # 同じメーカー・同じ枚数・同じ値段の出品は1行に（テープS: メリーズ296枚が書き方違いで2行出ていた）
     _its = [{"itemName": "花王 メリーズさらさらエアスルー テープ Sサイズ (4~8kg)296枚 (74枚×4) 送料無料", "itemPrice": 7150, "reviewCount": 50, "itemCode": "a"},
             {"itemName": "メリーズ テープ Sサイズ 74シート×4個入り", "itemPrice": 7150, "reviewCount": 50, "itemCode": "b"},
