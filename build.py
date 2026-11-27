@@ -803,6 +803,10 @@ for _c in CATEGORIES:
 
 CATEGORIES_BY_SLUG = {c["slug"]: c for c in CATEGORIES}
 
+BACKMARKET_LINK = ('<a href="https://px.a8.net/svt/ejp?a8mat=4BGBN5+CP8XDE+5QCM+5YRHE" rel="sponsored nofollow noopener" target="_blank">Back Marketの公式サイトを見る</a>'
+                   '<img border="0" width="1" height="1" src="https://www18.a8.net/0.gif?a8mat=4BGBN5+CP8XDE+5QCM+5YRHE" alt="">')
+BACKMARKET_DESC = "整備済み品（リファービッシュ品）のスマホ・タブレットなどを扱う通販サイト"
+
 # 楽天以外の提携案件（A8）。ページ下部の紹介枠に出す。link はA8の広告コードそのまま（クリック計測の画像を含む）
 PROMOS = {
     "dog-food-dry": {
@@ -830,6 +834,11 @@ PROMOS = {
              "link": '<a href="https://px.a8.net/svt/ejp?a8mat=4BGBN4+9Q2WHE+3J8+3SXWUQ" rel="sponsored nofollow noopener" target="_blank">カナガン デンタルキャットフードの公式サイトを見る</a>'
                      '<img border="0" width="1" height="1" src="https://www19.a8.net/0.gif?a8mat=4BGBN4+9Q2WHE+3J8+3SXWUQ" alt="">'},
         ],
+    },
+    "mobile-battery": {
+        "title": "スマホごと見直すなら：整備済みスマホ",
+        "lead": "バッテリーの持ちが気になってきたら、買い替えという選択肢もあります。整備済み品（中古を点検・クリーニングしたもの）は新品より安く買えることが多いので、機種と状態ごとの値段・保証の条件を公式サイトで確認してください。",
+        "items": [{"name": "Back Market（バックマーケット）", "desc": BACKMARKET_DESC, "link": BACKMARKET_LINK}],
     },
     "water-2l": {
         "title": "毎月たくさん飲むなら：ウォーターサーバー",
@@ -2240,6 +2249,7 @@ a:focus-visible,button:focus-visible{{outline:2px solid var(--acc);outline-offse
 <li>まずは最近3か月のデータ使用量を、今の携帯会社のアプリで確認する。多めに見積もりすぎると払いすぎになる</li>
 <li>楽天モバイルとLINEMOは「使った分だけ」の段階制。月によって使用量がばらつく人に向いている</li>
 <li>電話をよくかけるなら、通話無料の条件（アプリ必須、5分以内など）も比べる</li></ul></section>
+<section class=box><p class=pr>PR</p><h2>端末代も安くするなら：整備済みスマホ</h2><p>格安SIMに乗り換えるときは、端末を整備済み品（中古を点検・クリーニングしたもの）にすると端末代も抑えられます。SIMフリーかどうか、機種と状態ごとの値段・保証の条件を公式サイトで確認してください。</p><p><b>Back Market（バックマーケット）</b><br><small>{e(BACKMARKET_DESC)}</small><br>{BACKMARKET_LINK}</p></section>
 <section class=box><h2>よくある質問</h2>{''.join(f"<details><summary>{e(q)}</summary><p>{e(a)}</p></details>" for q, a in faq)}</section>
 <p class=pr style="margin-top:16px"><a href="./">トップへ戻る</a> ・ <a href="calc.html">単価計算ツール</a> ・ <a href="about.html">このサイトについて</a></p>
 </main>
