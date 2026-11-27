@@ -1,5 +1,5 @@
 """楽天ROOM用のネタ帳ページ（本人だけが使う。検索エンジンには載せない）。
-毎日のビルドで、週替わりの10ジャンルから「コスパ最強（なければ最安）」の商品と紹介文を作る。
+毎日のビルドで、日替わりの2ジャンルから「コスパ最強（なければ最安）」の商品と紹介文を作る。
 商品リンクはアフィリエイトではない普通の商品ページ（本人がクリックしても自己クリックにならないように）。"""
 import html
 import json
@@ -11,6 +11,14 @@ TAGS = {
     "paper": "#日用品ストック", "care": "#バスタイム", "food": "#食費節約", "eye": "#コンタクト",
     "furusato": "#ふるさと納税 #返礼品", "manga": "#漫画 #全巻セット",
 }
+
+
+def pick_day(cands, n=2, today=None):
+    """候補（報酬の目安が大きい順）を1日ごとにずらして n 件選ぶ。毎日投稿するので日替わり（2026-11-27〜）"""
+    if not cands:
+        return []
+    start = ((today or datetime.now()).toordinal() * n) % len(cands)
+    return [cands[(start + i) % len(cands)] for i in range(min(n, len(cands)))]
 
 
 def pick_week(cands, n=10, today=None):
@@ -38,9 +46,9 @@ ONE = {
 
 
 def one_liner(c):
-    """商品ごとに決まった1つを選ぶ（同じ週は同じ文。週が変わると入れ替わる）"""
+    """商品ごとに決まった1つを選ぶ（同じ日は同じ文。日が変わると入れ替わる）"""
     pool = ONE["manga"] if c["kind"] == "manga" else ONE["furusato"] if c["furusato"] else ONE.get(c["group"], ONE[""])
-    h = sum(ord(ch) for ch in c["code"]) + datetime.now().isocalendar()[1]
+    h = sum(ord(ch) for ch in c["code"]) + datetime.now().toordinal()
     return pool[h % len(pool)]
 
 
@@ -85,7 +93,7 @@ ol{{list-style:none;padding:0;display:grid;gap:12px}}.c{{display:flex;gap:10px;b
 .cp{{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}}
 .c.done{{opacity:.5}}a{{color:var(--acc);font-weight:600}}</style></head><body><main>
 <h1>楽天ROOM ネタ帳</h1>
-<p class=mut>あなた専用のページです（検索エンジンには載せていません）。毎週月曜に10商品が入れ替わり、値段は毎日更新されます（最終更新 {e(updated)}）。</p>
+<p class=mut>あなた専用のページです（検索エンジンには載せていません）。毎朝2商品が入れ替わります（1日1〜2件の投稿用）。値段も毎日更新されます（最終更新 {e(updated)}）。</p>
 <p class=mut>使い方：①「コピーしてROOMの投稿画面を開く」を押す ② 開いた投稿画面のコメント欄に貼り付け（Ctrl＋V／スマホは長押し→ペースト）③「投稿」④ この画面に戻って「投稿した」にチェック。投稿画面が開かないときは「紹介文だけコピー」→「商品ページ」→</p><p class=mut> 商品ページの「ROOMに投稿」を押して貼り付けて投稿（最後のひとことも自動で入っています。実際に使っている商品なら、自分の感想に変えるとさらに良いです）。商品ページのリンクはアフィリエイトではないので、押しても問題ありません。</p>
 <ol>{cards}</ol></main>
 <script>

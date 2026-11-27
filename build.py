@@ -8,7 +8,7 @@ import html
 from calc_page import render_calc
 from features import FEATURES, HUBS, HUB_OF, feature_cards, render_feature
 from monthly import PAGES as MONTHLY, render_monthly
-from room import pick_week, render_room
+from room import pick_day, render_room
 from cooccur import BRANDS as KYOKI_BRANDS, brand_of
 import json
 import os
@@ -2682,10 +2682,9 @@ def main():
     (OUT / "items_history.json").write_text(json.dumps(item_hist, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (OUT / "index.html").write_text(render_index(summary, updated, drops, history), encoding="utf-8")
     (OUT / "about.html").write_text(render_about(), encoding="utf-8")
-    # 楽天ROOMのネタ帳（本人用・検索エンジンには載せない）: 漫画は2つまでにして、報酬の目安が大きい順に週替わりで10件
-    manga = [c for c in room_cands if c["kind"] == "manga"]
+    # 楽天ROOMのネタ帳（本人用・検索エンジンには載せない）: 毎日1〜2件投稿するので、報酬の目安が大きい順に日替わりで2件（漫画は除く）
     rest = sorted([c for c in room_cands if c["kind"] != "manga"], key=lambda c: -c["fee"])
-    picks = pick_week(rest, 8) + pick_week(sorted(manga, key=lambda c: -c["fee"]), 2)
+    picks = pick_day(rest, 2)
     (OUT / "room-picks.html").write_text(render_room(picks, updated), encoding="utf-8")
     activate_pending_links()
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
