@@ -133,7 +133,8 @@ CATEGORIES = [
         "must": ["ワイド"],
         # レギュラー版と同じく、売れ筋の「レギュラー800枚／ワイド400枚」選択式はワイドの枚数だけを読む
         "size_pick": "レギュラー", "size_word": "(?<!スーパー)(?<!ダブル)(?<!ウルトラ)ワイド", "size_label": "ワイド",
-        "ng": ["スーパーワイド", "トレー", "トレイ", "収納ケース", "トイレケース", "ホルダー", "ハーフ", "洗える", "布"],
+        "ng": ["スーパーワイド", "トレー", "トレイ", "収納ケース", "トイレケース", "ホルダー", "ハーフ", "洗える", "布",
+               "レギュラー"],  # レギュラー/ワイドを選べる出品は、表示価格がどちらのサイズのものか分からない（11/27 11.2円/枚の1位）
     },
     {
         "slug": "mask",
@@ -845,6 +846,13 @@ PROMOS = {
                      '<img border="0" width="1" height="1" src="https://www17.a8.net/0.gif?a8mat=4BGBN4+85IQ0I+YK6+5YRHE" alt="">'},
         ],
     },
+}
+
+# 運営者が実際に使っている物（本人から聞いた事実だけを書く。効き目の表現は書かない）
+OWNER_MEMO = {
+    "body-soap-refill": "運営者はボタニストのボディソープ（クリアクレンズ）を使っています。",
+    "laundry-gelball": "運営者は洗濯にジェルボールを使っています。",
+    "toothpaste": "運営者はコンクールの歯みがき剤を使っています。",
 }
 
 # 各ページ下部の「選び方のポイント」
@@ -1874,8 +1882,9 @@ def render(cat, rows, updated, hist=None):
     tips = TIPS.get(cat["slug"]) or cat.get("tips", [])
     tips_html = ("<section class=tips><h2>選び方のポイント</h2><ul>" + "".join(f"<li>{e(t)}</li>" for t in tips)
                  + "</ul></section>") if tips else ""
-    if cat.get("memo"):  # 運営者が実際に使っている物のひとこと（本人から聞いた事実だけ）
-        tips_html = f"<section class=tips><h2>運営者メモ</h2><p>{e(cat['memo'])}</p></section>" + tips_html
+    memo = cat.get("memo") or OWNER_MEMO.get(cat["slug"])
+    if memo:  # 運営者が実際に使っている物のひとこと（本人から聞いた事実だけ）
+        tips_html = f"<section class=tips><h2>運営者メモ</h2><p>{e(memo)}</p></section>" + tips_html
     promo = PROMOS.get(cat["slug"])
     if promo:  # link は自分で管理する広告コードなのでエスケープしない
         tips_html += (f"<section class=promo><p class=pr>PR</p><h2>{e(promo['title'])}</h2><p>{e(promo['lead'])}</p>"
