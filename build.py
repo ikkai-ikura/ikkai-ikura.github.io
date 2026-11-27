@@ -1717,7 +1717,7 @@ def faq_items(cat, rows, updated):
     qa = [(f"{name}でいちばん安いのはどれ？",
            f"{updated[:10].replace('-', '/')}時点では「{clean_name(best['name'], 50)}」が{best['unit_price']:.1f}円/{unit}で最安です"
            f"（{best['price']:,}円・{best['count']:,.0f}{base}）。"),
-          (f"{name}の{per_text_of(cat)}の相場は？",
+          (f"{name}の{per_text_of(cat)}の相場（平均価格）は？",
            f"掲載している{len(rows)}商品の中央値は{median_unit(rows):.1f}円/{unit}です。最安の商品は相場より{(1 - best['unit_price'] / median_unit(rows)) * 100:.0f}%安くなっています。")]
     qa += baby_month_qa(cat, rows)
     free = next((r for r in rows if r["free_ship"]), None)
@@ -1950,12 +1950,14 @@ def render(cat, rows, updated, hist=None):
     # 「楽天」「最安値」を入れて、価格.comやAmazonと正面からぶつからない「楽天で買う人」の検索を取りにいく
     bu = best_row(rows)["unit_price"] if rows else None
     from_ = (f"{per_text}{bu:.0f}円〜" if bu >= 100 else f"{per_text}{bu:.1f}円〜") if bu else per_text
+    mu = median_unit(rows) if rows else None  # 「○○ 平均価格」「○○ 相場」で探す人向け（実際の検索語にある）
+    mtxt = (f"{mu:,.0f}円" if mu >= 100 else f"{mu:.1f}円") if mu else ""
     seo_title = (f"【楽天】{name}の最安値｜{from_} 新品・中古を比較｜TANKA" if cat.get("manga")
                  else f"【楽天ふるさと納税】{name.replace('ふるさと納税 ', '')}のコスパ比較｜寄付額{from_} 量が多い順｜TANKA" if cat.get("furusato")
-                 else f"【楽天】{name}の最安値｜{from_} 安い順ランキング｜TANKA")
+                 else f"【楽天】{name}の最安値と相場｜{from_}・平均{mtxt} 安い順｜TANKA")
     desc = (f"楽天ふるさと納税の{name.replace('ふるさと納税 ', '')}の返礼品を、寄付額{per_text}で比較。寄付1万円でどれだけもらえるかが分かります。毎日自動で更新。"
             if cat.get("furusato") else f"楽天で{name}を買うならどこが最安？{name}を安い順に比較。楽天市場の価格と内容量から{per_text}の値段に換算して毎日自動で更新。"
-            + (f"今日の最安{'（送料無料）' if best_row(rows)['free_ship'] else ''}は{best_row(rows)['unit_price']:.1f}円/{unit}。" if rows else "") + "同じ商品は最安の出品だけを掲載。")
+            + (f"今日の最安{'（送料無料）' if best_row(rows)['free_ship'] else ''}は{best_row(rows)['unit_price']:.1f}円/{unit}、相場（平均的な値段）は{mu:,.1f}円/{unit}。" if rows else "") + "同じ商品は最安の出品だけを掲載。")
     # 検索エンジン向け構造化データ（パンくず＋ランキングの並び）
     ld = json.dumps([
         {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
