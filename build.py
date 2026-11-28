@@ -2702,7 +2702,7 @@ def main():
     (OUT / "about.html").write_text(render_about(), encoding="utf-8")
     # 楽天ROOMのネタ帳（本人用・検索エンジンには載せない）: 毎日1〜2件投稿するので、報酬の目安が大きい順に日替わりで2件（漫画は除く）
     rest = sorted([c for c in room_cands if c["kind"] != "manga"], key=lambda c: -c["fee"])
-    picks = pick_day(rest, 2)
+    picks = pick_day(rest, 2, datetime.now(JST))  # Actionsは UTC。朝8時台のビルドが前日扱いになり同じ2件が続いていた
     (OUT / "room-picks.html").write_text(render_room(picks, updated), encoding="utf-8")
     activate_pending_links()
     (OUT / "sim.html").write_text(render_sim(updated), encoding="utf-8")
